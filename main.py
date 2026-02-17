@@ -283,6 +283,10 @@ class Game:
                     display.error(f"'{cmd.upper()}' is not available during the {phase} phase.")
                     continue
 
+                # Stash location so tutorial can detect failed moves
+                if phase == "prologue":
+                    self.state["_pre_cmd_location"] = self.state.get("prologue_location")
+
                 self.handle_command(cmd, args)
 
                 # Tutorial after-command hook
@@ -290,6 +294,7 @@ class Game:
                     complete = tutorial.after_command(cmd, args, self)
                     if complete:
                         self._transition_to_day1()
+                    self.state.pop("_pre_cmd_location", None)
 
             except EOFError:
                 print()

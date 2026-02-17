@@ -128,6 +128,11 @@ def after_command(cmd, args, game):
         return False
 
     if step == "movement" and cmd == "go":
+        # Only advance if the player actually moved (not blocked by invalid direction).
+        # _pre_cmd_location is stashed by the game loop before dispatching.
+        pre_loc = game.state.pop("_pre_cmd_location", None)
+        if pre_loc is not None and pre_loc == game.state.get("prologue_location"):
+            return False
         room = game.current_room()
         if room and "sevarik" in room.npcs:
             # Found explorer on the first move — go straight to encounter
