@@ -53,6 +53,7 @@
         "stat_bonuses": {},
         "stackable": false,
         "special": "emergency_return",
+        "slot": "feet",
         "zone": null,
         "room": null,
         "discovery_text": "Silver slippers, barely tarnished, sitting on the bare ground as if someone set them down and walked away. They catch the light in ways the light shouldn't bend."
@@ -67,6 +68,7 @@
         "stat_bonuses": {},
         "stackable": false,
         "special": "reduce_resentment",
+        "slot": "head",
         "zone": null,
         "room": null,
         "discovery_text": "A red clown nose, sitting on the ground like a joke with no punchline. It's perfectly round, impossibly vivid against the dull soil."

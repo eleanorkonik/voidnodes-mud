@@ -9,7 +9,7 @@ import json
 import random
 
 from engine import parser, display, save, dice, tutorial, map_renderer
-from models.character import Character
+from models.character import Character, BODY_SLOTS
 from models.room import Room
 from models.tuft import Tuft
 from models.skerry import Skerry
@@ -319,6 +319,8 @@ class Game:
             "quit": self.cmd_quit,
             "talk": self.cmd_talk,
             "use": self.cmd_use,
+            "wear": self.cmd_wear,
+            "remove": self.cmd_remove,
             "map": self.cmd_map,
             "skip": self.cmd_skip,
             "bond": self.cmd_bond,
@@ -397,6 +399,12 @@ class Game:
             display.error("You're nowhere. That's concerning.")
             return
 
+        # Examine self
+        if target in ("self", "me", "myself"):
+            char = self.current_character()
+            display.display_self(char, self.items_db, self.artifacts_db)
+            return
+
         # Look at NPC
         npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
         if npc:
@@ -468,6 +476,26 @@ class Game:
                 bonuses = ", ".join(f"+{v} {k}" for k, v in item["stat_bonuses"].items())
                 display.info(f"  Bonuses (if kept): {bonuses}")
             display.info(f"  Mote value (if fed): {item.get('mote_value', 1)}")
+            return
+
+        # Look at worn items
+        worn_ids = [wid for wid in char.worn.values() if wid is not None]
+        art_id, art = self._find_entity(worn_ids, target, self.artifacts_db)
+        if art:
+            display.header(art["name"])
+            display.narrate(f"  {art.get('description', '')}")
+            if art.get("aspects"):
+                aspects = ", ".join(display.aspect_text(a) for a in art["aspects"])
+                print(f"  Aspects: {aspects}")
+            if art.get("stat_bonuses"):
+                bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
+                display.info(f"  Bonuses: {bonuses}")
+            display.info(f"  Mote value (if fed): {art.get('mote_value', 1)}")
+            return
+        item_id, item = self._find_entity(worn_ids, target, self.items_db)
+        if item:
+            display.header(item["name"])
+            display.narrate(f"  {item.get('description', '')}")
             return
 
         # Look at aspect
@@ -1019,6 +1047,83 @@ class Game:
             return
 
         display.narrate(f"You don't have '{target}'.")
+
+    def cmd_wear(self, args):
+        if not args:
+            display.error("Wear what?")
+            return
+
+        target = " ".join(args).lower()
+        char = self.current_character()
+
+        # Find item in inventory — check both items_db and artifacts_db
+        art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
+        if art:
+            slot = art.get("slot")
+            if not slot:
+                display.narrate("You can't wear that.")
+                return
+            if char.worn.get(slot):
+                current_name = display._lookup_name(char.worn[slot], self.items_db, self.artifacts_db)
+                display.narrate(f"You're already wearing {current_name} on your {slot}. REMOVE it first.")
+                return
+            char.wear_item(art_id, slot)
+            display.success(f"You put on the {art['name']}.")
+            return
+
+        item_id, item = self._find_entity(char.inventory, target, self.items_db)
+        if item:
+            slot = item.get("slot")
+            if not slot:
+                display.narrate("You can't wear that.")
+                return
+            if char.worn.get(slot):
+                current_name = display._lookup_name(char.worn[slot], self.items_db, self.artifacts_db)
+                display.narrate(f"You're already wearing {current_name} on your {slot}. REMOVE it first.")
+                return
+            char.wear_item(item_id, slot)
+            display.success(f"You put on the {item['name']}.")
+            return
+
+        display.narrate(f"You don't have '{target}'.")
+
+    def cmd_remove(self, args):
+        if not args:
+            display.error("Remove what?")
+            return
+
+        target = " ".join(args).lower()
+        char = self.current_character()
+
+        # Try target as a slot name
+        if target in BODY_SLOTS:
+            item_id = char.remove_worn(target)
+            if item_id:
+                name = display._lookup_name(item_id, self.items_db, self.artifacts_db)
+                display.success(f"You take off the {name}.")
+            else:
+                display.narrate(f"You're not wearing anything on your {target}.")
+            return
+
+        # Match item name against worn items
+        worn_ids = [wid for wid in char.worn.values() if wid is not None]
+        art_id, art = self._find_entity(worn_ids, target, self.artifacts_db)
+        if art:
+            slot = char.find_worn_by_item(art_id)
+            if slot:
+                char.remove_worn(slot)
+                display.success(f"You take off the {art['name']}.")
+                return
+
+        item_id, item = self._find_entity(worn_ids, target, self.items_db)
+        if item:
+            slot = char.find_worn_by_item(item_id)
+            if slot:
+                char.remove_worn(slot)
+                display.success(f"You take off the {item['name']}.")
+                return
+
+        display.narrate(f"You're not wearing anything called '{target}'.")
 
     # ── Explorer Commands ─────────────────────────────────────────
 

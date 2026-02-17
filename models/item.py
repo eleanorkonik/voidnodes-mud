@@ -12,6 +12,7 @@ class Item:
         self.stat_bonuses = dict(data.get("stat_bonuses", {}))  # {skill: bonus} when kept
         self.stackable = data.get("stackable", True)
         self.special = data.get("special", None)  # special effect ID (e.g., "eliok_house")
+        self.slot = data.get("slot", None)  # body slot for wearable items
 
     def to_dict(self):
         """Serialize to dict."""
@@ -25,4 +26,5 @@ class Item:
             "stat_bonuses": self.stat_bonuses,
             "stackable": self.stackable,
             "special": self.special,
+            "slot": self.slot,
         }

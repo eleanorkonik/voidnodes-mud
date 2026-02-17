@@ -173,6 +173,41 @@ def display_tuft(tuft, name="Tuft"):
     print(f"  {BRIGHT_GREEN}[{name}]{RESET} Motes: {motes}  Stage: {stage}{progress}")
 
 
+def _lookup_name(item_id, items_db, artifacts_db):
+    """Look up an item name from items_db or artifacts_db, with fallback."""
+    if item_id in items_db:
+        return items_db[item_id]["name"]
+    if artifacts_db and item_id in artifacts_db:
+        return artifacts_db[item_id]["name"]
+    return item_id.replace("_", " ").title()
+
+
+def display_self(character, items_db, artifacts_db=None):
+    """Display the character's appearance: worn items and aspects."""
+    from models.character import BODY_SLOTS
+    artifacts_db = artifacts_db or {}
+
+    header(f"═══ {character.name} ═══")
+    print(f"  {character.aspects['high_concept']}")
+
+    print()
+    print(f"  {BOLD}Wearing:{RESET}")
+    for slot in BODY_SLOTS:
+        worn_id = character.worn.get(slot) if hasattr(character, 'worn') else None
+        if worn_id:
+            name = _lookup_name(worn_id, items_db, artifacts_db)
+            print(f"    {slot.capitalize():<8} {item_name(name)}")
+        else:
+            print(f"    {slot.capitalize():<8} {DIM}(nothing){RESET}")
+
+    print()
+    print(f"  {BOLD}Aspects:{RESET}")
+    print(f"    {aspect_text(character.aspects['high_concept'])}")
+    print(f"    {aspect_text(character.aspects['trouble'])}")
+    for a in character.aspects.get("other", []):
+        print(f"    {aspect_text(a)}")
+
+
 def display_inventory(character, items_db, artifacts_db=None):
     """Display character inventory."""
     header(f"{character.name}'s Inventory")
@@ -198,6 +233,13 @@ def display_inventory(character, items_db, artifacts_db=None):
             print(f"  {item_name(name)} x{count}")
         else:
             print(f"  {item_name(name)}")
+
+    worn = {s: i for s, i in character.worn.items() if i} if hasattr(character, 'worn') else {}
+    if worn:
+        print(f"  {BOLD}Wearing:{RESET}")
+        for slot, wid in worn.items():
+            name = _lookup_name(wid, items_db, artifacts_db)
+            print(f"    {slot.capitalize()}: {item_name(name)}")
 
 
 def display_character_sheet(character):
@@ -235,6 +277,9 @@ def display_help(phase, seed_name="Tuft"):
         ("TALK / HI <npc>", "Talk to an NPC (also: GREET)"),
         (f"CHECK <npc/{seed_name.lower()}>", f"Check status of NPC or {seed_name}"),
         ("USE <item>", "Use an item"),
+        ("WEAR <item>", "Put on a piece of clothing or artifact"),
+        ("REMOVE <item>", "Take off something you're wearing"),
+        ("EXAMINE SELF", "See your appearance, worn items, and aspects"),
         (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
         ("INVENTORY", "Show your inventory"),
         ("STATUS", "Show your character sheet"),

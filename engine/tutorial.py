@@ -12,7 +12,7 @@ STEPS = [
     "exploring",         # free exploration, encounter explorer at shelter
     "artifact_ih",       # IH to see artifact in room
     "artifact_examine",  # EXAMINE/PROBE the artifact
-    "artifact_use",      # TAKE then USE/WEAR the artifact
+    "artifact_use",      # TAKE then WEAR the artifact
     "artifact_choice",   # KEEP or OFFER the artifact
     "handoff",           # handoff — switch focus to explorer
     "complete",          # done
@@ -188,10 +188,10 @@ def after_command(cmd, args, game):
             game.state["artifact_taken"] = True
             print()
             display.tuft_speak("Good. Now try it on.")
-            _tutorial_prompt(f"Type USE {art_name.upper()}")
+            _tutorial_prompt(f"Type WEAR {art_name.upper()}")
             return False
 
-        if cmd == "use" and game.state.get("artifact_taken"):
+        if cmd in ("use", "wear") and game.state.get("artifact_taken"):
             # cmd_use already showed the artifact effect narration
             print()
             seed_name = game.state.get("world_seed_name", "Tuft")
@@ -369,8 +369,8 @@ def get_current_hint(step, game_state=None):
         else:
             art_name = "the artifact"
         if (game_state or {}).get("artifact_taken"):
-            display.tuft_speak(f"Try it on. USE the {art_name}.")
-            _tutorial_prompt(f"Type USE {art_name.upper()}")
+            display.tuft_speak(f"Try it on. WEAR the {art_name}.")
+            _tutorial_prompt(f"Type WEAR {art_name.upper()}")
         else:
             display.tuft_speak(f"Pick it up first.")
             _tutorial_prompt(f"Type TAKE {art_name.upper()}")

@@ -102,6 +102,10 @@ def _migrate_state(state):
     state.setdefault("explorer_name", "Sevarik")
     state.setdefault("steward_name", "Miria")
     state.setdefault("agents", {})
+    # Add worn dict for old saves
+    for char_key in ("explorer", "steward"):
+        if char_key in state:
+            state[char_key].setdefault("worn", {})
 
 
 def delete_save(slot_name):

@@ -1,5 +1,7 @@
 """Character model — skills, aspects, stress, consequences, fate points."""
 
+BODY_SLOTS = ["head", "torso", "legs", "feet", "hands"]
+
 
 class Character:
     def __init__(self, data):
@@ -11,6 +13,7 @@ class Character:
         self.fate_points = data["fate_points"]
         self.refresh = data["refresh"]
         self.inventory = list(data.get("inventory", []))
+        self.worn = dict(data.get("worn", {}))
 
     def get_skill(self, skill_name):
         """Get skill value by name (case-insensitive). Returns 0 if not found."""
@@ -143,6 +146,40 @@ class Character:
         """Check if character has an item."""
         return item_id in self.inventory
 
+    def wear_item(self, item_id, slot):
+        """Equip an item from inventory to a body slot. Returns False if slot occupied or item not in inventory."""
+        if item_id not in self.inventory:
+            return False
+        if self.worn.get(slot):
+            return False
+        self.inventory.remove(item_id)
+        self.worn[slot] = item_id
+        return True
+
+    def remove_worn(self, slot):
+        """Unequip an item from a body slot, returning it to inventory. Returns item_id or None."""
+        item_id = self.worn.get(slot)
+        if not item_id:
+            return None
+        self.worn[slot] = None
+        self.inventory.append(item_id)
+        return item_id
+
+    def get_worn_item(self, slot):
+        """Return item_id worn in a slot, or None."""
+        return self.worn.get(slot)
+
+    def get_all_worn(self):
+        """Return {slot: item_id} for occupied slots only."""
+        return {slot: item_id for slot, item_id in self.worn.items() if item_id}
+
+    def find_worn_by_item(self, item_id):
+        """Return the slot name an item is worn in, or None."""
+        for slot, worn_id in self.worn.items():
+            if worn_id == item_id:
+                return slot
+        return None
+
     def to_dict(self):
         """Serialize to dict for saving."""
         return {
@@ -154,4 +191,5 @@ class Character:
             "fate_points": self.fate_points,
             "refresh": self.refresh,
             "inventory": self.inventory,
+            "worn": self.worn,
         }

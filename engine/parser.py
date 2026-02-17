@@ -13,7 +13,7 @@ DIRECTION_ALIASES = {
 COMMAND_ALIASES = {
     "l": "look", "i": "inventory", "inv": "inventory",
     "x": "look", "examine": "probe",
-    "wear": "use",
+    "equip": "wear", "unequip": "remove", "unwear": "remove",
     "get": "take", "grab": "take", "pick": "take",
     "q": "quit", "exit": "quit",
     "?": "help", "h": "help",
@@ -39,6 +39,8 @@ COMMANDS = {
     "quit":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "talk":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "use":       {"phases": ["explorer", "steward", "prologue"], "args": "required"},
+    "wear":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
+    "remove":    {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "map":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "skip":      {"phases": ["prologue"], "args": "none"},
     "bond":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},

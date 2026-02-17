@@ -22,7 +22,8 @@
         "consequences": {"mild": null, "moderate": null, "severe": null},
         "fate_points": 3,
         "refresh": 3,
-        "inventory": ["preserved_food"]
+        "inventory": ["preserved_food"],
+        "worn": {"torso": "khaki_jumpsuit", "feet": "work_boots"}
     },
     "miria": {
         "name": "Miria",
@@ -47,6 +48,7 @@
         "consequences": {"mild": null, "moderate": null, "severe": null},
         "fate_points": 3,
         "refresh": 3,
-        "inventory": []
+        "inventory": [],
+        "worn": {"torso": "red_sundress", "feet": "canvas_flats"}
     }
 }
