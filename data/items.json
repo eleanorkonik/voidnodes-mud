@@ -1,0 +1,189 @@
+{
+    "metal_scraps": {
+        "id": "metal_scraps",
+        "name": "Metal Scraps",
+        "description": "Twisted pieces of hull plating and structural supports. Useful for building and crafting.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "wire": {
+        "id": "wire",
+        "name": "Wire",
+        "description": "Lengths of copper and fiber-optic cabling salvaged from the wreckage.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "torn_fabric": {
+        "id": "torn_fabric",
+        "name": "Torn Fabric",
+        "description": "Scraps of durable ship fabric. Worn but still strong enough to be useful.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "basic_tools": {
+        "id": "basic_tools",
+        "name": "Basic Tools",
+        "description": "A collection of wrenches, pliers, and a multi-driver. The essentials.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "luminous_moss": {
+        "id": "luminous_moss",
+        "name": "Luminous Moss",
+        "description": "Softly glowing moss from the coral thicket. It pulses with a gentle blue-green light.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "resin": {
+        "id": "resin",
+        "name": "Resin",
+        "description": "Thick, amber-colored resin from coral growths. Hardens quickly and bonds well.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "seeds": {
+        "id": "seeds",
+        "name": "Seeds",
+        "description": "Hardy seeds from coral-adapted plants. They could grow in Tuft-nourished soil.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "coral_fragments": {
+        "id": "coral_fragments",
+        "name": "Coral Fragments",
+        "description": "Broken pieces of crystallized coral. Sharp-edged and surprisingly strong.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "ancient_alloys": {
+        "id": "ancient_alloys",
+        "name": "Ancient Alloys",
+        "description": "Metal from the frozen wreck, made of alloys unknown to any living smith. Dense, dark, and warm to the touch.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 3,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "frozen_water": {
+        "id": "frozen_water",
+        "name": "Frozen Water",
+        "description": "Ice from the frozen wreck. Pure and clean once thawed — precious in the void.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "preserved_food": {
+        "id": "preserved_food",
+        "name": "Preserved Food",
+        "description": "Vacuum-sealed rations from the frozen wreck. Ancient but still edible.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "restore_stress"
+    },
+    "crystal_shards": {
+        "id": "crystal_shards",
+        "name": "Crystal Shards",
+        "description": "Fragments of crystalline material that hum faintly. They react to Tuft's presence.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 3,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "rope": {
+        "id": "rope",
+        "name": "Rope",
+        "description": "Strong braided cord made from fabric and resin. Essential for building.",
+        "type": "crafted",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "torch": {
+        "id": "torch",
+        "name": "Torch",
+        "description": "A wire-wrapped bundle of luminous moss that casts a soft, steady glow.",
+        "type": "crafted",
+        "aspects": ["Steady Light"],
+        "mote_value": 2,
+        "stat_bonuses": {"Notice": 1},
+        "stackable": false,
+        "special": null
+    },
+    "shelter_patch": {
+        "id": "shelter_patch",
+        "name": "Shelter Patch",
+        "description": "A sturdy patch of fabric and coral for repairing structures.",
+        "type": "crafted",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "water_filter": {
+        "id": "water_filter",
+        "name": "Water Filter",
+        "description": "A crystal and resin filtration device. Purifies void-mist into drinkable water.",
+        "type": "crafted",
+        "aspects": ["Clean Water Supply"],
+        "mote_value": 3,
+        "stat_bonuses": {},
+        "stackable": false,
+        "special": null
+    },
+    "signal_beacon": {
+        "id": "signal_beacon",
+        "name": "Signal Beacon",
+        "description": "A powerful light that can be seen far across the void. Might attract help — or trouble.",
+        "type": "crafted",
+        "aspects": ["Visible From Afar"],
+        "mote_value": 5,
+        "stat_bonuses": {},
+        "stackable": false,
+        "special": null
+    }
+}

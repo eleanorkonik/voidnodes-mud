@@ -1,0 +1,9 @@
+{
+    "motes": 15,
+    "growth_stage": 0,
+    "stage_thresholds": [0, 30, 75, 150, 300],
+    "total_motes_fed": 0,
+    "aspects": ["Baby Seed With Perfect Memory", "Hungry for Motes"],
+    "stress": [false, false],
+    "alive": true
+}

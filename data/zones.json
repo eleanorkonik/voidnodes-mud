@@ -1,0 +1,317 @@
+{
+    "debris_field": {
+        "name": "The Debris Field",
+        "description": "A slowly tumbling mass of broken hull plating, cargo containers, and twisted metal. The remains of some great vessel, shattered and scattered across this pocket of void.",
+        "difficulty": "easy",
+        "rooms": [
+            {
+                "id": "df_entrance",
+                "name": "Edge of the Debris Field",
+                "description": "Jagged metal fragments drift lazily at the boundary of the debris field. A faint hum resonates through the larger pieces, as if the wreckage still remembers being whole. The way back to the skerry is clear to the south.",
+                "zone": "debris_field",
+                "exits": {"south": "skerry_landing", "north": "df_cargo_bay", "east": "df_hull_breach"},
+                "aspects": ["Drifting Wreckage", "Faint Harmonic Hum"],
+                "items": ["metal_scraps"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "df_cargo_bay",
+                "name": "Shattered Cargo Bay",
+                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. Something skitters in the shadows between them.",
+                "zone": "debris_field",
+                "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
+                "aspects": ["Sealed Cargo Crates", "Skittering Shadows"],
+                "items": ["wire", "torn_fabric"],
+                "npcs": ["emmy"],
+                "enemies": ["void_vermin_pack"],
+                "discovered": false
+            },
+            {
+                "id": "df_hull_breach",
+                "name": "Gaping Hull Breach",
+                "description": "A massive hole torn through the outer hull reveals layers of internal structure. The edges are sharp and corroded. Useful salvage clings to the exposed framework.",
+                "zone": "debris_field",
+                "exits": {"west": "df_entrance", "north": "df_control_room"},
+                "aspects": ["Sharp Metal Edges", "Exposed Framework"],
+                "items": ["metal_scraps", "wire"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "df_control_room",
+                "name": "Ruined Control Room",
+                "description": "Banks of dead consoles line the walls, their screens dark and cracked. A corroded automaton stands frozen mid-step near the captain's chair, its optics flickering with residual power.",
+                "zone": "debris_field",
+                "exits": {"south": "df_hull_breach", "west": "df_cargo_bay"},
+                "aspects": ["Dead Consoles", "Residual Power"],
+                "items": ["basic_tools"],
+                "npcs": ["dax"],
+                "enemies": ["corroded_automaton"],
+                "discovered": false
+            },
+            {
+                "id": "df_engine_room",
+                "name": "Engine Room Wreckage",
+                "description": "The heart of the ship, now still. Massive turbines lie split open, their cores dark. Among the wreckage, a faintly glowing device pulses with residual energy — the Stabilization Engine.",
+                "zone": "debris_field",
+                "exits": {"south": "df_cargo_bay"},
+                "aspects": ["Split Turbines", "Residual Energy Pulse"],
+                "items": ["metal_scraps", "torn_fabric"],
+                "npcs": [],
+                "enemies": ["void_vermin_scout"],
+                "discovered": false
+            }
+        ],
+        "artifacts": ["stabilization_engine"],
+        "entry_room": "df_entrance",
+        "enemies_data": [
+            {
+                "id": "void_vermin_pack",
+                "name": "Void Vermin Pack",
+                "description": "A chittering swarm of small, multi-legged creatures with translucent shells. Individually weak, they overwhelm through numbers.",
+                "aspects": ["Pack Tactics", "Translucent Shells"],
+                "skills": {"Fight": 2, "Notice": 1},
+                "stress": [false, false],
+                "consequences": {"mild": null},
+                "loot": ["metal_scraps"]
+            },
+            {
+                "id": "void_vermin_scout",
+                "name": "Void Vermin Scout",
+                "description": "A lone vermin, larger than its pack cousins. Its mandibles click as it sizes you up.",
+                "aspects": ["Lone Hunter", "Sharp Mandibles"],
+                "skills": {"Fight": 1, "Notice": 2},
+                "stress": [false],
+                "consequences": {"mild": null},
+                "loot": ["torn_fabric"]
+            },
+            {
+                "id": "corroded_automaton",
+                "name": "Corroded Automaton",
+                "description": "A maintenance robot gone wrong. Its corroded frame jerks with erratic, dangerous movements. Sparks fly from exposed wiring.",
+                "aspects": ["Erratic Movements", "Sparking Wiring"],
+                "skills": {"Fight": 3, "Endure": 2},
+                "stress": [false, false, false],
+                "consequences": {"mild": null, "moderate": null},
+                "loot": ["wire", "metal_scraps"]
+            }
+        ]
+    },
+    "coral_thicket": {
+        "name": "The Coral Thicket",
+        "description": "A dense growth of crystallized organic matter, glowing with soft bioluminescence. The coral structures twist and branch in impossible patterns, creating a labyrinth of beauty and danger.",
+        "difficulty": "medium",
+        "rooms": [
+            {
+                "id": "ct_entrance",
+                "name": "Coral Threshold",
+                "description": "The edge of the thicket glows with pale blue light. Crystalline tendrils reach outward like fingers, and the air tastes faintly sweet. The path back to the skerry lies to the west.",
+                "zone": "coral_thicket",
+                "exits": {"west": "skerry_landing", "north": "ct_grove", "east": "ct_tunnel"},
+                "aspects": ["Bioluminescent Glow", "Sweet Air"],
+                "items": ["luminous_moss"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "ct_grove",
+                "name": "Luminous Grove",
+                "description": "A clearing in the coral where enormous fan-shaped growths create a canopy of shifting light. Someone has been living here — there's a crude lean-to built against a coral wall.",
+                "zone": "coral_thicket",
+                "exits": {"south": "ct_entrance", "east": "ct_spore_chamber", "north": "ct_heart"},
+                "aspects": ["Shifting Light Canopy", "Signs of Habitation"],
+                "items": ["resin", "seeds"],
+                "npcs": ["chris"],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "ct_tunnel",
+                "name": "Narrow Coral Tunnel",
+                "description": "A tight passage between coral walls, barely wide enough to squeeze through. The walls pulse with internal light, and thorny protrusions scrape against anything that passes.",
+                "zone": "coral_thicket",
+                "exits": {"west": "ct_entrance", "north": "ct_spore_chamber"},
+                "aspects": ["Tight Squeeze", "Thorny Protrusions"],
+                "items": ["coral_fragments"],
+                "npcs": [],
+                "enemies": ["thorn_crawler"],
+                "discovered": false
+            },
+            {
+                "id": "ct_spore_chamber",
+                "name": "Spore Chamber",
+                "description": "A vast hollow space filled with drifting clouds of luminous spores. They pulse in slow rhythms, beautiful but potentially toxic. The air is thick and warm.",
+                "zone": "coral_thicket",
+                "exits": {"south": "ct_tunnel", "west": "ct_grove", "north": "ct_heart"},
+                "aspects": ["Toxic Spore Clouds", "Warm Thick Air"],
+                "items": ["luminous_moss", "resin"],
+                "npcs": [],
+                "enemies": ["spore_cloud"],
+                "discovered": false
+            },
+            {
+                "id": "ct_heart",
+                "name": "Heart of the Thicket",
+                "description": "The deepest part of the coral growth, where the crystal structures are oldest and most complex. A woman tends a small garden of cultivated coral, humming to herself. Nestled among the roots, a lattice-work of living crystal pulses with green light.",
+                "zone": "coral_thicket",
+                "exits": {"south": "ct_grove", "east": "ct_spore_chamber"},
+                "aspects": ["Ancient Crystal Formations", "Cultivated Growth"],
+                "items": ["seeds", "coral_fragments"],
+                "npcs": ["tilly"],
+                "enemies": ["thorn_crawler_alpha"],
+                "discovered": false
+            }
+        ],
+        "artifacts": ["growth_lattice"],
+        "entry_room": "ct_entrance",
+        "enemies_data": [
+            {
+                "id": "thorn_crawler",
+                "name": "Thorn Crawler",
+                "description": "A coral-armored predator that blends with the thicket walls. It strikes from ambush, its barbed limbs lashing out with surprising speed.",
+                "aspects": ["Ambush Predator", "Coral Camouflage"],
+                "skills": {"Fight": 3, "Notice": 2},
+                "stress": [false, false],
+                "consequences": {"mild": null},
+                "loot": ["coral_fragments", "resin"]
+            },
+            {
+                "id": "thorn_crawler_alpha",
+                "name": "Thorn Crawler Alpha",
+                "description": "The largest of its kind, this crawler has grown thick coral plating and developed a cunning patience. It waits until prey is committed before striking.",
+                "aspects": ["Thick Coral Plating", "Patient Hunter"],
+                "skills": {"Fight": 4, "Endure": 3, "Notice": 2},
+                "stress": [false, false, false],
+                "consequences": {"mild": null, "moderate": null},
+                "loot": ["coral_fragments", "seeds"]
+            },
+            {
+                "id": "spore_cloud",
+                "name": "Spore Cloud",
+                "description": "Not a creature exactly — a living cloud of luminous spores that drifts with purpose. Inhaling them causes disorientation and hallucinations.",
+                "aspects": ["Toxic Cloud", "Drifting Menace"],
+                "skills": {"Fight": 2, "Will": 3},
+                "stress": [false, false],
+                "consequences": {"mild": null},
+                "loot": ["luminous_moss"]
+            }
+        ]
+    },
+    "frozen_wreck": {
+        "name": "The Frozen Wreck",
+        "description": "An ancient ship, petrified and encrusted with void-ice. It drifts in eerie silence, its surfaces glittering with frost. Whatever happened here happened long ago, and some things are best left undisturbed.",
+        "difficulty": "hard",
+        "rooms": [
+            {
+                "id": "fw_entrance",
+                "name": "Ice-Crusted Bow",
+                "description": "The prow of the ancient vessel juts from a mass of void-ice. The metal beneath is unlike anything you've seen — dark, dense, and covered in script that seems to shift when you're not looking directly at it. The way back is to the south.",
+                "zone": "frozen_wreck",
+                "exits": {"south": "skerry_landing", "north": "fw_corridor", "east": "fw_observation"},
+                "aspects": ["Shifting Script", "Ancient Construction"],
+                "items": ["ancient_alloys"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "fw_corridor",
+                "name": "Frost-Locked Corridor",
+                "description": "A long hallway sheathed in ice so thick the walls are barely visible. Your breath freezes in the air. Shadows move beneath the ice — whether preserved crew or something else, you can't tell.",
+                "zone": "frozen_wreck",
+                "exits": {"south": "fw_entrance", "north": "fw_armory", "east": "fw_quarters"},
+                "aspects": ["Bone-Deep Cold", "Shadows Under Ice"],
+                "items": ["frozen_water"],
+                "npcs": [],
+                "enemies": ["frost_shade"],
+                "discovered": false
+            },
+            {
+                "id": "fw_observation",
+                "name": "Observation Deck",
+                "description": "A domed room with panels of translucent crystal, now frosted over. Through the ice you can see the void stretching in all directions. A figure sits at a desk covered in notes and rubbings of the ship's inscriptions.",
+                "zone": "frozen_wreck",
+                "exits": {"west": "fw_entrance", "north": "fw_quarters"},
+                "aspects": ["Frosted Crystal Dome", "Scholar's Workspace"],
+                "items": ["crystal_shards"],
+                "npcs": ["callum"],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "fw_quarters",
+                "name": "Crew Quarters",
+                "description": "Rows of alcoves line the walls, each containing a frozen shape that might once have been a sleeping berth — or a coffin. The ice here is thinnest, and you can almost make out faces.",
+                "zone": "frozen_wreck",
+                "exits": {"south": "fw_observation", "west": "fw_corridor", "north": "fw_vault"},
+                "aspects": ["Frozen Sleepers", "Thin Ice"],
+                "items": ["preserved_food", "ancient_alloys"],
+                "npcs": [],
+                "enemies": ["swarm_mites"],
+                "discovered": false
+            },
+            {
+                "id": "fw_armory",
+                "name": "Ancient Armory",
+                "description": "Weapon racks line the walls, but the weapons have long since fused with the ice. Only one corner remains accessible, where a warrior has set up camp amid the frozen arsenal.",
+                "zone": "frozen_wreck",
+                "exits": {"south": "fw_corridor", "east": "fw_vault"},
+                "aspects": ["Frozen Arsenal", "Warrior's Camp"],
+                "items": ["ancient_alloys", "crystal_shards"],
+                "npcs": ["angya"],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "fw_vault",
+                "name": "The Vault",
+                "description": "The deepest chamber of the ancient ship. The ice here is clear as glass, and through it you can see the walls are covered in intricate murals depicting a civilization of tree-like beings. At the center, encased in a pillar of crystal, rests a small structure — perfect, ornate, unmistakably a house built for beings no larger than your hand.",
+                "zone": "frozen_wreck",
+                "exits": {"south": "fw_quarters", "west": "fw_armory"},
+                "aspects": ["Crystal-Clear Ice", "Eliok Murals", "Preserved Perfectly"],
+                "items": [],
+                "npcs": [],
+                "enemies": ["frost_shade_elder"],
+                "discovered": false
+            }
+        ],
+        "artifacts": ["eliok_house"],
+        "entry_room": "fw_entrance",
+        "enemies_data": [
+            {
+                "id": "frost_shade",
+                "name": "Frost Shade",
+                "description": "A shadow that moves beneath the ice, reaching through with freezing tendrils. It was something once — crew, passenger, prisoner. Now it's just cold and hunger.",
+                "aspects": ["Freezing Touch", "Under the Ice"],
+                "skills": {"Fight": 3, "Will": 3, "Endure": 2},
+                "stress": [false, false, false],
+                "consequences": {"mild": null, "moderate": null},
+                "loot": ["frozen_water", "crystal_shards"]
+            },
+            {
+                "id": "swarm_mites",
+                "name": "Swarm Mites",
+                "description": "Tiny crystalline insects that swarm in vast numbers. Each one is fragile, but together they can strip metal to the bone.",
+                "aspects": ["Overwhelming Numbers", "Crystalline Teeth"],
+                "skills": {"Fight": 2, "Notice": 1},
+                "stress": [false, false],
+                "consequences": {"mild": null},
+                "loot": ["crystal_shards"]
+            },
+            {
+                "id": "frost_shade_elder",
+                "name": "Frost Shade Elder",
+                "description": "The captain of the frozen wreck, preserved in void-ice for centuries. Its form is massive, translucent, and filled with a terrible cold intelligence. It guards the vault and the Eliok House within.",
+                "aspects": ["Ancient Captain's Authority", "Terrible Cold Intelligence", "Guardian of the Vault"],
+                "skills": {"Fight": 4, "Will": 4, "Endure": 3, "Notice": 2},
+                "stress": [false, false, false, false],
+                "consequences": {"mild": null, "moderate": null, "severe": null},
+                "loot": ["ancient_alloys", "crystal_shards", "frozen_water"]
+            }
+        ]
+    }
+}

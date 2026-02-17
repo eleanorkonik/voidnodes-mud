@@ -1,0 +1,213 @@
+{
+    "varis": {
+        "name": "Varis",
+        "location": "skerry_central",
+        "recruited": true,
+        "aspects": {
+            "high_concept": "Mysterious Wanderer Who Found the Skerry First",
+            "trouble": "Secrets That Could Help or Harm",
+            "other": ["Knows More Than They Say"]
+        },
+        "skills": {
+            "Navigate": 3,
+            "Notice": 3,
+            "Commune": 2,
+            "Will": 2
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 5,
+        "assignment": "idle",
+        "mood": "content",
+        "house_level": 1,
+        "dialogue": {
+            "greeting": "Varis nods as you approach. 'The void is restless today. Can you feel it?'",
+            "idle": "'There's work to be done. The skerry won't grow itself — well, {seed_name} will, but it needs help.'",
+            "happy": "'This place is starting to feel like it could be something. Keep at it.'",
+            "quest": "'The frozen wreck to the west... I've seen lights there that shouldn't exist. Be careful if you go.'"
+        },
+        "recruit_dc": null,
+        "recruit_condition": null
+    },
+    "emmy": {
+        "name": "Emmy",
+        "location": "df_cargo_bay",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Enthusiastic Scavenger With an Eye for Value",
+            "trouble": "Too Trusting for the Void",
+            "other": ["Quick Hands, Quicker Smile"]
+        },
+        "skills": {
+            "Scavenge": 3,
+            "Notice": 2,
+            "Craft": 2,
+            "Rapport": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "content",
+        "house_level": 0,
+        "dialogue": {
+            "greeting": "A young woman waves from atop a cargo crate. 'Oh! A person! A real, actual person! I haven't seen anyone in ages!'",
+            "idle": "'So when do we start scavenging? I know all the good spots around here.'",
+            "happy": "'I love having people around. The void was so quiet before.'",
+            "recruit_success": "'You have a place to stay? With actual walls? I'm in. Absolutely in. When do we leave?'",
+            "recruit_fail": "'I mean, it sounds nice, but... are you sure it's safe? Maybe come back later?'"
+        },
+        "recruit_dc": 1,
+        "recruit_condition": null
+    },
+    "dax": {
+        "name": "Dax",
+        "location": "df_control_room",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Cautious Mechanic Who's Seen Too Much Go Wrong",
+            "trouble": "Trust Issues (Well-Founded)",
+            "other": ["Steady Hands Under Pressure"]
+        },
+        "skills": {
+            "Craft": 3,
+            "Endure": 2,
+            "Notice": 2,
+            "Fight": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "restless",
+        "dialogue": {
+            "greeting": "A stocky figure looks up from the console they're tinkering with. 'Another survivor? Don't touch anything.'",
+            "idle": "'If you need something fixed, I'm your person. Just don't expect miracles.'",
+            "happy": "'I have to admit, this shelter is better than a dead control room. Good work.'",
+            "recruit_success": "Dax looks around the ruined control room, then sighs. 'Fine. Can't be worse than this. Lead the way.'",
+            "recruit_fail": "'I don't know you. Why would I leave the only shelter I know to follow a stranger? Come back when I have a reason to trust you.'"
+        },
+        "recruit_dc": 3,
+        "recruit_condition": null
+    },
+    "chris": {
+        "name": "Chris",
+        "location": "ct_grove",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Scared Teenager Trying to Be Brave",
+            "trouble": "Jumps at Every Shadow",
+            "other": ["Surprisingly Observant"]
+        },
+        "skills": {
+            "Notice": 3,
+            "Endure": 2,
+            "Commune": 1,
+            "Rapport": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "content",
+        "dialogue": {
+            "greeting": "A teenager peers out from behind a lean-to, eyes wide. 'Are... are you friendly? Please be friendly.'",
+            "idle": "'I'm trying to help. Just tell me what to do and I'll do it. Promise.'",
+            "happy": "'I feel safe here. For the first time in... I don't even know how long.'",
+            "recruit_success": "'You want me to come with you? Really? Yes! I mean — yes. Definitely. Let's go.'",
+            "recruit_fail": "'I want to, but... what if it's not safe? What if we get lost on the way?'"
+        },
+        "recruit_dc": 0,
+        "recruit_condition": null
+    },
+    "tilly": {
+        "name": "Tilly",
+        "location": "ct_heart",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Practical Farmer Who Makes Things Grow",
+            "trouble": "Won't Move Without Proof",
+            "other": ["Green Thumb in Any Soil"]
+        },
+        "skills": {
+            "Craft": 3,
+            "Organize": 2,
+            "Endure": 2,
+            "Commune": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "content",
+        "dialogue": {
+            "greeting": "A weathered woman looks up from her coral garden. 'Hm. You look like you could use a meal. Sit down.'",
+            "idle": "'The garden needs tending. These coral-seeds don't plant themselves.'",
+            "happy": "'The soil here responds to {seed_name}. I've never seen anything like it. We could grow real food.'",
+            "recruit_success": "'You've got a world seed and a place to put down roots? Show me this skerry of yours. If it's real, I'll stay.'",
+            "recruit_fail": "'Talk is cheap in the void. Come back when you have something real to show me.'"
+        },
+        "recruit_dc": 2,
+        "recruit_condition": "visit_skerry"
+    },
+    "callum": {
+        "name": "Callum",
+        "location": "fw_observation",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Obsessive Scholar Deciphering Ancient Script",
+            "trouble": "Knowledge Above Self-Preservation",
+            "other": ["Reads Dead Languages"]
+        },
+        "skills": {
+            "Notice": 3,
+            "Commune": 2,
+            "Will": 2,
+            "Navigate": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "content",
+        "dialogue": {
+            "greeting": "A thin man adjusts spectacles made from crystal shards. 'Fascinating — another living being. Tell me, can you read Eliok script?'",
+            "idle": "'The inscriptions on this ship... they tell a story. A world that grew from a single seed. Sound familiar?'",
+            "happy": "'Access to {seed_name} changes everything. If I could study the world seed directly...'",
+            "recruit_success": "'A world seed? An actual living world seed? I need to study it. Take me to it immediately.'",
+            "recruit_fail": "'I appreciate the offer, but my research here isn't finished. Perhaps once I've translated the vault inscriptions.'"
+        },
+        "recruit_dc": 2,
+        "recruit_condition": "study_first"
+    },
+    "angya": {
+        "name": "Angya",
+        "location": "fw_armory",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Battle-Hardened Warrior of the Old Ships",
+            "trouble": "Respects Only Strength",
+            "other": ["Ice in Her Veins"]
+        },
+        "skills": {
+            "Fight": 3,
+            "Endure": 3,
+            "Will": 2,
+            "Notice": 1
+        },
+        "stress": [false, false, false],
+        "consequences": {"mild": null, "moderate": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "restless",
+        "dialogue": {
+            "greeting": "A scarred woman rises from a crouch, hand on a makeshift blade. 'State your business. Quickly.'",
+            "idle": "'Don't bore me with talk. If there's fighting to be done, I'm ready.'",
+            "happy": "'This skerry... it's worth defending. I'll make sure nothing threatens it.'",
+            "recruit_success": "Angya sheathes her blade. 'You fight well. That's all I needed to see. Lead on.'",
+            "recruit_fail": "'You want me to follow you? Prove you're worth following. Fight me.'"
+        },
+        "recruit_dc": 0,
+        "recruit_condition": "combat_demo"
+    }
+}

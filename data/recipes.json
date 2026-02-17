@@ -1,0 +1,56 @@
+{
+    "rope": {
+        "id": "rope",
+        "name": "Rope",
+        "materials": {"torn_fabric": 1, "resin": 1},
+        "result": "rope",
+        "difficulty": 1,
+        "skill": "Craft",
+        "description": "Braid fabric and coat with resin for a strong, flexible rope."
+    },
+    "torch": {
+        "id": "torch",
+        "name": "Torch",
+        "materials": {"luminous_moss": 1, "wire": 1},
+        "result": "torch",
+        "difficulty": 0,
+        "skill": "Craft",
+        "description": "Wrap luminous moss around a wire frame for a steady, lasting light."
+    },
+    "basic_tools": {
+        "id": "basic_tools",
+        "name": "Basic Tools",
+        "materials": {"metal_scraps": 2, "wire": 1},
+        "result": "basic_tools",
+        "difficulty": 2,
+        "skill": "Craft",
+        "description": "Shape metal scraps into simple but effective hand tools."
+    },
+    "shelter_patch": {
+        "id": "shelter_patch",
+        "name": "Shelter Patch",
+        "materials": {"torn_fabric": 1, "coral_fragments": 1},
+        "result": "shelter_patch",
+        "difficulty": 1,
+        "skill": "Craft",
+        "description": "Reinforce fabric with coral fragments for a durable repair patch."
+    },
+    "water_filter": {
+        "id": "water_filter",
+        "name": "Water Filter",
+        "materials": {"crystal_shards": 1, "resin": 1, "metal_scraps": 1},
+        "result": "water_filter",
+        "difficulty": 3,
+        "skill": "Craft",
+        "description": "Build a filtration device using crystal resonance to purify void-mist."
+    },
+    "signal_beacon": {
+        "id": "signal_beacon",
+        "name": "Signal Beacon",
+        "materials": {"ancient_alloys": 1, "luminous_moss": 1, "wire": 1},
+        "result": "signal_beacon",
+        "difficulty": 4,
+        "skill": "Craft",
+        "description": "Craft a powerful beacon from ancient metals and bioluminescent moss."
+    }
+}

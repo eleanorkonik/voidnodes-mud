@@ -1,0 +1,107 @@
+{
+    "explorer_events": [
+        {
+            "id": "void_wind",
+            "name": "Void Wind",
+            "description": "A sudden ripple of void-energy buffets you, threatening to knock you off course.",
+            "skill_check": {"skill": "Endure", "difficulty": 2},
+            "success": "You brace yourself and weather the surge. It passes quickly.",
+            "failure": "The energy catches you off guard. You lose your footing and take a hard tumble.",
+            "failure_effect": {"stress": 1},
+            "weight": 3
+        },
+        {
+            "id": "hidden_cache",
+            "name": "Hidden Cache",
+            "description": "You spot something glinting in a crevice — a hidden cache of supplies.",
+            "skill_check": {"skill": "Notice", "difficulty": 1},
+            "success": "You find a small cache of useful materials!",
+            "failure": "You reach for it, but it's just a reflection. Nothing here.",
+            "success_effect": {"random_item": true},
+            "weight": 2
+        },
+        {
+            "id": "strange_sound",
+            "name": "Strange Sound",
+            "description": "An eerie humming fills the air, making your teeth vibrate.",
+            "skill_check": {"skill": "Will", "difficulty": 2},
+            "success": "You focus your mind and the sound fades. Just the void playing tricks.",
+            "failure": "The sound gets inside your head. Your concentration wavers.",
+            "failure_effect": {"stress": 1},
+            "weight": 2
+        },
+        {
+            "id": "tuft_warning",
+            "name": "Tuft's Warning",
+            "description": "Tuft pulses urgently — it senses something nearby.",
+            "skill_check": null,
+            "success": "Tuft's awareness reveals a hidden danger in the next room. You'll be prepared.",
+            "success_effect": {"next_room_bonus": 2},
+            "weight": 1
+        }
+    ],
+    "steward_events": [
+        {
+            "id": "npc_argument",
+            "name": "NPC Argument",
+            "description": "Two of your settlers are having a heated disagreement about how to organize supplies.",
+            "skill_check": {"skill": "Rapport", "difficulty": 2},
+            "success": "You mediate the argument successfully. Both parties feel heard.",
+            "failure": "The argument escalates. Both NPCs are in worse moods.",
+            "failure_effect": {"mood_penalty": true},
+            "requires": {"min_npcs": 2},
+            "weight": 3
+        },
+        {
+            "id": "resource_shortage",
+            "name": "Resource Shortage",
+            "description": "Supplies are running low. The settlers are worried about food and water.",
+            "skill_check": {"skill": "Organize", "difficulty": 2},
+            "success": "You redistribute supplies efficiently. Crisis averted.",
+            "failure": "The shortage strains morale. Everyone tightens their belts.",
+            "failure_effect": {"mood_penalty": true},
+            "requires": {"min_npcs": 1},
+            "weight": 2
+        },
+        {
+            "id": "tuft_growth_spurt",
+            "name": "Tuft Growth Spurt",
+            "description": "Tuft pulses with sudden energy, its roots spreading visibly.",
+            "skill_check": null,
+            "success": "Tuft grows a little stronger! The skerry feels more alive.",
+            "success_effect": {"mote_bonus": 3},
+            "weight": 2
+        },
+        {
+            "id": "void_debris",
+            "name": "Void Debris",
+            "description": "A chunk of debris drifts close to the skerry.",
+            "skill_check": {"skill": "Notice", "difficulty": 1},
+            "success": "You spot useful materials in the debris and salvage them!",
+            "failure": "The debris drifts past before you can reach it.",
+            "success_effect": {"random_item": true},
+            "weight": 2
+        },
+        {
+            "id": "peaceful_day",
+            "name": "Peaceful Day",
+            "description": "The void is calm today. A rare moment of tranquility on the skerry.",
+            "skill_check": null,
+            "success": "Everyone rests well. The quiet is a gift.",
+            "success_effect": {"mood_bonus": true},
+            "weight": 3
+        },
+        {
+            "id": "npc_request",
+            "name": "NPC Request",
+            "description": "One of the settlers approaches you with a personal request.",
+            "skill_check": {"skill": "Rapport", "difficulty": 1},
+            "success": "You take time to listen and help. Their loyalty increases.",
+            "failure": "You're too busy to give them proper attention. They understand, but they're disappointed.",
+            "success_effect": {"loyalty_bonus": true},
+            "failure_effect": {"loyalty_penalty": true},
+            "requires": {"min_npcs": 1},
+            "weight": 2
+        }
+    ]
+}

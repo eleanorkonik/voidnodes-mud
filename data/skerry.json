@@ -1,0 +1,118 @@
+{
+    "rooms": [
+        {
+            "id": "skerry_central",
+            "name": "Central Clearing",
+            "description": "The heart of the skerry — a small patch of solid ground amid the void. A faint warmth radiates from the world seed's presence below. From here, paths lead to the other areas of your fragile home.",
+            "zone": "skerry",
+            "exits": {"north": "skerry_shelter", "east": "skerry_hollow", "south": "skerry_landing"},
+            "aspects": ["Safe Haven", "Seed's Presence"],
+            "items": [],
+            "npcs": ["varis"],
+            "enemies": [],
+            "discovered": true,
+            "structures": [],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_shelter",
+            "name": "Basic Shelter",
+            "description": "A rough structure cobbled together from salvaged hull plating and fabric. It blocks the view of the void, barely. There's room for a few people to sleep, though comfort is a generous word for it.",
+            "zone": "skerry",
+            "exits": {"south": "skerry_central"},
+            "aspects": ["Rough But Functional", "Void Shelter"],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": true,
+            "structures": ["basic_shelter"],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_hollow",
+            "name": "The Hollow",
+            "description": "A natural depression in the skerry's surface where the world seed has taken root. Faint green light pulses from below, and you can feel its awareness pressing gently against your mind. This is where you commune with the seed and feed it motes.",
+            "zone": "skerry",
+            "exits": {"west": "skerry_central"},
+            "aspects": ["World Seed Nexus", "Green Pulse Light"],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": true,
+            "structures": [],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_landing",
+            "name": "Landing Pad",
+            "description": "The edge of the skerry where the void begins. From here, you can see the distant glimmer of the debris field to the north, the soft glow of the coral thicket to the east, and the cold glitter of the frozen wreck to the west. This is where explorers depart and return.",
+            "zone": "skerry",
+            "exits": {"north": "skerry_central", "east": "ct_entrance", "west": "fw_entrance", "south": "df_entrance"},
+            "aspects": ["Edge of the Void", "Departure Point"],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": true,
+            "structures": [],
+            "assigned_npcs": [],
+            "resources": {}
+        }
+    ],
+    "expandable_rooms": [
+        {
+            "id": "skerry_workshop",
+            "name": "Workshop",
+            "description": "A proper workspace with a sturdy bench and basic tools mounted on the walls. Here, salvage becomes something useful.",
+            "zone": "skerry",
+            "exits": {"west": "skerry_central"},
+            "connect_to": {"skerry_central": "east"},
+            "aspects": ["Well-Organized Tools", "Crafting Station"],
+            "requires": {"materials": {"metal_scraps": 3, "basic_tools": 1}, "npcs": 1},
+            "structures": ["workshop"],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_garden",
+            "name": "Garden",
+            "description": "A patch of cultivated ground where seeds from the coral thicket have taken hold. Small green shoots push up through the soil, nourished by the world seed's ambient energy.",
+            "zone": "skerry",
+            "exits": {"south": "skerry_central"},
+            "connect_to": {"skerry_central": "north"},
+            "aspects": ["Growing Things", "Seed-Nourished Soil"],
+            "requires": {"materials": {"seeds": 2, "resin": 1}, "npcs": 1, "tuft_stage": 1},
+            "structures": ["garden"],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_water",
+            "name": "Water Collection",
+            "description": "Crystal shards arranged in a precise pattern collect and purify moisture from the void-mist. The water tastes faintly of minerals but is clean and safe.",
+            "zone": "skerry",
+            "exits": {"east": "skerry_hollow"},
+            "connect_to": {"skerry_hollow": "west"},
+            "aspects": ["Purified Water", "Crystal Array"],
+            "requires": {"materials": {"crystal_shards": 2, "frozen_water": 1}, "tuft_stage": 1},
+            "structures": ["water_collection"],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
+            "id": "skerry_lookout",
+            "name": "Lookout Post",
+            "description": "A raised platform built from ancient alloys, offering a clear view in all directions. From here, you can spot approaching threats — or opportunities — long before they arrive.",
+            "zone": "skerry",
+            "exits": {"north": "skerry_landing"},
+            "connect_to": {"skerry_landing": "south"},
+            "aspects": ["Clear Sightlines", "Elevated Position"],
+            "requires": {"materials": {"ancient_alloys": 2, "wire": 2}, "npcs": 2},
+            "structures": ["lookout_post"],
+            "assigned_npcs": [],
+            "resources": {}
+        }
+    ]
+}
