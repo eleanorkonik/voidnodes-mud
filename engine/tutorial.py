@@ -61,7 +61,7 @@ def show_prologue_intro():
     display.tuft_speak("I've been alone so long. Please — let me in.")
     print()
 
-    _tutorial_prompt(f"Type {display.BOLD}BOND{display.BRIGHT_YELLOW} to accept the connection.")
+    _tutorial_prompt(f"Try {display.BOLD}BOND{display.BRIGHT_YELLOW} to accept the connection.")
 
 
 def show_skip_message():
@@ -69,7 +69,7 @@ def show_skip_message():
     display.tuft_speak("Fine, fine. You know what you're doing. I hope.")
     print()
     display.info("  Tutorial skipped. Jumping to Day 1.")
-    display.info("  Type HELP any time to see available commands.")
+    display.info("  HELP is always available if you need it.")
     print()
 
 
@@ -157,7 +157,7 @@ def after_command(cmd, args, game):
         art_name = art.get("name", "something")
         print()
         display.tuft_speak(f"See that? {art_name}. Look more closely.")
-        _tutorial_prompt(f"Type EXAMINE {art_name.upper()} to inspect it.")
+        _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
         game.state["tutorial_step"] = "artifact_examine"
         return False
 
@@ -174,7 +174,7 @@ def after_command(cmd, args, game):
         print()
         display.tuft_speak("Take it. It shouldn't just sit on the ground.")
         art_name = art.get("name", "it")
-        _tutorial_prompt(f"Type TAKE {art_name.upper()} to pick it up.")
+        _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
         game.state["tutorial_step"] = "artifact_use"
         game.state["artifact_taken"] = False
         return False
@@ -188,7 +188,7 @@ def after_command(cmd, args, game):
             game.state["artifact_taken"] = True
             print()
             display.tuft_speak("Good. Now try it on.")
-            _tutorial_prompt(f"Type WEAR {art_name.upper()}")
+            _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
             return False
 
         if cmd in ("use", "wear") and game.state.get("artifact_taken"):
@@ -199,7 +199,7 @@ def after_command(cmd, args, game):
             display.tuft_speak(f"power. Or you can OFFER it TO me. I'll break it down")
             display.tuft_speak("into motes and grow stronger. Your power or mine.")
             display.tuft_speak("There's always a trade.")
-            _tutorial_prompt(f"Type KEEP or OFFER {art_name.upper()} TO {seed_name.upper()}")
+            _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
             game.state["tutorial_step"] = "artifact_choice"
             return False
 
@@ -215,7 +215,7 @@ def after_command(cmd, args, game):
         print()
         display.tuft_speak(f"Now. {explorer_name} is waiting. Time to see the void")
         display.tuft_speak("through his eyes.")
-        _tutorial_prompt(f"Type SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
+        _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
         game.state["tutorial_step"] = "handoff"
         return False
 
@@ -324,8 +324,8 @@ def _show_the_split(game):
             room.add_item(artifact_id)
 
     display.tuft_speak("Hold on. I can feel something nearby. Our bond lets you")
-    display.tuft_speak("sense objects with substance. Type IH to see what's here.")
-    _tutorial_prompt("Type IH to see what's around you.")
+    display.tuft_speak("sense objects with substance. Try IH to see what's here.")
+    _tutorial_prompt("IH shows what's around you.")
 
     game.state["tutorial_step"] = "artifact_ih"
 
@@ -335,7 +335,7 @@ def get_current_hint(step, game_state=None):
     seed_name = (game_state or {}).get("world_seed_name", "the seed")
     if step == "awakening":
         display.narrate("A thread of green light pulses before you, waiting.")
-        _tutorial_prompt(f"Type BOND to accept the connection.")
+        _tutorial_prompt(f"Try BOND to accept the connection.")
     elif step == "naming":
         display.tuft_speak("I don't have a name. Not one anyone's given me.")
         display.tuft_speak("What would you call me?")
@@ -343,15 +343,15 @@ def get_current_hint(step, game_state=None):
             game_state["awaiting_world_seed_name"] = True
     elif step == "first_look":
         display.tuft_speak("Now, let me help you perceive.")
-        _tutorial_prompt("Type LOOK to see your surroundings.")
+        _tutorial_prompt("Go ahead and LOOK to see your surroundings.")
     elif step == "movement":
         display.tuft_speak("There are paths here. Pick a direction.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
     elif step == "exploring":
         display.tuft_speak("Keep looking around. There's someone here you need to meet.")
     elif step == "artifact_ih":
-        display.tuft_speak("I can feel something nearby. Use IH to see what's here.")
-        _tutorial_prompt("Type IH to see what's around you.")
+        display.tuft_speak("I can feel something nearby. Try IH to see what's here.")
+        _tutorial_prompt("IH shows what's around you.")
     elif step == "artifact_examine":
         artifact_id = (game_state or {}).get("starter_artifact")
         if artifact_id and game_state:
@@ -360,7 +360,7 @@ def get_current_hint(step, game_state=None):
         else:
             art_name = "the artifact"
         display.tuft_speak(f"Look more closely at the {art_name}.")
-        _tutorial_prompt(f"Type EXAMINE {art_name.upper()} to inspect it.")
+        _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
     elif step == "artifact_use":
         artifact_id = (game_state or {}).get("starter_artifact")
         if artifact_id and game_state:
@@ -370,10 +370,10 @@ def get_current_hint(step, game_state=None):
             art_name = "the artifact"
         if (game_state or {}).get("artifact_taken"):
             display.tuft_speak(f"Try it on. WEAR the {art_name}.")
-            _tutorial_prompt(f"Type WEAR {art_name.upper()}")
+            _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
         else:
             display.tuft_speak(f"Pick it up first.")
-            _tutorial_prompt(f"Type TAKE {art_name.upper()}")
+            _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
     elif step == "artifact_choice":
         seed_name = (game_state or {}).get("world_seed_name", "Tuft")
         artifact_id = (game_state or {}).get("starter_artifact")
@@ -383,12 +383,12 @@ def get_current_hint(step, game_state=None):
         else:
             art_name = "the artifact"
         display.tuft_speak("Your power or mine. There's always a trade.")
-        _tutorial_prompt(f"Type KEEP or OFFER {art_name.upper()} TO {seed_name.upper()}")
+        _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
     elif step == "handoff":
         explorer_name = (game_state or {}).get("explorer_name", "Sevarik")
         steward_name = (game_state or {}).get("steward_name", "Miria")
         display.tuft_speak(f"You're {steward_name} right now. Explore the skerry if you like.")
-        _tutorial_prompt(f"Type SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
+        _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
 
 
 def _tutorial_prompt(text):
