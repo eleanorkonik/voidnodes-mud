@@ -349,7 +349,8 @@ def _show_sevarik_encounter(game):
     display.narrate("a makeshift blade on a chunk of salvaged stone. He rises")
     display.narrate("as you approach — watchful, tense, but not hostile.")
     print()
-    print(f"  {display.npc_name(explorer_name)}: \"You're the one {seed_name} bonded with.\"")
+    print(f"  {display.npc_name(explorer_name)}: \"You bonded with the world seed?\"")
+    print(f"  {display.npc_name(explorer_name)}: \"And named it... {seed_name}?\"")
     print(f"  {display.npc_name(explorer_name)}: \"Good. I've been waiting.\"")
     print()
     _show_the_split(game)
@@ -383,28 +384,6 @@ def _show_the_split(game):
     display.seed_speak("Perhaps that will change later, as we expand the skerry.")
     display.seed_speak("But I need more motes before I can grow. I'm limited")
     display.seed_speak("in what I can protect, for now.")
-    print()
-
-    # Quick reference
-    display.header("Quick Reference")
-    cmds = [
-        ("LOOK [thing]", "Examine your surroundings"),
-        ("IH [thing]", "List objects here, or examine something"),
-        ("GO <direction>", "Move (N/S/E/W or full words)"),
-        ("MAP", "Show the zone map"),
-        ("TALK / HI <npc>", "Talk to someone"),
-        (f"CHECK {seed_name.upper()}", f"Check {seed_name}'s status"),
-        ("INVENTORY", "Your items"),
-        ("STATUS", "Your character sheet"),
-        ("SWITCH FOCUS TO <name>", "Switch active agent"),
-        ("HELP", "Full command list"),
-        ("SAVE / QUIT", "Save progress"),
-    ]
-    for c, desc in cmds:
-        print(f"  {display.BOLD}{c:<22}{display.RESET} {desc}")
-    print()
-
-    display.divider()
     print()
 
     display.seed_speak(f"Before we go further — CHECK me. See how I'm doing.")
