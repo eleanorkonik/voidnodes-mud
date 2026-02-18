@@ -1951,6 +1951,31 @@ class Game:
         target = " ".join(args).lower()
         room = self.current_room()
 
+        # GET ALL / TAKE ALL — grab all loose items (not artifacts)
+        if target == "all":
+            if not room.items:
+                display.narrate("There's nothing here to pick up.")
+                return
+            picked = []
+            for item_id in list(room.items):
+                if item_id in self.items_db:
+                    room.remove_item(item_id)
+                    self.current_character().add_to_inventory(item_id)
+                    picked.append(item_id)
+            if not picked:
+                display.narrate("There's nothing here to pick up.")
+                return
+            counts = {}
+            for mid in picked:
+                name = self.items_db.get(mid, {}).get("name", mid)
+                counts[name] = counts.get(name, 0) + 1
+            for name, count in counts.items():
+                if count > 1:
+                    display.success(f"  {display.item_name(name)} x{count}")
+                else:
+                    display.success(f"  {display.item_name(name)}")
+            return
+
         # Check artifacts in room
         art_id, art = self._find_entity(list(room.items), target, self.artifacts_db)
         if art:
