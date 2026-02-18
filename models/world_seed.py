@@ -3,12 +3,12 @@
 import random
 
 
-STAGE_NAMES = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
+STAGE_NAMES = ["Seed", "Tendril", "Aura", "Canopy", "Beacon"]
 
 # World seed communication flavor by growth stage.
 # {seed_name} is substituted at runtime via communicate().
 FEELINGS = {
-    0: [  # Mote — colors and feelings
+    0: [  # Seed — colors and feelings
         "A warm pulse of golden light.",
         "A faint shiver of pale blue unease.",
         "A soft green contentment radiates from below.",

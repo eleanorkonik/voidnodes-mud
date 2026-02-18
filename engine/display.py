@@ -1,5 +1,7 @@
 """Display system — ANSI-colored text output for the MUD."""
 
+from models.world_seed import STAGE_NAMES
+
 # ANSI color codes
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -159,8 +161,7 @@ def display_status(character, phase):
 
 def display_seed(seed_data, name="Tuft"):
     """Display world seed status."""
-    stage_names = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
-    stage = stage_names[seed_data.get("growth_stage", 0)]
+    stage = STAGE_NAMES[seed_data.get("growth_stage", 0)]
     motes = seed_data.get("motes", 0)
     next_threshold = seed_data.get("stage_thresholds", [0, 30, 75, 150, 300])
     current_stage = seed_data.get("growth_stage", 0)
