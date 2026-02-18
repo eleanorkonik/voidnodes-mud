@@ -3,12 +3,12 @@
 import random
 
 
-STAGE_NAMES = ["Seed", "Tendril", "Aura", "Canopy", "Beacon"]
+STAGE_NAMES = ["Baby", "Tendril", "Aura", "Voyager", "Sun"]
 
 # World seed communication flavor by growth stage.
 # {seed_name} is substituted at runtime via communicate().
 FEELINGS = {
-    0: [  # Seed — colors and feelings
+    0: [  # Baby — colors and feelings
         "A warm pulse of golden light.",
         "A faint shiver of pale blue unease.",
         "A soft green contentment radiates from below.",
@@ -98,10 +98,10 @@ class WorldSeed:
             self.stress = [False, False, False]  # +1 stress box
         elif stage == 2:  # Aura
             self.aspects = ["Protective Seed With Growing Awareness", "Connection to the Void"]
-        elif stage == 3:  # Canopy
+        elif stage == 3:  # Voyager
             self.aspects = ["World Seed Shaping the Skerry", "Voice of the Green"]
-        elif stage == 4:  # Beacon
-            self.aspects = ["Beacon Seed Calling to the Lost", "Memory of a World"]
+        elif stage == 4:  # Sun
+            self.aspects = ["World Seed With Its Own Magic Field", "Memory of a World"]
 
     def get_stage_name(self):
         """Get current stage name."""
