@@ -296,12 +296,12 @@ class Game:
             except EOFError:
                 print()
                 self.save_game()
-                display.narrate("Farewell, wanderer.")
+                display.seed_speak(f"Placing you in stasis, {self.current_character().name}. I'll watch over you.")
                 break
             except KeyboardInterrupt:
                 print()
                 self.save_game()
-                display.narrate("Farewell, wanderer.")
+                display.seed_speak(f"Placing you in stasis, {self.current_character().name}. I'll watch over you.")
                 break
 
     def handle_command(self, cmd, args):
@@ -1187,7 +1187,7 @@ class Game:
 
     def cmd_quit(self, args):
         self.save_game()
-        display.narrate("Farewell, wanderer. The void remembers.")
+        display.seed_speak(f"Placing you in stasis, {self.current_character().name}. I'll watch over you.")
         self.running = False
 
     def cmd_talk(self, args):
