@@ -103,13 +103,13 @@ def display_room(room, game_state):
     room_desc(room.description)
 
     if game_state.get("bonded_with_seed", True):
-        # Zone-wide aspect
+        all_aspects = []
         zone_aspect = _get_zone_aspect(room, game_state)
         if zone_aspect:
-            print(f"  Zone: {aspect_text(zone_aspect)}")
-        # Room aspects
-        if room.aspects:
-            aspects = ", ".join(aspect_text(a) for a in room.aspects)
+            all_aspects.append(zone_aspect)
+        all_aspects.extend(room.aspects)
+        if all_aspects:
+            aspects = ", ".join(aspect_text(a) for a in all_aspects)
             print(f"  Aspects: {aspects}")
 
     if room.items:

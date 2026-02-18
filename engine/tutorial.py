@@ -149,11 +149,7 @@ def after_command(cmd, args, game):
             display.seed_speak("That's it. One step, then another. The skerry isn't")
             display.seed_speak("big, but it's yours.")
             print()
-            display.seed_speak("Out there in the void, there are things I can sense —")
-            display.seed_speak("artifacts, echoes of meaning. Bring them to me.")
-            display.seed_speak("Feed me what has weight, and the skerry grows.")
-            print()
-            display.seed_speak("Keep looking around. There's someone here you should find.")
+            display.seed_speak("There's someone here you should find.")
             game.state["tutorial_step"] = "exploring"
         return False
 
