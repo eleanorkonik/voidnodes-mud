@@ -813,10 +813,10 @@ class Game:
         # World seed gives Sevarik direction
         print()
         display.seed_speak("Good. We have a steward. I'm stronger now.")
-        display.seed_speak(f"I can send you beyond the skerry to look for supplies.")
+        display.seed_speak("I can send you beyond the skerry to look for supplies.")
         print()
-        display.seed_speak("I sense a derelict ship drifting in the debris field")
-        display.seed_speak("to the south. Could be survivors. Could be salvage.")
+        display.seed_speak("I sense something to the south. It has the feel of")
+        display.seed_speak("a faint harmonic hum. Doesn't feel big.")
         display.seed_speak("Are you interested in investigating it?")
         print()
         display.seed_speak("Head south when you're ready.")
