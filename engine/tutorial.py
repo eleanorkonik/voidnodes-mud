@@ -56,9 +56,9 @@ def show_prologue_intro():
     print()
 
     # First contact — barely verbal
-    display.tuft_speak("... you. I can feel you.")
+    display.seed_speak("... you. I can feel you.")
     print()
-    display.tuft_speak("I've been alone so long. Please — let me in.")
+    display.seed_speak("I've been alone so long. Please — let me in.")
     print()
 
     _tutorial_prompt(f"Try {display.BOLD}BOND{display.BRIGHT_YELLOW} to accept the connection.")
@@ -66,7 +66,7 @@ def show_prologue_intro():
 
 def show_skip_message():
     """Message when the player skips the tutorial."""
-    display.tuft_speak("Fine, fine. You know what you're doing. I hope.")
+    display.seed_speak("Fine, fine. You know what you're doing. I hope.")
     print()
     display.info("  Tutorial skipped. Jumping to Day 1.")
     display.info("  HELP is always available if you need it.")
@@ -100,11 +100,11 @@ def after_command(cmd, args, game):
             display.narrate("scraggly plants, the faint hum of something alive")
             display.narrate("beneath the surface.")
         print()
-        display.tuft_speak("I hold this ground together — without me, it's all")
-        display.tuft_speak("just dust in the void. But I can't do it alone anymore.")
+        display.seed_speak("I hold this ground together — without me, it's all")
+        display.seed_speak("just dust in the void. But I can't do it alone anymore.")
         print()
-        display.tuft_speak("I don't have a name. Not one anyone's given me.")
-        display.tuft_speak("What would you call me?")
+        display.seed_speak("I don't have a name. Not one anyone's given me.")
+        display.seed_speak("What would you call me?")
         game.state["awaiting_world_seed_name"] = True
         return False
 
@@ -112,18 +112,18 @@ def after_command(cmd, args, game):
         game.state["tutorial_step"] = "movement"
         seed_name = game.state.get("world_seed_name", "Tuft")
         print()
-        display.tuft_speak("Good. The clearing, the paths, the edges of things?")
-        display.tuft_speak("You see that with your eyes.")
+        display.seed_speak("Good. The clearing, the paths, the edges of things?")
+        display.seed_speak("You see that with your eyes.")
         print()
         # Explain aspects
         room = game.current_room()
         if room and room.aspects:
             aspect_list = ". ".join(room.aspects)
-            display.tuft_speak(f"See those? {aspect_list}.")
-            display.tuft_speak("Those are aspects — the deeper nature of things.")
-            display.tuft_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
+            display.seed_speak(f"See those? {aspect_list}.")
+            display.seed_speak("Those are aspects — the deeper nature of things.")
+            display.seed_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
             print()
-        display.tuft_speak("For now, survey our domain. Try walking.")
+        display.seed_speak("For now, survey our domain. Try walking.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
         return False
 
@@ -139,14 +139,14 @@ def after_command(cmd, args, game):
             _show_sevarik_encounter(game)
         else:
             print()
-            display.tuft_speak("That's it. One step, then another. The skerry isn't")
-            display.tuft_speak("big, but it's yours.")
+            display.seed_speak("That's it. One step, then another. The skerry isn't")
+            display.seed_speak("big, but it's yours.")
             print()
-            display.tuft_speak("Out there in the void, there are things I can sense —")
-            display.tuft_speak("artifacts, echoes of meaning. Bring them to me.")
-            display.tuft_speak("Feed me what has weight, and the skerry grows.")
+            display.seed_speak("Out there in the void, there are things I can sense —")
+            display.seed_speak("artifacts, echoes of meaning. Bring them to me.")
+            display.seed_speak("Feed me what has weight, and the skerry grows.")
             print()
-            display.tuft_speak("Keep looking around. There's someone here you should find.")
+            display.seed_speak("Keep looking around. There's someone here you should find.")
             game.state["tutorial_step"] = "exploring"
         return False
 
@@ -161,7 +161,7 @@ def after_command(cmd, args, game):
         art = game.artifacts_db.get(artifact_id, {})
         art_name = art.get("name", "something")
         print()
-        display.tuft_speak(f"See that? {art_name}. Look more closely.")
+        display.seed_speak(f"See that? {art_name}. Look more closely.")
         _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
         game.state["tutorial_step"] = "artifact_examine"
         return False
@@ -173,11 +173,11 @@ def after_command(cmd, args, game):
         if aspects:
             aspect_str = display.aspect_text(aspects[0])
             print()
-            display.tuft_speak(f"See that shimmer? That's an aspect — {aspect_str}.")
-            display.tuft_speak("Aspects are the deeper nature of things. When you need")
-            display.tuft_speak("strength, you can INVOKE an aspect for a bonus.")
+            display.seed_speak(f"See that shimmer? That's an aspect — {aspect_str}.")
+            display.seed_speak("Aspects are the deeper nature of things. When you need")
+            display.seed_speak("strength, you can INVOKE an aspect for a bonus.")
         print()
-        display.tuft_speak("Take it. It shouldn't just sit on the ground.")
+        display.seed_speak("Take it. It shouldn't just sit on the ground.")
         art_name = art.get("name", "it")
         _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
         game.state["tutorial_step"] = "artifact_use"
@@ -192,7 +192,7 @@ def after_command(cmd, args, game):
         if cmd == "take" and not game.state.get("artifact_taken"):
             game.state["artifact_taken"] = True
             print()
-            display.tuft_speak("Good. Now try it on.")
+            display.seed_speak("Good. Now try it on.")
             _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
             return False
 
@@ -200,10 +200,10 @@ def after_command(cmd, args, game):
             # cmd_use already showed the artifact effect narration
             print()
             seed_name = game.state.get("world_seed_name", "Tuft")
-            display.tuft_speak("Now. A choice. You can KEEP it — carry it, use its")
-            display.tuft_speak(f"power. Or you can OFFER it TO me. I'll break it down")
-            display.tuft_speak("into motes and grow stronger. Your power or mine.")
-            display.tuft_speak("There's always a trade.")
+            display.seed_speak("Now. A choice. You can KEEP it — carry it, use its")
+            display.seed_speak(f"power. Or you can OFFER it TO me. I'll break it down")
+            display.seed_speak("into motes and grow stronger. Your power or mine.")
+            display.seed_speak("There's always a trade.")
             _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
             game.state["tutorial_step"] = "artifact_choice"
             return False
@@ -221,14 +221,14 @@ def after_command(cmd, args, game):
         explorer_name = game.state.get("explorer_name", "Sevarik")
         print()
         if cmd == "keep":
-            display.tuft_speak("Your call. Carry it well.")
+            display.seed_speak("Your call. Carry it well.")
         else:
             seed_name = game.state.get("world_seed_name", "Tuft")
-            display.tuft_speak("Mmm. I can feel that. Thank you.")
-            display.tuft_speak(f"CHECK {seed_name.upper()} any time to see how I'm growing.")
+            display.seed_speak("Mmm. I can feel that. Thank you.")
+            display.seed_speak(f"CHECK {seed_name.upper()} any time to see how I'm growing.")
         print()
-        display.tuft_speak(f"Now. {explorer_name} is waiting. Time to see the void")
-        display.tuft_speak("through his eyes.")
+        display.seed_speak(f"Now. {explorer_name} is waiting. Time to see the void")
+        display.seed_speak("through his eyes.")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
         game.state["tutorial_step"] = "handoff"
         return False
@@ -268,11 +268,11 @@ def _show_the_split(game):
     steward_name = game.state.get("steward_name", "Miria")
     display.divider()
     print()
-    display.tuft_speak("Listen. There's something you need to understand.")
+    display.seed_speak("Listen. There's something you need to understand.")
     print()
 
-    display.tuft_speak("We can't survive here alone. Not for long. It takes")
-    display.tuft_speak("a team.")
+    display.seed_speak("We can't survive here alone. Not for long. It takes")
+    display.seed_speak("a team.")
     print()
 
     display.narrate(f"You are {display.GREEN}{steward_name}{display.RESET} — a healer, an organizer, the one who")
@@ -285,10 +285,10 @@ def _show_the_split(game):
     display.narrate("fight threats, and find survivors.")
     print()
 
-    display.tuft_speak("I can only focus on one of you at a time, though.")
-    display.tuft_speak("Perhaps that will change later, as we expand the skerry.")
-    display.tuft_speak("But I need more motes before I can grow. I'm limited")
-    display.tuft_speak("in what I can protect, for now.")
+    display.seed_speak("I can only focus on one of you at a time, though.")
+    display.seed_speak("Perhaps that will change later, as we expand the skerry.")
+    display.seed_speak("But I need more motes before I can grow. I'm limited")
+    display.seed_speak("in what I can protect, for now.")
     print()
 
     # Quick reference
@@ -313,7 +313,7 @@ def _show_the_split(game):
     display.divider()
     print()
 
-    display.tuft_speak(f"{seed_name} is focused on {steward_name} right now.")
+    display.seed_speak(f"{seed_name} is focused on {steward_name} right now.")
     print()
 
     # Set up starter artifact
@@ -328,8 +328,8 @@ def _show_the_split(game):
         if artifact_id not in room.items:
             room.add_item(artifact_id)
 
-    display.tuft_speak("Hold on. I can feel something nearby. Our bond lets you")
-    display.tuft_speak("sense objects with substance. Try IH to see what's here.")
+    display.seed_speak("Hold on. I can feel something nearby. Our bond lets you")
+    display.seed_speak("sense objects with substance. Try IH to see what's here.")
     _tutorial_prompt("IH shows what's around you.")
 
     game.state["tutorial_step"] = "artifact_ih"
@@ -342,20 +342,20 @@ def get_current_hint(step, game_state=None):
         display.narrate("A thread of green light pulses before you, waiting.")
         _tutorial_prompt(f"Try BOND to accept the connection.")
     elif step == "naming":
-        display.tuft_speak("I don't have a name. Not one anyone's given me.")
-        display.tuft_speak("What would you call me?")
+        display.seed_speak("I don't have a name. Not one anyone's given me.")
+        display.seed_speak("What would you call me?")
         if game_state:
             game_state["awaiting_world_seed_name"] = True
     elif step == "first_look":
-        display.tuft_speak("Now, let me help you perceive.")
+        display.seed_speak("Now, let me help you perceive.")
         _tutorial_prompt("Go ahead and LOOK to see your surroundings.")
     elif step == "movement":
-        display.tuft_speak("There are paths here. Pick a direction.")
+        display.seed_speak("There are paths here. Pick a direction.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
     elif step == "exploring":
-        display.tuft_speak("Keep looking around. There's someone here you need to meet.")
+        display.seed_speak("Keep looking around. There's someone here you need to meet.")
     elif step == "artifact_ih":
-        display.tuft_speak("I can feel something nearby. Try IH to see what's here.")
+        display.seed_speak("I can feel something nearby. Try IH to see what's here.")
         _tutorial_prompt("IH shows what's around you.")
     elif step == "artifact_examine":
         artifact_id = (game_state or {}).get("starter_artifact")
@@ -364,7 +364,7 @@ def get_current_hint(step, game_state=None):
             art_name = art.get("name", "the artifact")
         else:
             art_name = "the artifact"
-        display.tuft_speak(f"Look more closely at the {art_name}.")
+        display.seed_speak(f"Look more closely at the {art_name}.")
         _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
     elif step == "artifact_use":
         artifact_id = (game_state or {}).get("starter_artifact")
@@ -374,10 +374,10 @@ def get_current_hint(step, game_state=None):
         else:
             art_name = "the artifact"
         if (game_state or {}).get("artifact_taken"):
-            display.tuft_speak(f"Try it on. WEAR the {art_name}.")
+            display.seed_speak(f"Try it on. WEAR the {art_name}.")
             _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
         else:
-            display.tuft_speak(f"Pick it up first.")
+            display.seed_speak(f"Pick it up first.")
             _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
     elif step == "artifact_choice":
         seed_name = (game_state or {}).get("world_seed_name", "Tuft")
@@ -387,13 +387,13 @@ def get_current_hint(step, game_state=None):
             art_name = art.get("name", "the artifact")
         else:
             art_name = "the artifact"
-        display.tuft_speak("Your power or mine. There's always a trade.")
+        display.seed_speak("Your power or mine. There's always a trade.")
         _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
     elif step == "handoff":
         explorer_name = (game_state or {}).get("explorer_name", "Sevarik")
         steward_name = (game_state or {}).get("steward_name", "Miria")
         seed_name = (game_state or {}).get("world_seed_name", "Tuft")
-        display.tuft_speak(f"{seed_name} is focused on {steward_name} right now. Explore the skerry if you like.")
+        display.seed_speak(f"{seed_name} is focused on {steward_name} right now. Explore the skerry if you like.")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
 
 

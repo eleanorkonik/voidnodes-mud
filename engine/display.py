@@ -55,8 +55,8 @@ def aspect_text(aspect):
     return f"{BRIGHT_MAGENTA}{aspect}{RESET}"
 
 
-def tuft_speak(text):
-    """Green text for Tuft communication."""
+def seed_speak(text):
+    """Green text for world seed communication."""
     print(f"{BRIGHT_GREEN}  ✧ {text}{RESET}")
 
 

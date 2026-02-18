@@ -251,22 +251,22 @@ class Game:
                 if self.state.get("awaiting_world_seed_name"):
                     name = raw.strip()
                     if not name:
-                        display.tuft_speak("Go on. Anything you like.")
+                        display.seed_speak("Go on. Anything you like.")
                         continue
                     # Title-case the name
                     name = name.strip().title()
                     # Enforce unique seed names across saves
                     if save.seed_name_taken(name):
                         display.error(f"A world seed named '{name}' already exists in another save.")
-                        display.tuft_speak("That name is already taken. Try another?")
+                        display.seed_speak("That name is already taken. Try another?")
                         continue
                     self.state["world_seed_name"] = name
                     self.state["awaiting_world_seed_name"] = False
                     self.state["tutorial_step"] = "first_look"
                     print()
-                    display.tuft_speak(f"{name}.")
+                    display.seed_speak(f"{name}.")
                     print()
-                    display.tuft_speak("I like that.")
+                    display.seed_speak("I like that.")
                     tutorial.get_current_hint("first_look", self.state)
                     continue
 
@@ -590,7 +590,7 @@ class Game:
         # Tuft flavor message occasionally
         if random.random() < 0.3:
             print()
-            display.tuft_speak(self.tuft.communicate(self.seed_name))
+            display.seed_speak(self.tuft.communicate(self.seed_name))
 
     def cmd_inventory(self, args):
         display.display_inventory(self.current_character(), self.items_db, self.artifacts_db)
@@ -616,7 +616,7 @@ class Game:
             print(f"  Stress: {stress_str}")
             print(f"  Alive: {'Yes' if self.tuft.alive else 'NO — GAME OVER'}")
             print()
-            display.tuft_speak(self.tuft.communicate(self.seed_name))
+            display.seed_speak(self.tuft.communicate(self.seed_name))
             return
 
         if target == "skerry":
@@ -717,13 +717,13 @@ class Game:
     def cmd_bond(self, args):
         if self.state.get("bonded_with_tuft"):
             display.narrate("The tendril hums. Warm. Alive.")
-            display.tuft_speak("We're already connected. I'm right here.")
+            display.seed_speak("We're already connected. I'm right here.")
             return
 
         # Must be near Tuft (hollow or at least on the skerry)
         room = self.current_room()
         if not room or not room.id.startswith("skerry_"):
-            display.tuft_speak("You're too far away. Come back to the skerry.")
+            display.seed_speak("You're too far away. Come back to the skerry.")
             return
 
         self.state["bonded_with_tuft"] = True
@@ -770,14 +770,14 @@ class Game:
             print()
             if room.aspects:
                 aspect_list = ". ".join(room.aspects)
-                display.tuft_speak(f"See those? {aspect_list}.")
+                display.seed_speak(f"See those? {aspect_list}.")
             else:
-                display.tuft_speak("See that?")
-            display.tuft_speak("Those are aspects — the deeper nature of things,")
-            display.tuft_speak("the way I understand the world. Now you can see it too.")
+                display.seed_speak("See that?")
+            display.seed_speak("Those are aspects — the deeper nature of things,")
+            display.seed_speak("the way I understand the world. Now you can see it too.")
             print()
-            display.tuft_speak("When you're in trouble, you can invoke an aspect for")
-            display.tuft_speak("strength. But that costs a fate point. Use them wisely.")
+            display.seed_speak("When you're in trouble, you can invoke an aspect for")
+            display.seed_speak("strength. But that costs a fate point. Use them wisely.")
 
     def cmd_give(self, args):
         if not args:
@@ -839,15 +839,15 @@ class Game:
         phase = self.state["current_phase"]
         if phase == "prologue":
             if self.state.get("tutorial_step") == "handoff":
-                display.tuft_speak(f"Tell me to shift focus to {self.explorer_name}.")
+                display.seed_speak(f"Tell me to shift focus to {self.explorer_name}.")
                 display.info(f"  Type SWITCH FOCUS TO {self.explorer_name.upper()}.")
             else:
-                display.tuft_speak("Not yet. There's more to see here first.")
+                display.seed_speak("Not yet. There's more to see here first.")
         elif phase == "explorer":
-            display.tuft_speak(f"Ready to shift? Tell me to focus on {self.steward_name}.")
+            display.seed_speak(f"Ready to shift? Tell me to focus on {self.steward_name}.")
             display.info(f"  Type SWITCH FOCUS TO {self.steward_name.upper()}.")
         else:
-            display.tuft_speak(f"Ready to shift? Tell me to focus on {self.explorer_name}.")
+            display.seed_speak(f"Ready to shift? Tell me to focus on {self.explorer_name}.")
             display.info(f"  Type SWITCH FOCUS TO {self.explorer_name.upper()}.")
 
     def cmd_switch(self, args):
@@ -881,14 +881,14 @@ class Game:
                 self._switch_focus_narration("explorer")
                 return  # tutorial.after_command handles completion
             else:
-                display.tuft_speak("Not yet. Get to know this place first.")
+                display.seed_speak("Not yet. Get to know this place first.")
                 return
 
         # Validate: not switching to current
         if (phase == "explorer" and target_role == "explorer") or \
            (phase == "steward" and target_role == "steward"):
             target_name = self.explorer_name if target_role == "explorer" else self.steward_name
-            display.tuft_speak(f"I'm already focused on {target_name}.")
+            display.seed_speak(f"I'm already focused on {target_name}.")
             return
 
         self._switch_focus(target_role)
@@ -1027,14 +1027,14 @@ class Game:
                 display.narrate("You slip them on and click the heels together.")
                 display.narrate("Once. Twice. Three times.")
                 print()
-                display.tuft_speak("You feel a tug — toward the skerry. Lost in the")
-                display.tuft_speak("void, click your heels and these will pull you home.")
+                display.seed_speak("You feel a tug — toward the skerry. Lost in the")
+                display.seed_speak("void, click your heels and these will pull you home.")
             elif art_id == "red_clown_nose":
                 display.narrate("You put on the nose. It's squishy. Ridiculous.")
                 display.narrate("But something shifts — the air around you softens.")
                 print()
-                display.tuft_speak("Less sharp. Less threatening. Less worth envying.")
-                display.tuft_speak("That could save your life out there.")
+                display.seed_speak("Less sharp. Less threatening. Less worth envying.")
+                display.seed_speak("That could save your life out there.")
             else:
                 display.narrate(f"You hold the {art['name']}. It hums faintly.")
             return
@@ -1390,7 +1390,7 @@ class Game:
 
             if stage_changed:
                 display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                display.tuft_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.tuft.communicate(self.seed_name))
 
             display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
             return
@@ -1405,7 +1405,7 @@ class Game:
             display.success(f"You feed {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
             if stage_changed:
                 display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                display.tuft_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.tuft.communicate(self.seed_name))
 
             display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
             return
@@ -1480,7 +1480,7 @@ class Game:
 
                 if stage_changed:
                     display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                    display.tuft_speak(self.tuft.communicate(self.seed_name))
+                    display.seed_speak(self.tuft.communicate(self.seed_name))
 
                 display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
                 return
@@ -1501,7 +1501,7 @@ class Game:
                 display.success(f"You offer {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
                 if stage_changed:
                     display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                    display.tuft_speak(self.tuft.communicate(self.seed_name))
+                    display.seed_speak(self.tuft.communicate(self.seed_name))
 
                 display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
                 return
@@ -1946,7 +1946,7 @@ class Game:
                 self.running = False
             else:
                 display.narrate(f"You collapse on the landing pad, gasping. {self.seed_name} saved you — but at a cost.")
-                display.tuft_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.tuft.communicate(self.seed_name))
         else:
             display.error(f"  {self.seed_name} doesn't have enough motes ({cost} needed, {self.tuft.motes} available)!")
             display.error(f"\n  ═══ {self.seed_name.upper()} CANNOT SAVE YOU ═══")
@@ -1958,7 +1958,7 @@ class Game:
         day = self.state["day"]
 
         # Tuft growth check
-        display.tuft_speak(self.tuft.communicate(self.seed_name))
+        display.seed_speak(self.tuft.communicate(self.seed_name))
 
         # NPC mood updates
         for npc_id, npc in self.npcs_db.items():
