@@ -1034,11 +1034,8 @@ class Game:
         display.seed_speak("Good. We have a steward. I'm stronger now.")
         display.seed_speak("I can send you beyond the skerry — my tendril will carry you.")
         print()
-        display.seed_speak("I sense something to the south. It hums with memory —")
-        display.seed_speak("something broken that remembers being whole. Doesn't feel big.")
-        display.seed_speak("Are you interested in investigating it?")
-        print()
-        display.seed_speak("Go south to the landing pad, then ENTER VOID.")
+        display.seed_speak("I sense something out there. It hums with memory —")
+        display.seed_speak("something broken that remembers being whole.")
         print()
 
         self.save_game(silent=True)

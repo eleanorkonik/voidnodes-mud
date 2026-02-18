@@ -181,8 +181,7 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "explorer_navigate"
             game._transition_to_day1()
             print()
-            display.seed_speak("Head south to the landing pad. That's where the void begins.")
-            _tutorial_prompt("GO SOUTH toward the landing pad.")
+            _tutorial_prompt("GO SOUTH to the landing pad.")
         return False
 
     # ── Act 2: Sevarik Explorer ──
@@ -584,8 +583,7 @@ def get_current_hint(step, game_state=None):
         display.seed_speak(f"Is it OK if I switch my focus to {explorer_name}?")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
     elif step == "explorer_navigate":
-        display.seed_speak("Head south to the landing pad.")
-        _tutorial_prompt("GO SOUTH toward the landing pad.")
+        _tutorial_prompt("GO SOUTH to the landing pad.")
     elif step == "explorer_void_cross":
         display.seed_speak("ENTER VOID to cross to the debris field.")
         _tutorial_prompt("ENTER VOID.")
