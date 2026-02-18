@@ -1,21 +1,35 @@
-"""Interactive tutorial — world seed guides new players through the prologue."""
+"""Interactive tutorial — world seed guides new players through all three acts."""
 
-import random
 from engine import display
 
 
 STEPS = [
-    "awakening",         # tendril reaches out, prompt to BOND
-    "naming",            # seed asks for a name (input captured in game loop)
-    "first_look",        # prompt to LOOK — first perception of the skerry
-    "movement",          # prompt to GO somewhere
-    "exploring",         # free exploration, encounter explorer at shelter
-    "artifact_ih",       # IH to see artifact in room
-    "artifact_examine",  # EXAMINE/PROBE the artifact
-    "artifact_use",      # TAKE then WEAR the artifact
-    "artifact_choice",   # KEEP or OFFER the artifact
-    "handoff",           # handoff — switch focus to explorer
-    "complete",          # done
+    # Act 1 — Miria Prologue
+    "awakening",             # tendril reaches out, prompt to BOND
+    "naming",                # seed asks for a name (input captured in game loop)
+    "first_look",            # prompt to LOOK — first perception of the skerry
+    "movement",              # prompt to GO somewhere
+    "exploring",             # free exploration, encounter explorer at shelter
+    "check_seed",            # CHECK SEED — learn about motes
+    "handoff",               # switch focus to explorer
+
+    # Act 2 — Sevarik Explorer
+    "explorer_navigate",     # guide to landing pad
+    "explorer_void_cross",   # ENTER VOID — first crossing
+    "explorer_free",         # flexible exploration: combat, invoke, artifact, recruit
+    "explorer_return",       # ENTER VOID back to skerry
+    "explorer_artifact",     # resolve artifact: KEEP, OFFER, or GIVE
+    "explorer_stash",        # go to junkyard, DROP materials
+    "explorer_handoff",      # SWITCH FOCUS TO MIRIA
+
+    # Act 3 — Miria Steward
+    "steward_arrive",        # orientation narration
+    "steward_recipes",       # RECIPES
+    "steward_craft",         # CRAFT basic_tools
+    "steward_assign",        # ASSIGN recruited NPC
+    "steward_complete",      # tutorial done
+
+    "complete",
 ]
 
 
@@ -27,12 +41,7 @@ def _step_index(step):
 
 
 def show_prologue_intro():
-    """Show the atmospheric opening — void, then the tendril arrives.
-
-    The player starts in darkness. A tendril of green light reaches
-    toward them. The first action is to BOND — accepting the connection
-    is what gives them perception and grounds them on the skerry.
-    """
+    """Show the atmospheric opening — void, then the tendril arrives."""
     print()
     print(f"  {display.DIM}{'─' * 48}{display.RESET}")
     print()
@@ -47,7 +56,6 @@ def show_prologue_intro():
     print(f"  {display.DIM}{'─' * 48}{display.RESET}")
     print()
 
-    # The tendril arrives
     display.narrate("Something reaches toward you through the dark — a thread")
     display.narrate("of green light, thin and fragile. It pulses like a heartbeat.")
     print()
@@ -55,7 +63,6 @@ def show_prologue_intro():
     display.narrate("gently against your thoughts. A warmth. An invitation.")
     print()
 
-    # First contact — barely verbal
     display.seed_speak("... you. I can feel you.")
     print()
     display.seed_speak("I've been alone so long. Please — let me in.")
@@ -74,7 +81,7 @@ def show_skip_message():
 
 
 def after_command(cmd, args, game):
-    """Called after each command during the prologue.
+    """Called after each command during the tutorial.
 
     The world seed guides the player through each step, advancing when
     appropriate. Returns True if the tutorial is complete.
@@ -84,14 +91,11 @@ def after_command(cmd, args, game):
     if step == "complete" or game.state.get("tutorial_complete"):
         return True
 
-    # ── Step transitions ──
+    # ── Act 1: Miria Prologue ──
 
     if step == "awakening" and cmd == "bond":
         game.state["tutorial_step"] = "naming"
         print()
-        # Discover the room but DON'T show the full display yet —
-        # just an atmospheric arrival. The full room (aspects, exits)
-        # comes when the player LOOKs at the first_look step.
         room = game.current_room()
         if room:
             room.discover()
@@ -115,7 +119,6 @@ def after_command(cmd, args, game):
         display.seed_speak("Good. The clearing, the paths, the edges of things?")
         display.seed_speak("You see that with your eyes.")
         print()
-        # Explain aspects
         room = game.current_room()
         if room and room.aspects:
             aspect_list = ". ".join(room.aspects)
@@ -128,14 +131,11 @@ def after_command(cmd, args, game):
         return False
 
     if step == "movement" and cmd == "go":
-        # Only advance if the player actually moved (not blocked by invalid direction).
-        # _pre_cmd_location is stashed by the game loop before dispatching.
         pre_loc = game.state.pop("_pre_cmd_location", None)
         if pre_loc is not None and pre_loc == game.state.get("prologue_location"):
             return False
         room = game.current_room()
         if room and "sevarik" in room.npcs:
-            # Found explorer on the first move — go straight to encounter
             _show_sevarik_encounter(game)
         else:
             print()
@@ -156,95 +156,186 @@ def after_command(cmd, args, game):
             _show_sevarik_encounter(game)
         return False
 
-    if step == "artifact_ih" and cmd == "ih":
-        artifact_id = game.state.get("starter_artifact")
-        art = game.artifacts_db.get(artifact_id, {})
-        art_name = art.get("name", "something")
-        print()
-        display.seed_speak(f"See that? {art_name}. Look more closely.")
-        _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
-        game.state["tutorial_step"] = "artifact_examine"
-        return False
-
-    if step == "artifact_examine" and cmd == "probe":
-        artifact_id = game.state.get("starter_artifact")
-        art = game.artifacts_db.get(artifact_id, {})
-        aspects = art.get("aspects", [])
-        if aspects:
-            aspect_str = display.aspect_text(aspects[0])
-            print()
-            display.seed_speak(f"See that shimmer? That's an aspect — {aspect_str}.")
-            display.seed_speak("Aspects are the deeper nature of things. When you need")
-            display.seed_speak("strength, you can INVOKE an aspect for a bonus.")
-        print()
-        display.seed_speak("Take it. It shouldn't just sit on the ground.")
-        art_name = art.get("name", "it")
-        _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
-        game.state["tutorial_step"] = "artifact_use"
-        game.state["artifact_taken"] = False
-        return False
-
-    if step == "artifact_use":
-        artifact_id = game.state.get("starter_artifact")
-        art = game.artifacts_db.get(artifact_id, {})
-        art_name = art.get("name", "it")
-
-        if cmd == "take" and not game.state.get("artifact_taken"):
-            game.state["artifact_taken"] = True
-            print()
-            display.seed_speak("Good. Now try it on.")
-            _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
-            return False
-
-        if cmd in ("use", "wear") and game.state.get("artifact_taken"):
-            # cmd_use already showed the artifact effect narration
-            print()
-            seed_name = game.state.get("world_seed_name", "Tuft")
-            display.seed_speak("Now. A choice. You can KEEP it — carry it, use its")
-            display.seed_speak(f"power. Or you can OFFER it TO me. I'll break it down")
-            display.seed_speak("into motes and grow stronger. Your power or mine.")
-            display.seed_speak("There's always a trade.")
-            _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
-            game.state["tutorial_step"] = "artifact_choice"
-            return False
-
-        return False
-
-    if step == "artifact_choice" and cmd in ("keep", "offer"):
-        # Verify the action actually succeeded — artifact_status should
-        # be "kept" or "fed", not still "discovered".
-        artifact_id = game.state.get("starter_artifact")
-        if artifact_id:
-            status = game.state.get("artifacts_status", {}).get(artifact_id)
-            if status not in ("kept", "fed"):
-                return False
+    if step == "check_seed" and cmd == "check":
+        seed_name = game.state.get("world_seed_name", "Tuft")
         explorer_name = game.state.get("explorer_name", "Sevarik")
         print()
-        if cmd == "keep":
-            display.seed_speak("Your call. Carry it well.")
-        else:
-            seed_name = game.state.get("world_seed_name", "Tuft")
-            display.seed_speak("Mmm. I can feel that. Thank you.")
-            display.seed_speak(f"CHECK {seed_name.upper()} any time to see how I'm growing.")
+        display.seed_speak("See? I have motes. That's what keeps us alive here.")
+        display.seed_speak("Feed me artifacts and materials, and I grow stronger.")
+        display.seed_speak("The more motes I have, the more I can do for all of us.")
         print()
-        display.seed_speak(f"Now. {explorer_name} is waiting. Time to see the void")
-        display.seed_speak("through his eyes.")
+        display.seed_speak(f"Now... is it OK if I switch my focus to {explorer_name}?")
+        display.seed_speak("Now that you're here, it's safe to let him explore.")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
         game.state["tutorial_step"] = "handoff"
         return False
 
     if step == "handoff" and cmd == "switch":
-        # cmd_switch already handled the narration; just complete the tutorial
         words = [w for w in args if w not in ("focus", "to")]
         target = " ".join(words).lower() if words else ""
         explorer_name = game.state.get("explorer_name", "Sevarik").lower()
         if target in (explorer_name, "explorer"):
+            game.state["tutorial_step"] = "explorer_navigate"
+            game._transition_to_day1()
+            print()
+            display.seed_speak("Head south to the landing pad. That's where the void begins.")
+            _tutorial_prompt("GO SOUTH toward the landing pad.")
+        return False
+
+    # ── Act 2: Sevarik Explorer ──
+
+    if step == "explorer_navigate" and cmd == "go":
+        loc = game.state.get("explorer_location")
+        if loc == "skerry_landing":
+            print()
+            display.seed_speak("Here. The edge of everything we have. ENTER VOID to cross.")
+            _tutorial_prompt("ENTER VOID to cross to the debris field.")
+            game.state["tutorial_step"] = "explorer_void_cross"
+        return False
+
+    if step == "explorer_void_cross" and cmd == "enter":
+        room = game.current_room()
+        if room and room.zone != "skerry":
+            print()
+            display.seed_speak("The debris field. Stay sharp. Explore carefully,")
+            display.seed_speak("and watch for danger.")
+            game.state["tutorial_step"] = "explorer_free"
+        return False
+
+    if step == "explorer_free":
+        _explorer_free_hints(cmd, args, game)
+        # Check if all five objectives are done
+        if (game.state.get("tutorial_combat_done") and
+                game.state.get("tutorial_invoke_done") and
+                game.state.get("tutorial_scavenge_done") and
+                game.state.get("tutorial_artifact_found") and
+                game.state.get("tutorial_recruit_done")):
+            print()
+            display.seed_speak("You've done well. Head back to the skerry.")
+            display.seed_speak("South, then ENTER VOID.")
+            _tutorial_prompt("Head south and ENTER VOID to go home.")
+            game.state["tutorial_step"] = "explorer_return"
+        return False
+
+    if step == "explorer_return" and cmd == "enter":
+        room = game.current_room()
+        if room and room.zone == "skerry":
+            # Move Miria to landing pad to greet Sevarik
+            miria_id = game.steward_name.lower()
+            if miria_id in game.agents_db:
+                game.agents_db[miria_id]["location"] = "skerry_landing"
+            print()
+            display.narrate(f"{game.steward_name} hurries out to the landing pad as you arrive.")
+            print()
+            # Check if player has an unresolved artifact
+            _has_artifact = _player_has_unresolved_artifact(game)
+            if _has_artifact:
+                seed_name = game.state.get("world_seed_name", "Tuft")
+                steward_name = game.state.get("steward_name", "Miria")
+                display.seed_speak("Now, what about that artifact you brought back?")
+                display.seed_speak(f"You have three choices: KEEP it for the stat bonus.")
+                display.seed_speak(f"OFFER it TO {seed_name.upper()} for motes.")
+                display.seed_speak(f"Or GIVE it TO {steward_name.upper()}.")
+                game.state["tutorial_step"] = "explorer_artifact"
+            else:
+                _advance_to_stash(game)
+        return False
+
+    if step == "explorer_artifact":
+        if game.state.get("tutorial_artifact_resolved"):
+            _advance_to_stash(game)
+        return False
+
+    if step == "explorer_stash":
+        if cmd == "drop":
+            char = game.current_character()
+            has_materials = any(
+                game.items_db.get(i, {}).get("type") == "material"
+                for i in char.inventory
+            )
+            if not has_materials:
+                # Already dropped everything or had nothing
+                print()
+                steward_name = game.state.get("steward_name", "Miria")
+                display.seed_speak(f"Good. Now let {steward_name} take over.")
+                _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
+                game.state["tutorial_step"] = "explorer_handoff"
+        elif cmd == "go":
+            loc = game.state.get("explorer_location")
+            if loc == "skerry_junkyard":
+                print()
+                display.seed_speak("Drop your salvage here. DROP MATERIALS to pile it all.")
+                _tutorial_prompt("DROP MATERIALS to store your salvage.")
+        return False
+
+    if step == "explorer_handoff" and cmd == "switch":
+        # _switch_focus already handled the phase change
+        phase = game.state.get("current_phase")
+        if phase == "steward":
+            game.state["tutorial_step"] = "steward_arrive"
+            _steward_arrive(game)
+        return False
+
+    # ── Act 3: Miria Steward ──
+
+    if step == "steward_recipes" and cmd == "recipes":
+        print()
+        display.seed_speak("See anything you can make? Head to the junkyard —")
+        display.seed_speak("GO WEST — and try CRAFT BASIC TOOLS.")
+        _tutorial_prompt("GO WEST to the junkyard, then CRAFT BASIC_TOOLS.")
+        game.state["tutorial_step"] = "steward_craft"
+        return False
+
+    if step == "steward_craft" and cmd == "craft":
+        # Check if crafting succeeded (character should have basic_tools)
+        char = game.current_character()
+        if "basic_tools" in char.inventory:
+            print()
+            recruited = game.state.get("recruited_npcs", [])
+            if recruited:
+                npc_id = recruited[0]
+                npc_name = game.npcs_db.get(npc_id, {}).get("name", npc_id)
+                display.seed_speak(f"Well done. Now put your recruit to work.")
+                display.seed_speak(f"ASSIGN {npc_name.upper()} SALVAGE — she can sort what comes in.")
+                _tutorial_prompt(f"ASSIGN {npc_name.upper()} SALVAGE.")
+            else:
+                display.seed_speak("Well done. You'll need help eventually —")
+                display.seed_speak("Sevarik can recruit survivors on his next expedition.")
+            game.state["tutorial_step"] = "steward_assign"
+        else:
+            print()
+            display.seed_speak("That didn't work. Make sure you're in the junkyard")
+            display.seed_speak("with the materials.")
+        return False
+
+    if step == "steward_assign" and cmd == "assign":
+        # Check if any NPC has a non-idle assignment
+        npcs = game.state.get("npcs", {})
+        any_assigned = any(
+            npc.get("assignment") not in (None, "idle")
+            for npc in npcs.values()
+        )
+        if any_assigned:
+            print()
+            display.seed_speak("Perfect. They'll process salvage while you focus")
+            display.seed_speak("on other things.")
+            print()
+            display.divider()
+            print()
+            display.seed_speak("That's the rhythm. Explorer gathers, steward builds.")
+            display.seed_speak("Keep going — you know what to do now.")
+            display.seed_speak("HELP is always there if you need it.")
+            print()
+            display.divider()
             game.state["tutorial_step"] = "complete"
             game.state["tutorial_complete"] = True
             return True
+        return False
 
     return False
 
+
+# ── Helper functions ──
 
 def _show_sevarik_encounter(game):
     """Player meets the explorer at the shelter. Triggers the split explanation."""
@@ -262,7 +353,7 @@ def _show_sevarik_encounter(game):
 
 
 def _show_the_split(game):
-    """World seed explains the dual-role system. Player starts as steward."""
+    """World seed explains the dual-role system. No starter artifact — CHECK SEED instead."""
     seed_name = game.state.get("world_seed_name", "Tuft")
     explorer_name = game.state.get("explorer_name", "Sevarik")
     steward_name = game.state.get("steward_name", "Miria")
@@ -306,41 +397,191 @@ def _show_the_split(game):
         ("HELP", "Full command list"),
         ("SAVE / QUIT", "Save progress"),
     ]
-    for cmd, desc in cmds:
-        print(f"  {display.BOLD}{cmd:<22}{display.RESET} {desc}")
+    for c, desc in cmds:
+        print(f"  {display.BOLD}{c:<22}{display.RESET} {desc}")
     print()
 
     display.divider()
     print()
 
-    display.seed_speak(f"{seed_name} is focused on {steward_name} right now.")
+    display.seed_speak(f"Before we go further — CHECK me. See how I'm doing.")
+    _tutorial_prompt(f"CHECK {seed_name.upper()} to see the seed's status.")
+
+    game.state["tutorial_step"] = "check_seed"
+
+
+def _player_has_unresolved_artifact(game):
+    """Check if the current character has an unresolved artifact in inventory."""
+    char = game.current_character()
+    for item_id in char.inventory:
+        if item_id in game.artifacts_db:
+            status = game.state.get("artifacts_status", {}).get(item_id)
+            if status not in ("kept", "fed", "given"):
+                return True
+    return False
+
+
+def _advance_to_stash(game):
+    """Move tutorial to the explorer_stash step."""
+    char = game.current_character()
+    has_materials = any(
+        game.items_db.get(i, {}).get("type") == "material"
+        for i in char.inventory
+    )
+    if has_materials:
+        print()
+        display.seed_speak("Drop your salvage at the junkyard — Miria will know")
+        display.seed_speak("where to find it. Head west from the clearing.")
+        _tutorial_prompt("GO to the junkyard and DROP MATERIALS.")
+        game.state["tutorial_step"] = "explorer_stash"
+    else:
+        # Nothing to stash — skip to handoff
+        print()
+        steward_name = game.state.get("steward_name", "Miria")
+        display.seed_speak(f"Nothing to stash. Let {steward_name} take over.")
+        _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
+        game.state["tutorial_step"] = "explorer_handoff"
+
+
+def _steward_arrive(game):
+    """Steward orientation — immediately advance to steward_recipes."""
     print()
+    display.seed_speak("Good haul. Head to the junkyard and see what you can make.")
+    display.seed_speak("Type RECIPES to check what's available.")
+    _tutorial_prompt("RECIPES to see what you can craft.")
+    game.state["tutorial_step"] = "steward_recipes"
 
-    # Set up starter artifact
-    artifact_id = random.choice(["silver_slippers", "red_clown_nose"])
-    game.state["starter_artifact"] = artifact_id
 
-    # Place artifact in player's current room
+def _explorer_free_hints(cmd, args, game):
+    """Contextual hints during the explorer_free step."""
     room = game.current_room()
-    if room:
-        art = game.artifacts_db.get(artifact_id, {})
-        art["room"] = room.id
-        if artifact_id not in room.items:
-            room.add_item(artifact_id)
+    if not room:
+        return
 
-    display.seed_speak("Hold on. I can feel something nearby. Our bond lets you")
-    display.seed_speak("sense objects with substance. Try IH to see what's here.")
-    _tutorial_prompt("IH shows what's around you.")
+    combat_done = game.state.get("tutorial_combat_done")
+    invoke_done = game.state.get("tutorial_invoke_done")
+    scavenge_done = game.state.get("tutorial_scavenge_done")
+    artifact_found = game.state.get("tutorial_artifact_found")
+    recruit_done = game.state.get("tutorial_recruit_done")
 
-    game.state["tutorial_step"] = "artifact_ih"
+    # Just attacked — teach invoke
+    if cmd == "attack" and game.in_combat and not invoke_done:
+        enemy_data = game.enemies_db.get(game.combat_target, {})
+        enemy_aspects = enemy_data.get("aspects", [])
+        if enemy_aspects:
+            first_aspect = enemy_aspects[0]
+            # Suggest a short form of the aspect for the INVOKE command
+            short = first_aspect.split()[0] if first_aspect else "aspect"
+            print()
+            display.seed_speak(f"They're tough. Look — their aspects betray weaknesses.")
+            display.seed_speak(f"See '{display.aspect_text(first_aspect)}'?")
+            display.seed_speak(f"INVOKE {short.upper()} to use it against them.")
+            display.seed_speak("Costs a fate point, gives +2.")
+            _tutorial_prompt(f"INVOKE {first_aspect.upper()} during combat.")
+        return
+
+    # Just invoked successfully
+    if cmd == "invoke" and invoke_done and not game.state.get("_invoke_celebrated"):
+        game.state["_invoke_celebrated"] = True
+        print()
+        display.seed_speak("That's it! Invoking aspects is the heart of combat.")
+        display.seed_speak("Use your aspects, the room's, even your enemy's.")
+        return
+
+    # Enemy defeated — prompt to take loot
+    if cmd == "attack" and combat_done and not game.in_combat:
+        if room.items and not scavenge_done:
+            print()
+            display.seed_speak("Don't leave that behind — TAKE it.")
+            display.seed_speak("And SCAVENGE this area — Miria needs materials.")
+        elif not scavenge_done:
+            print()
+            display.seed_speak("Good fighting. Now SCAVENGE this area —")
+            display.seed_speak("Miria needs materials to work with.")
+            _tutorial_prompt("SCAVENGE to search for materials.")
+        return
+
+    # Just scavenged successfully
+    if cmd == "scavenge" and scavenge_done:
+        if not artifact_found:
+            print()
+            display.seed_speak("Good haul. Keep an eye out for artifacts")
+            display.seed_speak("and survivors too.")
+        return
+
+    # Room has enemies, not in combat, combat not done
+    if room.has_enemies() and not game.in_combat and not combat_done:
+        print()
+        display.seed_speak("Those creatures! ATTACK them before they swarm you.")
+        _tutorial_prompt("ATTACK to engage the enemy.")
+        return
+
+    # Room has undiscovered artifact
+    if not artifact_found:
+        for art_id, art in game.artifacts_db.items():
+            if art.get("room") == room.id:
+                status = game.state.get("artifacts_status", {}).get(art_id)
+                if status not in ("kept", "fed", "given"):
+                    if cmd == "ih" or cmd == "look":
+                        print()
+                        display.seed_speak("I sense something powerful here.")
+                        display.seed_speak("PROBE it to learn more.")
+                        _tutorial_prompt(f"PROBE {art.get('name', 'artifact').upper()} to examine it.")
+                    return
+
+    # Just probed an artifact
+    if cmd == "probe" and not artifact_found:
+        print()
+        display.seed_speak("Take it with you. TAKE it.")
+        display.seed_speak("We'll decide what to do with it back home.")
+        return
+
+    # Just took an artifact
+    if cmd == "take" and artifact_found:
+        if not game.state.get("_artifact_take_celebrated"):
+            game.state["_artifact_take_celebrated"] = True
+            print()
+            display.seed_speak("Good. Carry it home. You can decide its fate")
+            display.seed_speak("on the skerry.")
+        return
+
+    # Room has NPCs, recruit not done
+    if not recruit_done and combat_done and invoke_done:
+        npc_ids = room.npcs if hasattr(room, 'npcs') else []
+        if npc_ids:
+            print()
+            display.seed_speak("Survivors! They could use a safe place.")
+            display.seed_speak("Try RECRUIT.")
+            _tutorial_prompt(f"RECRUIT to bring them to the skerry.")
+            return
+
+    # Just recruited
+    if cmd == "recruit" and recruit_done:
+        if not game.state.get("_recruit_celebrated"):
+            game.state["_recruit_celebrated"] = True
+            print()
+            display.seed_speak("Good. We could use the help.")
+        return
+
+    # Combat+invoke done but scavenge not done
+    if combat_done and invoke_done and not scavenge_done:
+        if cmd == "go":
+            print()
+            display.seed_speak("SCAVENGE to search for materials.")
+            _tutorial_prompt("SCAVENGE to search for materials.")
+        return
 
 
 def get_current_hint(step, game_state=None):
     """Show a world-seed-voiced hint for the current step (on resume)."""
-    seed_name = (game_state or {}).get("world_seed_name", "the seed")
+    gs = game_state or {}
+    seed_name = gs.get("world_seed_name", "the seed")
+    explorer_name = gs.get("explorer_name", "Sevarik")
+    steward_name = gs.get("steward_name", "Miria")
+
     if step == "awakening":
         display.narrate("A thread of green light pulses before you, waiting.")
-        _tutorial_prompt(f"Try BOND to accept the connection.")
+        _tutorial_prompt("Try BOND to accept the connection.")
     elif step == "naming":
         display.seed_speak("I don't have a name. Not one anyone's given me.")
         display.seed_speak("What would you call me?")
@@ -354,47 +595,71 @@ def get_current_hint(step, game_state=None):
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
     elif step == "exploring":
         display.seed_speak("Keep looking around. There's someone here you need to meet.")
-    elif step == "artifact_ih":
-        display.seed_speak("I can feel something nearby. Try IH to see what's here.")
-        _tutorial_prompt("IH shows what's around you.")
-    elif step == "artifact_examine":
-        artifact_id = (game_state or {}).get("starter_artifact")
-        if artifact_id and game_state:
-            art = game_state.get("artifacts", {}).get(artifact_id, {})
-            art_name = art.get("name", "the artifact")
-        else:
-            art_name = "the artifact"
-        display.seed_speak(f"Look more closely at the {art_name}.")
-        _tutorial_prompt(f"EXAMINE {art_name.upper()} to get a closer look.")
-    elif step == "artifact_use":
-        artifact_id = (game_state or {}).get("starter_artifact")
-        if artifact_id and game_state:
-            art = game_state.get("artifacts", {}).get(artifact_id, {})
-            art_name = art.get("name", "the artifact")
-        else:
-            art_name = "the artifact"
-        if (game_state or {}).get("artifact_taken"):
-            display.seed_speak(f"Try it on. WEAR the {art_name}.")
-            _tutorial_prompt(f"Go ahead and WEAR {art_name.upper()}.")
-        else:
-            display.seed_speak(f"Pick it up first.")
-            _tutorial_prompt(f"TAKE {art_name.upper()} to pick it up.")
-    elif step == "artifact_choice":
-        seed_name = (game_state or {}).get("world_seed_name", "Tuft")
-        artifact_id = (game_state or {}).get("starter_artifact")
-        if artifact_id and game_state:
-            art = game_state.get("artifacts", {}).get(artifact_id, {})
-            art_name = art.get("name", "the artifact")
-        else:
-            art_name = "the artifact"
-        display.seed_speak("Your power or mine. There's always a trade.")
-        _tutorial_prompt(f"KEEP it, or OFFER {art_name.upper()} TO {seed_name.upper()}.")
+    elif step == "check_seed":
+        display.seed_speak(f"CHECK {seed_name.upper()} to see the seed's status.")
+        _tutorial_prompt(f"CHECK {seed_name.upper()}.")
     elif step == "handoff":
-        explorer_name = (game_state or {}).get("explorer_name", "Sevarik")
-        steward_name = (game_state or {}).get("steward_name", "Miria")
-        seed_name = (game_state or {}).get("world_seed_name", "Tuft")
-        display.seed_speak(f"{seed_name} is focused on {steward_name} right now. Explore the skerry if you like.")
+        display.seed_speak(f"Is it OK if I switch my focus to {explorer_name}?")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
+    elif step == "explorer_navigate":
+        display.seed_speak("Head south to the landing pad.")
+        _tutorial_prompt("GO SOUTH toward the landing pad.")
+    elif step == "explorer_void_cross":
+        display.seed_speak("ENTER VOID to cross to the debris field.")
+        _tutorial_prompt("ENTER VOID.")
+    elif step == "explorer_free":
+        _explorer_free_resume_hint(gs)
+    elif step == "explorer_return":
+        display.seed_speak("Head back south and ENTER VOID to go home.")
+        _tutorial_prompt("ENTER VOID to return to the skerry.")
+    elif step == "explorer_artifact":
+        display.seed_speak(f"What will you do with the artifact?")
+        display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
+        display.seed_speak(f"or GIVE it TO {steward_name.upper()}.")
+    elif step == "explorer_stash":
+        display.seed_speak("Drop your salvage at the junkyard.")
+        _tutorial_prompt("GO WEST from the clearing, then DROP MATERIALS.")
+    elif step == "explorer_handoff":
+        display.seed_speak(f"Let {steward_name} take over.")
+        _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
+    elif step == "steward_arrive":
+        _tutorial_prompt("RECIPES to see what you can craft.")
+    elif step == "steward_recipes":
+        display.seed_speak("Type RECIPES to see what you can make.")
+        _tutorial_prompt("RECIPES.")
+    elif step == "steward_craft":
+        display.seed_speak("Head to the junkyard and try CRAFT BASIC TOOLS.")
+        _tutorial_prompt("GO WEST, then CRAFT BASIC_TOOLS.")
+    elif step == "steward_assign":
+        recruited = gs.get("recruited_npcs", [])
+        if recruited:
+            npc_name = recruited[0].replace("_", " ").title()
+            display.seed_speak(f"ASSIGN {npc_name.upper()} SALVAGE.")
+            _tutorial_prompt(f"ASSIGN {npc_name.upper()} SALVAGE.")
+        else:
+            display.seed_speak("You'll need recruits to assign tasks.")
+
+
+def _explorer_free_resume_hint(gs):
+    """Show a contextual hint for explorer_free when resuming a save."""
+    combat_done = gs.get("tutorial_combat_done")
+    invoke_done = gs.get("tutorial_invoke_done")
+    scavenge_done = gs.get("tutorial_scavenge_done")
+    artifact_found = gs.get("tutorial_artifact_found")
+    recruit_done = gs.get("tutorial_recruit_done")
+
+    if not combat_done:
+        display.seed_speak("Find enemies and ATTACK them.")
+    elif not invoke_done:
+        display.seed_speak("Find another enemy and try INVOKE [aspect] during combat.")
+    elif not scavenge_done:
+        display.seed_speak("SCAVENGE to search for materials.")
+    elif not artifact_found:
+        display.seed_speak("Look for artifacts. Try IH in each room.")
+    elif not recruit_done:
+        display.seed_speak("Find survivors and RECRUIT them.")
+    else:
+        display.seed_speak("Head back to the skerry. South, then ENTER VOID.")
 
 
 def _tutorial_prompt(text):

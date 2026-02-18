@@ -110,6 +110,20 @@ def _migrate_state(state):
     for char_key in ("explorer", "steward"):
         if char_key in state:
             state[char_key].setdefault("worn", {})
+    # Tutorial state fields
+    state.setdefault("tutorial_combat_done", False)
+    state.setdefault("tutorial_invoke_done", False)
+    state.setdefault("tutorial_scavenge_done", False)
+    state.setdefault("tutorial_artifact_found", False)
+    state.setdefault("tutorial_artifact_resolved", False)
+    state.setdefault("tutorial_recruit_done", False)
+    # Ensure basic_tools recipe is known
+    if "basic_tools" not in state.get("discovered_recipes", []):
+        state.setdefault("discovered_recipes", []).append("basic_tools")
+    # Rename old "scavenging" task to "salvage"
+    for npc_id, npc in state.get("npcs", {}).items():
+        if npc.get("assignment") == "scavenging":
+            npc["assignment"] = "salvage"
 
 
 def delete_save(slot_name):
@@ -185,6 +199,6 @@ def new_game_state():
         "steward_name": "Miria",
         "world_seed_name": "Tuft",
         "recruited_npcs": [],
-        "discovered_recipes": ["rope", "torch"],  # Start knowing basic recipes
+        "discovered_recipes": ["rope", "torch", "basic_tools"],  # Start knowing basic recipes
     }
     return state

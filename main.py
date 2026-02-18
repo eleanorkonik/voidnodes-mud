@@ -281,16 +281,16 @@ class Game:
                     continue
 
                 # Stash location so tutorial can detect failed moves
-                if phase == "prologue":
-                    self.state["_pre_cmd_location"] = self.state.get("prologue_location")
+                if not self.state.get("tutorial_complete"):
+                    loc_key = {"prologue": "prologue_location", "explorer": "explorer_location", "steward": "steward_location"}.get(phase)
+                    if loc_key:
+                        self.state["_pre_cmd_location"] = self.state.get(loc_key)
 
                 self.handle_command(cmd, args)
 
-                # Tutorial after-command hook
-                if phase == "prologue" and not self.state.get("tutorial_complete"):
-                    complete = tutorial.after_command(cmd, args, self)
-                    if complete:
-                        self._transition_to_day1()
+                # Tutorial after-command hook — runs for ALL phases while active
+                if not self.state.get("tutorial_complete"):
+                    tutorial.after_command(cmd, args, self)
                     self.state.pop("_pre_cmd_location", None)
 
             except EOFError:
@@ -327,6 +327,7 @@ class Game:
             "skip": self.cmd_skip,
             "bond": self.cmd_bond,
             "give": self.cmd_give,
+            "drop": self.cmd_drop,
             "switch": self.cmd_switch,
             "attack": self.cmd_attack,
             "defend": self.cmd_defend,
@@ -379,6 +380,7 @@ class Game:
             "enemies_db": self.enemies_db,
             "agents_db": self.agents_db,
             "bonded_with_seed": self.state.get("bonded_with_seed", False),
+            "artifacts_status": self.state.get("artifacts_status", {}),
         }
 
     # ── Universal Commands ────────────────────────────────────────
@@ -533,6 +535,14 @@ class Game:
                 else:
                     print(f"  {display.item_name(item_id.replace('_', ' ').title())}")
                 has_contents = True
+
+        # Zone artifacts (not in room.items but matched by room field)
+        for art_id, art in self.artifacts_db.items():
+            if art.get("room") == room.id and art_id not in room.items:
+                status = self.state.get("artifacts_status", {}).get(art_id)
+                if status not in ("kept", "fed"):
+                    print(f"  {display.item_name(art['name'])}")
+                    has_contents = True
 
         # NPCs
         for npc_id in room.npcs:
@@ -865,9 +875,116 @@ class Game:
 
     def cmd_give(self, args):
         if not args:
-            display.error("Give what to whom?")
+            display.error("Give what to whom? Usage: GIVE <item> TO <name>")
             return
-        display.error("You can't give that.")
+
+        raw = " ".join(args)
+        parts = raw.split(" to ", 1)
+        if len(parts) < 2:
+            display.error("Give what to whom? Usage: GIVE <item> TO <name>")
+            return
+
+        item_part = parts[0].strip().lower()
+        target_name = parts[1].strip().lower()
+        room = self.current_room()
+        char = self.current_character()
+
+        if not item_part:
+            display.error("Give what? Usage: GIVE <item> TO <name>")
+            return
+
+        # Find target agent in room
+        agent_id, agent_data = self._find_agent_in_room(target_name, room.id)
+        if not agent_data:
+            # Also check NPCs
+            npc_id, npc_data = self._find_entity(room.npcs, target_name, self.npcs_db)
+            if not npc_data:
+                display.error(f"There's nobody called '{target_name}' here to give things to.")
+                return
+            # For NPCs, just accept artifacts for tutorial purposes
+            art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
+            if art:
+                char.remove_from_inventory(art_id)
+                self.state.setdefault("artifacts_status", {})[art_id] = "given"
+                if not self.state.get("tutorial_complete"):
+                    self.state["tutorial_artifact_resolved"] = True
+                display.success(f"You give the {art['name']} to {npc_data['name']}.")
+                return
+            display.error(f"You don't have anything called '{item_part}'.")
+            return
+
+        # Determine target character object
+        target_role = agent_data.get("role")
+        target_char = self.steward if target_role == "steward" else self.explorer
+
+        # Check artifacts first, then items
+        art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
+        if art:
+            char.remove_from_inventory(art_id)
+            target_char.add_to_inventory(art_id)
+            self.state.setdefault("artifacts_status", {})[art_id] = "given"
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_artifact_resolved"] = True
+            display.success(f"You give the {art['name']} to {agent_data['name']}.")
+            return
+
+        item_id, item = self._find_entity(char.inventory, item_part, self.items_db)
+        if not item:
+            display.error(f"You don't have anything called '{item_part}'.")
+            return
+
+        char.remove_from_inventory(item_id)
+        target_char.add_to_inventory(item_id)
+        display.success(f"You give {item['name']} to {agent_data['name']}.")
+
+    def cmd_drop(self, args):
+        if not args:
+            display.error("Drop what? DROP <item> or DROP ALL.")
+            return
+
+        target = " ".join(args).lower()
+        char = self.current_character()
+        room = self.current_room()
+
+        if target in ("all", "materials"):
+            dropped = []
+            for item_id in list(char.inventory):
+                if self.items_db.get(item_id, {}).get("type") == "material":
+                    char.remove_from_inventory(item_id)
+                    room.add_item(item_id)
+                    dropped.append(item_id)
+            if dropped:
+                counts = {}
+                for mid in dropped:
+                    name = self.items_db.get(mid, {}).get("name", mid)
+                    counts[name] = counts.get(name, 0) + 1
+                display.narrate("You pile your salvage on the ground.")
+                for name, count in counts.items():
+                    if count > 1:
+                        display.info(f"  {display.item_name(name)} x{count}")
+                    else:
+                        display.info(f"  {display.item_name(name)}")
+            else:
+                display.narrate("You don't have any materials to drop.")
+            return
+
+        # Drop specific item
+        item_id, item = self._find_entity(char.inventory, target, self.items_db)
+        if item:
+            char.remove_from_inventory(item_id)
+            room.add_item(item_id)
+            display.success(f"You set down the {item['name']}.")
+            return
+
+        # Check artifacts too
+        art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
+        if art:
+            char.remove_from_inventory(art_id)
+            room.add_item(art_id)
+            display.success(f"You set down the {art['name']}.")
+            return
+
+        display.error(f"You don't have anything called '{target}'.")
 
     def _transition_to_day1(self):
         """Transition from prologue to Day 1 Explorer Phase."""
@@ -954,13 +1071,18 @@ class Game:
             display.error(f"You can't switch focus to '{target}'.")
             return
 
-        # Prologue handling
-        if phase == "prologue":
-            if target_role == "explorer" and self.state.get("tutorial_step") == "handoff":
-                self._switch_focus_narration("explorer")
-                return  # tutorial.after_command handles completion
-            else:
-                display.seed_speak("Not yet. Get to know this place first.")
+        # Tutorial gates — can only switch at handoff steps
+        if not self.state.get("tutorial_complete"):
+            step = self.state.get("tutorial_step", "")
+            if phase == "prologue":
+                if target_role == "explorer" and step == "handoff":
+                    self._switch_focus_narration("explorer")
+                    return  # tutorial.after_command handles phase transition
+                else:
+                    display.seed_speak("Not yet. Get to know this place first.")
+                    return
+            elif phase == "explorer" and step != "explorer_handoff":
+                display.seed_speak("You still have work to do out here.")
                 return
 
         # Validate: not switching to current
@@ -1336,6 +1458,9 @@ class Game:
             display.error("No fate points to spend!")
             return
 
+        if not self.state.get("tutorial_complete"):
+            self.state["tutorial_invoke_done"] = True
+
         display.success(f"You invoke {display.aspect_text(found)} for +2 on your next roll!")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
@@ -1407,6 +1532,9 @@ class Game:
                 self.explorer.add_to_inventory(bonus)
                 bonus_info = self.items_db.get(bonus, {})
                 display.success(f"  Excellent work! Also found: {bonus_info.get('name', bonus)}!")
+
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_scavenge_done"] = True
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
 
@@ -1499,6 +1627,11 @@ class Game:
         target = " ".join(args).lower()
         room = self.current_room()
 
+        # Skerry-only restriction for artifacts
+        if room and room.zone != "skerry":
+            display.error("You need to be back at the skerry to decide what to do with artifacts.")
+            return
+
         art_id, art = self._find_in_db(target, self.artifacts_db)
         if art:
             char = self.current_character()
@@ -1508,6 +1641,8 @@ class Game:
                 if not already_held:
                     char.add_to_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "kept"
+                if not self.state.get("tutorial_complete"):
+                    self.state["tutorial_artifact_resolved"] = True
 
                 display.success(f"You keep the {art['name']}.")
                 if art.get("stat_bonuses"):
@@ -1538,6 +1673,12 @@ class Game:
         # Check if target is the world seed
         seed_name = self.seed_name.lower()
         if target_name in (seed_name, "seed", "tuft"):
+            # Skerry-only restriction
+            room = self.current_room()
+            if room and room.zone != "skerry":
+                display.error(f"You need to be near {self.seed_name} on the skerry to offer artifacts.")
+                return
+
             # Same logic as feeding — check artifacts first, then items
             char = self.current_character()
 
@@ -1551,6 +1692,8 @@ class Game:
                 new_total, stage_changed = self.seed.feed(motes)
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+                if not self.state.get("tutorial_complete"):
+                    self.state["tutorial_artifact_resolved"] = True
 
                 if art.get("feed_effect"):
                     display.narrate(self.sub(art["feed_effect"]))
@@ -1606,6 +1749,18 @@ class Game:
             self.current_character().add_to_inventory(art_id)
             display.success(f"You pick up the {art.get('name', art_id)}.")
             return
+
+        # Check zone artifacts (not in room.items but matched by room field)
+        art_id2, art2 = self._find_in_db(target, self.artifacts_db)
+        if art2 and art2.get("room") == room.id:
+            status = self.state.get("artifacts_status", {}).get(art_id2)
+            if status not in ("kept", "fed"):
+                art2["room"] = None  # Remove from room
+                self.current_character().add_to_inventory(art_id2)
+                display.success(f"You pick up the {art2.get('name', art_id2)}.")
+                if not self.state.get("tutorial_complete"):
+                    self.state["tutorial_artifact_found"] = True
+                return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
         if item:
@@ -1697,9 +1852,14 @@ class Game:
             display.error(f"You haven't learned the {recipe['name']} recipe yet.")
             return
 
-        # Check materials
+        # Check materials — inventory + room items
         char = self.steward
+        room = self.current_room()
         inv_counts = self._inventory_counts(char)
+        # Also count materials in the room
+        if room:
+            for item_id in room.items:
+                inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
 
         missing = []
         for mat, needed in recipe["materials"].items():
@@ -1719,10 +1879,13 @@ class Game:
         print(f"  DC: +{dc}")
 
         if shifts >= 0:
-            # Consume materials
+            # Consume materials — take from room first, then inventory
             for mat, needed in recipe["materials"].items():
                 for _ in range(needed):
-                    char.remove_from_inventory(mat)
+                    if room and mat in room.items:
+                        room.remove_item(mat)
+                    else:
+                        char.remove_from_inventory(mat)
 
             # Create result
             result_id = recipe["result"]
@@ -1838,12 +2001,12 @@ class Game:
 
     def cmd_assign(self, args):
         if len(args) < 2:
-            display.error("Usage: ASSIGN <npc> <task>  (tasks: scavenging, building, gardening, guarding, crafting)")
+            display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, building, gardening, guarding, crafting)")
             return
 
         npc_target = args[0].lower()
         task = args[1].lower()
-        valid_tasks = ["scavenging", "building", "gardening", "guarding", "crafting", "idle"]
+        valid_tasks = ["salvage", "building", "gardening", "guarding", "crafting", "idle"]
 
         if task not in valid_tasks:
             display.error(f"Unknown task: '{task}'. Valid tasks: {', '.join(valid_tasks)}")
@@ -1993,6 +2156,8 @@ class Game:
                 display.success(f"  It drops: {item_info.get('name', dropped)}")
             self.explorer.gain_fate_point()
             display.info(f"  (+1 Fate Point for victory)")
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_combat_done"] = True
             return True
 
         enemy_data["stress"] = enemy_stress
@@ -2054,12 +2219,17 @@ class Game:
             if not npc.get("recruited"):
                 continue
             task = npc.get("assignment", "idle")
-            if task == "scavenging":
+            if task == "salvage":
                 if random.random() < 0.6:
                     loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
-                    self.steward.add_to_inventory(loot)
+                    # Deposit in junkyard room, not steward inventory
+                    junkyard = self.rooms.get("skerry_junkyard")
+                    if junkyard:
+                        junkyard.add_item(loot)
+                    else:
+                        self.steward.add_to_inventory(loot)
                     loot_name = self.items_db.get(loot, {}).get("name", loot)
-                    display.success(f"  {npc['name']} (scavenging) found: {loot_name}")
+                    display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
             elif task == "gardening":
                 if random.random() < 0.4:
                     self.steward.add_to_inventory("seeds")

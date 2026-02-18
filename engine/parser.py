@@ -63,6 +63,7 @@ COMMANDS = {
     "take":      {"phases": ["explorer", "prologue"], "args": "required"},
     "ih":        {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "offer":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
+    "drop":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     # Steward commands
     "craft":     {"phases": ["steward"], "args": "required"},
     "recipes":   {"phases": ["steward"], "args": "none"},

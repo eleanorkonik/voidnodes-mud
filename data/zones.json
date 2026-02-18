@@ -25,7 +25,7 @@
                 "aspects": ["Treasure Behind Sealed Doors", "Something Moves When You're Not Looking"],
                 "items": ["wire", "torn_fabric"],
                 "npcs": ["emmy", "varis"],
-                "enemies": ["void_vermin_pack"],
+                "enemies": ["rat_swarm"],
                 "discovered": false
             },
             {
@@ -61,7 +61,7 @@
                 "aspects": ["The Heart Stopped But It's Still Warm", "Something Down Here Has Juice"],
                 "items": ["metal_scraps", "torn_fabric"],
                 "npcs": [],
-                "enemies": ["void_vermin_scout"],
+                "enemies": ["hound_of_annwn"],
                 "discovered": false
             }
         ],
@@ -69,20 +69,20 @@
         "entry_room": "df_entrance",
         "enemies_data": [
             {
-                "id": "void_vermin_pack",
-                "name": "Void Vermin Pack",
-                "description": "A chittering swarm of small, multi-legged creatures with translucent shells. Individually weak, they overwhelm through numbers.",
-                "aspects": ["Stronger Together Than Apart", "You Can See Right Through Them"],
+                "id": "rat_swarm",
+                "name": "Rat Swarm",
+                "description": "A chittering mass of pale, eyeless rats with translucent skin stretched tight over visible bones. They pour from cracks in the bulkhead like liquid, each one small but the whole swarm a gnawing tide.",
+                "aspects": ["Stronger Together Than Apart", "A Hundred Tiny Mouths"],
                 "skills": {"Fight": 2, "Notice": 1},
                 "stress": [false, false],
                 "consequences": {"mild": null},
                 "loot": ["metal_scraps"]
             },
             {
-                "id": "void_vermin_scout",
-                "name": "Void Vermin Scout",
-                "description": "A lone vermin, larger than its pack cousins. Its mandibles click as it sizes you up.",
-                "aspects": ["Separated From the Pack and Desperate", "Those Jaws Cut Through Metal"],
+                "id": "hound_of_annwn",
+                "name": "Hound of Annwn",
+                "description": "A spectral hound with white fur and red-tipped ears, its form flickering between solid and translucent. It watches you with ancient, knowing eyes, and its growl resonates in your chest.",
+                "aspects": ["Between This World and the Next", "Those Jaws Cut Through Metal"],
                 "skills": {"Fight": 1, "Notice": 2},
                 "stress": [false],
                 "consequences": {"mild": null},
