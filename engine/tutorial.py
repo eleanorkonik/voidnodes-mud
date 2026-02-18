@@ -472,7 +472,7 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("They're tough. But every creature has weaknesses.")
             display.seed_speak(f"See '{display.aspect_text(first_aspect)}'?")
             display.seed_speak(f"EXPLOIT {short.upper()} to set up a tactical advantage.")
-            display.seed_speak("It won't cost anything — just your Notice skill vs theirs.")
+            display.seed_speak("It won't cost anything — just your ability to NOTICE things versus theirs.")
             _tutorial_prompt(f"EXPLOIT {short.upper()} to create a free invocation.")
         return
 
