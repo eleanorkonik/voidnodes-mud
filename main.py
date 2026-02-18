@@ -574,14 +574,16 @@ class Game:
         """Narrate the tendril FWOOM between skerry and a node."""
         seed = self.seed_name
         print()
-        if from_room.zone == "skerry":
-            display.narrate(f"{seed}'s tendril coils around you — warm, insistent — and pulls tight.")
+        if to_room.zone != "skerry":
+            # Leaving the skerry → outbound
+            display.narrate(f"{seed}'s tendril coils around you — warm, insistent — and launches you out.")
             print()
             display.success("  FWOOM.")
             print()
             display.narrate("Void-dark. Rushing emptiness. Your stomach drops.")
             display.narrate("Then ground under your feet, and the tendril loosens.")
         else:
+            # Returning to the skerry → homebound
             display.narrate(f"{seed}'s tendril tugs — homeward. You let go.")
             print()
             display.success("  FWOOM.")
@@ -676,6 +678,11 @@ class Game:
             display.error("That path leads nowhere. (This shouldn't happen.)")
             return
 
+        # Block cross-zone movement — requires ENTER VOID
+        if room.zone != target_room.zone:
+            display.narrate("The void stretches before you. Type ENTER VOID to cross.")
+            return
+
         # Move
         phase = self.state["current_phase"]
         if phase == "prologue":
@@ -683,11 +690,6 @@ class Game:
         else:
             self.state[f"{phase}_location"] = target_id
         target_room.discover()
-
-        # Block cross-zone movement — requires ENTER VOID
-        if room.zone != target_room.zone:
-            display.narrate("The void stretches before you. Type ENTER VOID to cross.")
-            return
 
         display.display_room(target_room, self.game_context())
 
