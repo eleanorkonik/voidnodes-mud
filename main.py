@@ -355,6 +355,7 @@ class Game:
             "recruit": self.cmd_recruit,
             "retreat": self.cmd_retreat,
             "enter": self.cmd_enter,
+            "seek": self.cmd_seek,
             "craft": self.cmd_craft,
             "recipes": self.cmd_recipes,
             "build": self.cmd_build,
