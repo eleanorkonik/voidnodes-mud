@@ -26,6 +26,7 @@ COMMAND_ALIASES = {
     "m": "map",
     "hi": "talk", "greet": "talk",
     "focus": "switch",
+    "ca": "exploit", "setup": "exploit",
 }
 
 # All recognized commands and which phase they're valid in
@@ -53,6 +54,7 @@ COMMANDS = {
     "attack":    {"phases": ["explorer"], "args": "required"},
     "defend":    {"phases": ["explorer"], "args": "none"},
     "invoke":    {"phases": ["explorer"], "args": "required"},
+    "exploit":   {"phases": ["explorer"], "args": "required"},
     "concede":   {"phases": ["explorer"], "args": "none"},
     "scavenge":  {"phases": ["explorer"], "args": "none"},
     "probe":     {"phases": ["explorer", "prologue"], "args": "required"},

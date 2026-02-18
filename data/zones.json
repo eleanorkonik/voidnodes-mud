@@ -87,7 +87,8 @@
                 "skills": {"Fight": 1, "Notice": 2},
                 "stress": [false],
                 "consequences": {"mild": null},
-                "loot": ["torn_fabric"]
+                "loot": ["torn_fabric"],
+                "aggressive": true
             },
             {
                 "id": "corroded_automaton",
@@ -179,7 +180,8 @@
                 "skills": {"Fight": 3, "Notice": 2},
                 "stress": [false, false],
                 "consequences": {"mild": null},
-                "loot": ["coral_fragments", "resin"]
+                "loot": ["coral_fragments", "resin"],
+                "aggressive": true
             },
             {
                 "id": "thorn_crawler_alpha",

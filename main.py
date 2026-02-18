@@ -37,6 +37,9 @@ class Game:
         self.in_combat = False
         self.combat_target = None
         self.defending = False
+        self.free_invocations = {}  # {aspect_name: count}
+        self.combat_boost = 0  # one-use +2 from ties
+        self.combat_consequences_taken = 0  # for CONCEDE FP calculation
 
     @property
     def seed_name(self):
@@ -331,6 +334,7 @@ class Game:
             "switch": self.cmd_switch,
             "attack": self.cmd_attack,
             "defend": self.cmd_defend,
+            "exploit": self.cmd_exploit,
             "invoke": self.cmd_invoke,
             "concede": self.cmd_concede,
             "scavenge": self.cmd_scavenge,
@@ -704,6 +708,10 @@ class Game:
         self._narrate_void_crossing(room, target_room)
         display.display_room(target_room, self.game_context())
 
+        # Check for aggressive enemies
+        if self.state["current_phase"] == "explorer":
+            self._on_room_enter(target_room)
+
     def cmd_enter(self, args):
         """Handle ENTER VOID — legacy command, redirects to SEEK."""
         if not args or args[0].lower() != "void":
@@ -732,6 +740,8 @@ class Game:
             target_room.discover()
             self._narrate_void_crossing(room, target_room)
             display.display_room(target_room, self.game_context())
+            if self.state["current_phase"] == "explorer":
+                self._on_room_enter(target_room)
             return
 
         # Multiple crossings — show what the seed senses and prompt SEEK
@@ -788,8 +798,12 @@ class Game:
 
         display.display_room(target_room, self.game_context())
 
+        # Check for aggressive enemies
+        if self.state["current_phase"] == "explorer":
+            self._on_room_enter(target_room)
+
         # World seed flavor message occasionally
-        if random.random() < 0.3:
+        if not self.in_combat and random.random() < 0.3:
             print()
             display.seed_speak(self.seed.communicate(self.seed_name))
 
@@ -1444,58 +1458,72 @@ class Game:
     # ── Explorer Commands ─────────────────────────────────────────
 
     def cmd_attack(self, args):
-        if not args:
+        if not args and not self.in_combat:
             display.error("Attack what?")
             return
 
-        target = " ".join(args).lower()
         room = self.current_room()
 
-        enemy_id, enemy_data = self._find_entity(room.enemies, target, self.enemies_db)
+        if not self.in_combat:
+            target = " ".join(args).lower()
+            enemy_id, enemy_data = self._find_entity(room.enemies, target, self.enemies_db)
+            if not enemy_data:
+                display.error(f"There's nothing called '{target}' to attack here.")
+                return
+            self._start_combat(enemy_id)
+        elif args:
+            # Already in combat — check if re-targeting
+            target = " ".join(args).lower()
+            enemy_id, enemy_data = self._find_entity(room.enemies, target, self.enemies_db)
+            if enemy_data:
+                self.combat_target = enemy_id
+
+        enemy_data = self.enemies_db.get(self.combat_target)
         if not enemy_data:
-            display.error(f"There's nothing called '{target}' to attack here.")
             return
 
-        self.in_combat = True
-        self.combat_target = enemy_id
-        self.defending = False
+        # Calculate bonus from free invocations and boost
+        bonus = 0
+        used_aspect = None
+        if self.free_invocations:
+            # Auto-consume one free invocation
+            aspect_name = next(iter(self.free_invocations))
+            self.free_invocations[aspect_name] -= 1
+            if self.free_invocations[aspect_name] <= 0:
+                del self.free_invocations[aspect_name]
+            bonus += 2
+            used_aspect = aspect_name
 
-        # Get skills
-        atk_skill_val = self.explorer.get_skill("Fight")
+        if self.combat_boost > 0:
+            bonus += self.combat_boost
+            self.combat_boost = 0
+
+        atk_skill_val = self.explorer.get_skill("Fight") + bonus
         def_skill_val = enemy_data["skills"].get("Fight", 1)
 
-        # Roll opposed
         atk_total, def_total, shifts, atk_dice, def_dice = dice.opposed_roll(atk_skill_val, def_skill_val)
 
         display.header(f"Combat: {self.explorer.name} vs {enemy_data['name']}")
-        print(f"  {self.explorer.name}: {dice.roll_description(atk_dice, atk_skill_val, 'Fight')}")
+        if used_aspect:
+            print(f"  {display.DIM}(Free invocation: {display.aspect_text(used_aspect)}){display.RESET}")
+        skill_label = f"Fight+{bonus}" if bonus else "Fight"
+        base_fight = self.explorer.get_skill("Fight")
+        print(f"  {self.explorer.name}: {dice.roll_description(atk_dice, base_fight + bonus, skill_label)}")
         print(f"  {enemy_data['name']}: {dice.roll_description(def_dice, def_skill_val, 'Fight')}")
 
         if shifts > 0:
-            # Player hits enemy
             display.success(f"  You hit for {shifts} shifts!")
-            if self._apply_enemy_damage(enemy_data, enemy_id, shifts, room):
+            if self._apply_enemy_damage(enemy_data, self.combat_target, shifts, room):
                 return
-
-        elif shifts < 0:
-            # Enemy hits player
-            hit_amount = abs(shifts)
-            display.warning(f"  {enemy_data['name']} hits you for {hit_amount} shifts!")
-            taken_out = self.explorer.apply_damage(hit_amount)
-
-            if taken_out:
-                display.warning(f"\n  {self.explorer.name} is taken out!")
-                self._seed_extraction()
-                return
-
-            stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
-            display.info(f"  Stress: {stress_str}")
-
+        elif shifts == 0:
+            display.narrate("  A draw — you gain a momentary edge.")
+            self.combat_boost += 2
+            display.info(f"  (Boost: +2 on your next action)")
         else:
-            display.narrate("  The exchange is a draw. Neither side gains ground.")
+            display.narrate(f"  You miss. {enemy_data['name']} deflects your strike.")
 
-        print()
-        display.narrate("Combat continues. ATTACK again, DEFEND, INVOKE an aspect, CONCEDE, or RETREAT.")
+        # Enemy turn
+        self._enemy_turn()
 
     def cmd_defend(self, args):
         if not self.in_combat:
@@ -1503,34 +1531,98 @@ class Game:
             return
 
         self.defending = True
-        display.narrate("You take a defensive stance. (+2 to your next defense roll)")
+        display.narrate("You brace yourself, watching for openings. (+2 defense this exchange)")
 
-        # Enemy attacks
-        enemy_data = self.enemies_db.get(self.combat_target, {})
-        if not enemy_data:
-            return
-
-        def_skill_val = self.explorer.get_skill("Fight") + 2  # defensive bonus
-        atk_skill_val = enemy_data["skills"].get("Fight", 1)
-
-        atk_total, def_total, shifts, atk_dice, def_dice = dice.opposed_roll(atk_skill_val, def_skill_val)
-
-        print(f"  {enemy_data['name']} attacks: {dice.roll_description(atk_dice, atk_skill_val, 'Fight')}")
-        print(f"  Your defense: {dice.roll_description(def_dice, def_skill_val, 'Fight (defending)')}")
-
-        if shifts > 0:
-            display.warning(f"  Despite your defense, you take {shifts} shifts!")
-            taken_out = self.explorer.apply_damage(shifts)
-            if taken_out:
-                display.warning(f"\n  {self.explorer.name} is taken out!")
-                self._seed_extraction()
-                return
-        else:
-            display.success("  You successfully defend against the attack.")
-
+        # Enemy turn (with the +2 defense active)
+        self._enemy_turn()
         self.defending = False
 
+    def cmd_exploit(self, args):
+        """EXPLOIT <aspect> — Create an Advantage by exploiting an aspect.
+
+        Roll Notice vs difficulty to place free invocations on the aspect.
+        Success: 1 free invocation. Success with style (3+): 2 free invocations.
+        Tie: boost (+2 one-use). Fail: wasted turn, enemy still attacks.
+        """
+        if not args:
+            display.error("Exploit what? EXPLOIT <aspect> to create a tactical advantage.")
+            return
+
+        if not self.in_combat:
+            display.error("You can only exploit aspects during combat.")
+            return
+
+        aspect_name = " ".join(args)
+        enemy_data = self.enemies_db.get(self.combat_target, {})
+
+        # Gather all available aspects
+        all_aspects = []
+        room = self.current_room()
+        if room:
+            all_aspects.extend(room.aspects)
+            zone_aspect = self._get_zone_aspect(room)
+            if zone_aspect:
+                all_aspects.append(zone_aspect)
+        all_aspects.extend(enemy_data.get("aspects", []))
+        char = self.current_character()
+        all_aspects.extend(char.get_all_aspects())
+
+        # Fuzzy match
+        found = None
+        for a in all_aspects:
+            if aspect_name.lower() in a.lower():
+                found = a
+                break
+
+        if not found:
+            display.error(f"No matching aspect found for '{aspect_name}'.")
+            display.info("Available aspects:")
+            for a in all_aspects:
+                print(f"  {display.aspect_text(a)}")
+            return
+
+        # Determine difficulty: enemy aspects use enemy Notice, room aspects use flat 1
+        is_enemy_aspect = found in enemy_data.get("aspects", [])
+        if is_enemy_aspect:
+            difficulty = enemy_data["skills"].get("Notice", 1)
+        else:
+            difficulty = 1
+
+        notice_val = self.explorer.get_skill("Notice")
+        total, shifts, dice_result = dice.skill_check(notice_val, difficulty)
+
+        display.header(f"Exploit: {found}")
+        diff_label = f"vs {enemy_data['name']} Notice" if is_enemy_aspect else "vs difficulty 1"
+        print(f"  {self.explorer.name}: {dice.roll_description(dice_result, notice_val, 'Notice')} ({diff_label})")
+
+        if shifts >= 3:
+            # Success with style — 2 free invocations
+            self.free_invocations[found] = self.free_invocations.get(found, 0) + 2
+            display.success(f"  Brilliant! You spot exactly how to use {display.aspect_text(found)}.")
+            display.info(f"  (2 free invocations on {found})")
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_exploit_done"] = True
+        elif shifts >= 0:
+            # Success — 1 free invocation
+            self.free_invocations[found] = self.free_invocations.get(found, 0) + 1
+            display.success(f"  You find a way to use {display.aspect_text(found)} to your advantage.")
+            display.info(f"  (1 free invocation on {found})")
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_exploit_done"] = True
+        elif shifts == -1:
+            # Tie — boost
+            self.combat_boost += 2
+            display.narrate(f"  Not quite — but you gain a momentary edge.")
+            display.info(f"  (Boost: +2 on your next action)")
+        else:
+            # Fail
+            display.narrate(f"  You try to exploit {display.aspect_text(found)} but can't find an opening.")
+
+        # Enemy turn
+        self._enemy_turn()
+
     def cmd_invoke(self, args):
+        """INVOKE <aspect> — Spend a fate point to invoke an aspect for +2 on an attack."""
         if not args:
             display.error("Invoke which aspect? Type INVOKE followed by an aspect name.")
             return
@@ -1562,7 +1654,7 @@ class Game:
 
         if not found:
             display.error(f"No matching aspect found for '{aspect_name}'.")
-            display.info(f"Available aspects:")
+            display.info("Available aspects:")
             for a in all_aspects:
                 print(f"  {display.aspect_text(a)}")
             return
@@ -1574,46 +1666,73 @@ class Game:
         if not self.state.get("tutorial_complete"):
             self.state["tutorial_invoke_done"] = True
 
-        display.success(f"You invoke {display.aspect_text(found)} for +2 on your next roll!")
+        display.success(f"You invoke {display.aspect_text(found)} for +2!")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
-        # Auto-attack with the bonus
+        # Auto-attack with the invoke bonus (+2) plus any free invocations/boost
         enemy_data = self.enemies_db.get(self.combat_target, {})
         if not enemy_data:
             return
 
-        atk_skill_val = self.explorer.get_skill("Fight") + 2  # invoke bonus
+        bonus = 2  # invoke bonus
+        used_free = None
+        if self.free_invocations:
+            free_aspect = next(iter(self.free_invocations))
+            self.free_invocations[free_aspect] -= 1
+            if self.free_invocations[free_aspect] <= 0:
+                del self.free_invocations[free_aspect]
+            bonus += 2
+            used_free = free_aspect
+
+        if self.combat_boost > 0:
+            bonus += self.combat_boost
+            self.combat_boost = 0
+
+        atk_skill_val = self.explorer.get_skill("Fight") + bonus
         def_skill_val = enemy_data["skills"].get("Fight", 1)
 
         atk_total, def_total, shifts, atk_dice, def_dice = dice.opposed_roll(atk_skill_val, def_skill_val)
 
-        print(f"  {self.explorer.name} (invoked): {dice.roll_description(atk_dice, atk_skill_val, 'Fight+2')}")
+        base_fight = self.explorer.get_skill("Fight")
+        skill_label = f"Fight+{bonus}"
+        if used_free:
+            print(f"  {display.DIM}(Also using free invocation: {display.aspect_text(used_free)}){display.RESET}")
+        print(f"  {self.explorer.name}: {dice.roll_description(atk_dice, base_fight + bonus, skill_label)}")
         print(f"  {enemy_data['name']}: {dice.roll_description(def_dice, def_skill_val, 'Fight')}")
 
         if shifts > 0:
             display.success(f"  Empowered strike for {shifts} shifts!")
             if self._apply_enemy_damage(enemy_data, self.combat_target, shifts, room):
-                self.combat_target = None
                 return
-        elif shifts < 0:
-            display.warning(f"  Even with the invoke, {enemy_data['name']} counters for {abs(shifts)} shifts!")
-            self.explorer.apply_damage(abs(shifts))
+        elif shifts == 0:
+            display.narrate("  A draw despite the invocation — you gain a momentary edge.")
+            self.combat_boost += 2
+            display.info(f"  (Boost: +2 on your next action)")
         else:
-            display.narrate("  A draw despite the invocation.")
+            display.narrate(f"  Even with the invoke, {enemy_data['name']} deflects your strike.")
+
+        # Enemy turn
+        self._enemy_turn()
 
     def cmd_concede(self, args):
+        """CONCEDE — Surrender combat. Gain 1 FP + 1 per consequence taken this fight."""
         if not self.in_combat:
             display.error("You're not in combat.")
             return
 
-        self.in_combat = False
         enemy = self.enemies_db.get(self.combat_target, {})
-        self.combat_target = None
-        self.explorer.gain_fate_point()
+        cons_taken = self.combat_consequences_taken
+        fp_gain = 1 + cons_taken
+        self._end_combat()
+
+        for _ in range(fp_gain):
+            self.explorer.gain_fate_point()
 
         display.narrate(f"You concede the fight against {enemy.get('name', 'the enemy')}.")
         display.narrate("You back away carefully, ceding ground.")
-        display.success("+1 Fate Point for conceding.")
+        display.success(f"+{fp_gain} Fate Point{'s' if fp_gain > 1 else ''} for conceding.")
+        if cons_taken > 0:
+            display.info(f"  (1 base + {cons_taken} for consequences taken)")
         display.narrate("The enemy lets you go — for now.")
 
     def cmd_scavenge(self, args):
@@ -2233,6 +2352,123 @@ class Game:
             counts[item_id] = counts.get(item_id, 0) + 1
         return counts
 
+    def _start_combat(self, enemy_id):
+        """Initialize combat state for a new encounter."""
+        self.in_combat = True
+        self.combat_target = enemy_id
+        self.defending = False
+        self.free_invocations = {}
+        self.combat_boost = 0
+        self.combat_consequences_taken = 0
+
+    def _end_combat(self):
+        """Clean up after combat ends (victory, concede, or extraction)."""
+        self.in_combat = False
+        self.combat_target = None
+        self.defending = False
+        self.free_invocations = {}
+        self.combat_boost = 0
+        self.combat_consequences_taken = 0
+        self.explorer.clear_stress()
+
+    def _enemy_turn(self):
+        """Enemy takes an independent attack action."""
+        if not self.in_combat or not self.combat_target:
+            return
+
+        enemy_data = self.enemies_db.get(self.combat_target)
+        if not enemy_data:
+            return
+
+        # Enemy attacks with Fight vs player Fight (+2 if defending)
+        enemy_fight = enemy_data["skills"].get("Fight", 1)
+        player_fight = self.explorer.get_skill("Fight")
+        defend_bonus = 2 if self.defending else 0
+        player_defense = player_fight + defend_bonus
+
+        atk_total, def_total, shifts, atk_dice, def_dice = dice.opposed_roll(enemy_fight, player_defense)
+
+        print()
+        defense_label = f"Fight+2" if self.defending else "Fight"
+        print(f"  {display.DIM}{enemy_data['name']} strikes back!{display.RESET}")
+        print(f"  {enemy_data['name']}: {dice.roll_description(atk_dice, enemy_fight, 'Fight')}")
+        print(f"  {self.explorer.name}: {dice.roll_description(def_dice, player_defense, defense_label)}")
+
+        if shifts > 0:
+            display.warning(f"  {enemy_data['name']} hits you for {shifts} shifts!")
+            taken_out = self.explorer.apply_damage(shifts)
+            if taken_out:
+                display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
+                display.narrate(f"  {self.seed_name} reaches across the void...")
+                self._seed_extraction()
+                return
+            # Track consequences for concede calculation
+            for sev in ["mild", "moderate", "severe"]:
+                if self.explorer.consequences.get(sev) == "Pending":
+                    self.combat_consequences_taken += 1
+                    # Name the consequence based on enemy
+                    self.explorer.consequences[sev] = f"Wounded by {enemy_data['name']}"
+            # Show current stress
+            stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
+            display.info(f"  Stress: {stress_str}")
+        elif shifts == 0:
+            display.narrate(f"  {enemy_data['name']} lunges but you deflect it perfectly.")
+        else:
+            display.narrate(f"  {enemy_data['name']} swings wide. You sidestep easily.")
+
+    def _on_room_enter(self, room):
+        """Check for aggressive enemies when entering a room. Called after room display."""
+        if not room.enemies:
+            return
+
+        for enemy_id in room.enemies:
+            enemy_data = self.enemies_db.get(enemy_id)
+            if not enemy_data or not enemy_data.get("aggressive"):
+                continue
+
+            # Aggressive enemy — initiative roll: enemy Notice vs player Notice
+            enemy_notice = enemy_data["skills"].get("Notice", 0)
+            player_notice = self.explorer.get_skill("Notice")
+            atk_total, def_total, shifts, _, _ = dice.opposed_roll(enemy_notice, player_notice)
+
+            if shifts >= 0:
+                # Enemy wins initiative — gets a free strike
+                print()
+                display.warning(f"  {enemy_data['name']} lunges at you!")
+                self._start_combat(enemy_id)
+
+                enemy_fight = enemy_data["skills"].get("Fight", 1)
+                player_fight = self.explorer.get_skill("Fight")
+                atk_total, def_total, hit_shifts, atk_dice, def_dice = dice.opposed_roll(enemy_fight, player_fight)
+
+                print(f"  {enemy_data['name']}: {dice.roll_description(atk_dice, enemy_fight, 'Fight')}")
+                print(f"  {self.explorer.name}: {dice.roll_description(def_dice, player_fight, 'Fight')}")
+
+                if hit_shifts > 0:
+                    display.warning(f"  Ambush! {enemy_data['name']} hits for {hit_shifts} shifts!")
+                    taken_out = self.explorer.apply_damage(hit_shifts)
+                    if taken_out:
+                        display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
+                        display.narrate(f"  {self.seed_name} reaches across the void...")
+                        self._seed_extraction()
+                        return
+                    for sev in ["mild", "moderate", "severe"]:
+                        if self.explorer.consequences.get(sev) == "Pending":
+                            self.combat_consequences_taken += 1
+                            self.explorer.consequences[sev] = f"Ambushed by {enemy_data['name']}"
+                    stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
+                    display.info(f"  Stress: {stress_str}")
+                else:
+                    display.narrate(f"  You dodge the ambush! {enemy_data['name']} snarls.")
+
+                display.info(f"  You're locked in combat with {enemy_data['name']}!")
+                return
+            else:
+                # Player wins initiative — they noticed it first
+                display.warning(f"  {enemy_data['name']} tenses, ready to spring!")
+                display.info("  You have the initiative. ATTACK or EXPLOIT to act first.")
+                return
+
     def _apply_enemy_damage(self, enemy_data, enemy_id, shifts, room):
         """Apply damage to an enemy. Returns True if enemy was defeated."""
         enemy_stress = enemy_data.get("stress", [False, False])
@@ -2259,8 +2495,7 @@ class Game:
             # Enemy defeated!
             display.success(f"\n  {enemy_data['name']} is defeated!")
             room.remove_enemy(enemy_id)
-            self.in_combat = False
-            self.combat_target = None
+            self._end_combat()
             loot = enemy_data.get("loot", [])
             if loot:
                 dropped = random.choice(loot)
@@ -2283,9 +2518,7 @@ class Game:
 
         if self.seed.spend_motes(cost):
             self.state["extractions"] += 1
-            self.in_combat = False
-            self.combat_target = None
-            self.explorer.clear_stress()
+            self._end_combat()
             # Reset consequences to None only if pending
             for sev in list(self.explorer.consequences.keys()):
                 if self.explorer.consequences[sev] == "Pending":

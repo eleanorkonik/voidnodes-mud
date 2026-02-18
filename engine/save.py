@@ -117,6 +117,7 @@ def _migrate_state(state):
     state.setdefault("tutorial_artifact_found", False)
     state.setdefault("tutorial_artifact_resolved", False)
     state.setdefault("tutorial_recruit_done", False)
+    state.setdefault("tutorial_exploit_done", False)
     # Ensure basic_tools recipe is known
     if "basic_tools" not in state.get("discovered_recipes", []):
         state.setdefault("discovered_recipes", []).append("basic_tools")

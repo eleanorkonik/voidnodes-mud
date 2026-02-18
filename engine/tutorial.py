@@ -206,8 +206,9 @@ def after_command(cmd, args, game):
 
     if step == "explorer_free":
         _explorer_free_hints(cmd, args, game)
-        # Check if all five objectives are done
+        # Check if all six objectives are done
         if (game.state.get("tutorial_combat_done") and
+                game.state.get("tutorial_exploit_done") and
                 game.state.get("tutorial_invoke_done") and
                 game.state.get("tutorial_scavenge_done") and
                 game.state.get("tutorial_artifact_found") and
@@ -434,43 +435,81 @@ def _steward_arrive(game):
 
 
 def _explorer_free_hints(cmd, args, game):
-    """Contextual hints during the explorer_free step."""
+    """Contextual hints during the explorer_free step.
+
+    Teaching order: ATTACK → EXPLOIT → free invocation on ATTACK → INVOKE (paid).
+    """
     room = game.current_room()
     if not room:
         return
 
     combat_done = game.state.get("tutorial_combat_done")
+    exploit_done = game.state.get("tutorial_exploit_done")
     invoke_done = game.state.get("tutorial_invoke_done")
     scavenge_done = game.state.get("tutorial_scavenge_done")
     artifact_found = game.state.get("tutorial_artifact_found")
     recruit_done = game.state.get("tutorial_recruit_done")
 
-    # Just attacked — teach invoke
-    if cmd == "attack" and game.in_combat and not invoke_done:
+    # Room has enemies, not in combat, combat not done — prompt ATTACK
+    if room.has_enemies() and not game.in_combat and not combat_done:
+        print()
+        display.seed_speak("Those creatures! ATTACK them before they swarm you.")
+        _tutorial_prompt("ATTACK to engage the enemy.")
+        return
+
+    # Just attacked, enemy survived, exploit not yet taught
+    if cmd == "attack" and game.in_combat and not exploit_done:
         enemy_data = game.enemies_db.get(game.combat_target, {})
         enemy_aspects = enemy_data.get("aspects", [])
         if enemy_aspects:
             first_aspect = enemy_aspects[0]
-            # Suggest a short form of the aspect for the INVOKE command
             short = first_aspect.split()[0] if first_aspect else "aspect"
             print()
-            display.seed_speak(f"They're tough. Look — their aspects betray weaknesses.")
+            display.seed_speak("They're tough. But every creature has weaknesses.")
             display.seed_speak(f"See '{display.aspect_text(first_aspect)}'?")
-            display.seed_speak(f"INVOKE {short.upper()} to use it against them.")
-            display.seed_speak("Costs a fate point, gives +2.")
-            _tutorial_prompt(f"INVOKE {first_aspect.upper()} during combat.")
+            display.seed_speak(f"EXPLOIT {short.upper()} to set up a tactical advantage.")
+            display.seed_speak("It won't cost anything — just your Notice skill vs theirs.")
+            _tutorial_prompt(f"EXPLOIT {short.upper()} to create a free invocation.")
+        return
+
+    # Just exploited successfully — teach that ATTACK will auto-use it
+    if cmd == "exploit" and exploit_done and not game.state.get("_exploit_celebrated"):
+        game.state["_exploit_celebrated"] = True
+        print()
+        display.seed_speak("Now ATTACK — your free invocation will fire automatically.")
+        display.seed_speak("+2 to your strike, no fate point spent.")
+        _tutorial_prompt("ATTACK to use your free invocation.")
+        return
+
+    # Attack consumed a free invocation — celebrate, then teach INVOKE
+    if cmd == "attack" and exploit_done and not invoke_done:
+        if not game.state.get("_free_invoke_celebrated") and combat_done:
+            # Enemy was defeated by the free-invocation attack
+            game.state["_free_invoke_celebrated"] = True
+            print()
+            display.seed_speak("EXPLOIT sets up free hits. INVOKE costs a fate point")
+            display.seed_speak("but works instantly, no setup needed.")
+            display.seed_speak("Save INVOKE for when you need a guaranteed edge.")
+        elif not game.state.get("_free_invoke_celebrated") and game.in_combat:
+            # Enemy survived — show the payoff, mention INVOKE
+            game.state["_free_invoke_celebrated"] = True
+            print()
+            display.seed_speak("See? That free invocation hit hard.")
+            display.seed_speak("For tougher enemies, you can also INVOKE an aspect —")
+            display.seed_speak("costs a fate point, but gives +2 immediately.")
+            _tutorial_prompt("INVOKE <aspect> to spend a fate point for +2.")
         return
 
     # Just invoked successfully
     if cmd == "invoke" and invoke_done and not game.state.get("_invoke_celebrated"):
         game.state["_invoke_celebrated"] = True
         print()
-        display.seed_speak("That's it! Invoking aspects is the heart of combat.")
-        display.seed_speak("Use your aspects, the room's, even your enemy's.")
+        display.seed_speak("EXPLOIT for free advantages. INVOKE when you need power now.")
+        display.seed_speak("That's the rhythm of combat.")
         return
 
-    # Enemy defeated — prompt to take loot
-    if cmd == "attack" and combat_done and not game.in_combat:
+    # Enemy defeated — prompt to take loot and scavenge
+    if cmd in ("attack", "invoke") and combat_done and not game.in_combat:
         if room.items and not scavenge_done:
             print()
             display.seed_speak("Don't leave that behind — TAKE it.")
@@ -488,13 +527,6 @@ def _explorer_free_hints(cmd, args, game):
             print()
             display.seed_speak("Good haul. Keep an eye out for artifacts")
             display.seed_speak("and survivors too.")
-        return
-
-    # Room has enemies, not in combat, combat not done
-    if room.has_enemies() and not game.in_combat and not combat_done:
-        print()
-        display.seed_speak("Those creatures! ATTACK them before they swarm you.")
-        _tutorial_prompt("ATTACK to engage the enemy.")
         return
 
     # Room has undiscovered artifact
@@ -527,13 +559,13 @@ def _explorer_free_hints(cmd, args, game):
         return
 
     # Room has NPCs, recruit not done
-    if not recruit_done and combat_done and invoke_done:
+    if not recruit_done and combat_done and exploit_done:
         npc_ids = room.npcs if hasattr(room, 'npcs') else []
         if npc_ids:
             print()
             display.seed_speak("Survivors! They could use a safe place.")
             display.seed_speak("Try RECRUIT.")
-            _tutorial_prompt(f"RECRUIT to bring them to the skerry.")
+            _tutorial_prompt("RECRUIT to bring them to the skerry.")
             return
 
     # Just recruited
@@ -544,8 +576,8 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("Good. We could use the help.")
         return
 
-    # Combat+invoke done but scavenge not done
-    if combat_done and invoke_done and not scavenge_done:
+    # Combat+exploit done but scavenge not done
+    if combat_done and exploit_done and not scavenge_done:
         if cmd == "go":
             print()
             display.seed_speak("SCAVENGE to search for materials.")
@@ -623,6 +655,7 @@ def get_current_hint(step, game_state=None):
 def _explorer_free_resume_hint(gs):
     """Show a contextual hint for explorer_free when resuming a save."""
     combat_done = gs.get("tutorial_combat_done")
+    exploit_done = gs.get("tutorial_exploit_done")
     invoke_done = gs.get("tutorial_invoke_done")
     scavenge_done = gs.get("tutorial_scavenge_done")
     artifact_found = gs.get("tutorial_artifact_found")
@@ -630,8 +663,11 @@ def _explorer_free_resume_hint(gs):
 
     if not combat_done:
         display.seed_speak("Find enemies and ATTACK them.")
+    elif not exploit_done:
+        display.seed_speak("Find an enemy and try EXPLOIT [aspect] during combat.")
+        display.seed_speak("It sets up free invocations — tactical advantage, no cost.")
     elif not invoke_done:
-        display.seed_speak("Find another enemy and try INVOKE [aspect] during combat.")
+        display.seed_speak("Try INVOKE [aspect] during combat — costs a fate point for +2.")
     elif not scavenge_done:
         display.seed_speak("SCAVENGE to search for materials.")
     elif not artifact_found:

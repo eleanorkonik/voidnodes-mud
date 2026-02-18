@@ -316,9 +316,10 @@ def display_help(phase, seed_name="Tuft"):
     ]
     explorer_cmds = [
         ("ATTACK <target>", "Attack an enemy"),
+        ("EXPLOIT <aspect>", "Set up a tactical advantage (free +2)"),
         ("DEFEND", "Take a defensive stance (+2 to defense)"),
-        ("INVOKE <aspect>", "Spend a fate point to invoke an aspect (+2)"),
-        ("CONCEDE", "Surrender combat (gain 1 fate point)"),
+        ("INVOKE <aspect>", "Spend a fate point for +2 (costs FP)"),
+        ("CONCEDE", "Surrender combat (gain fate points)"),
         ("SCAVENGE", "Search the room for materials"),
         ("PROBE <thing>", "Examine an item or artifact closely"),
         ("KEEP <item>", "Keep an artifact for its stat bonus"),
