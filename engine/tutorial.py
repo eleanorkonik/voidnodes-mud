@@ -304,7 +304,7 @@ def _show_the_split(game):
     display.divider()
     print()
 
-    display.tuft_speak(f"You're {steward_name} right now.")
+    display.tuft_speak(f"{seed_name} is focused on {steward_name} right now.")
     print()
 
     # Set up starter artifact
@@ -383,7 +383,8 @@ def get_current_hint(step, game_state=None):
     elif step == "handoff":
         explorer_name = (game_state or {}).get("explorer_name", "Sevarik")
         steward_name = (game_state or {}).get("steward_name", "Miria")
-        display.tuft_speak(f"You're {steward_name} right now. Explore the skerry if you like.")
+        seed_name = (game_state or {}).get("world_seed_name", "Tuft")
+        display.tuft_speak(f"{seed_name} is focused on {steward_name} right now. Explore the skerry if you like.")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
 
 
