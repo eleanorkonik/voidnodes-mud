@@ -216,7 +216,9 @@ def after_command(cmd, args, game):
         if cmd == "keep":
             display.tuft_speak("Your call. Carry it well.")
         else:
+            seed_name = game.state.get("world_seed_name", "Tuft")
             display.tuft_speak("Mmm. I can feel that. Thank you.")
+            display.tuft_speak(f"CHECK {seed_name.upper()} any time to see how I'm growing.")
         print()
         display.tuft_speak(f"Now. {explorer_name} is waiting. Time to see the void")
         display.tuft_speak("through his eyes.")
