@@ -18,6 +18,7 @@ ROOM_LABELS = {
     "skerry_central": "Central",
     "skerry_shelter": "Shelter",
     "skerry_hollow": "Hollow",
+    "skerry_junkyard": "Junkyard",
     "skerry_landing": "Landing",
     # Debris Field
     "df_entrance": "Entrance",
@@ -46,10 +47,11 @@ ZONE_LAYOUTS = {
     "skerry": {
         "name": "The Skerry",
         "grid": [
-            (0, 0, "skerry_shelter"),
-            (1, 0, "skerry_central"),
-            (1, 1, "skerry_hollow"),
-            (2, 0, "skerry_landing"),
+            (0, 1, "skerry_shelter"),
+            (1, 0, "skerry_junkyard"),
+            (1, 1, "skerry_central"),
+            (1, 2, "skerry_hollow"),
+            (2, 1, "skerry_landing"),
         ],
     },
     "debris_field": {
