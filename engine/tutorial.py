@@ -211,6 +211,13 @@ def after_command(cmd, args, game):
         return False
 
     if step == "artifact_choice" and cmd in ("keep", "offer"):
+        # Verify the action actually succeeded — artifact_status should
+        # be "kept" or "fed", not still "discovered".
+        artifact_id = game.state.get("starter_artifact")
+        if artifact_id:
+            status = game.state.get("artifacts_status", {}).get(artifact_id)
+            if status not in ("kept", "fed"):
+                return False
         explorer_name = game.state.get("explorer_name", "Sevarik")
         print()
         if cmd == "keep":

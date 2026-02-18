@@ -1463,7 +1463,11 @@ class Game:
             char = self.current_character()
 
             art_id, art = self._find_in_db(item_name_str, self.artifacts_db)
-            if art and art_id in char.inventory:
+            if art and (art_id in char.inventory or char.find_worn_by_item(art_id)):
+                # If worn, unequip first (moves to inventory)
+                worn_slot = char.find_worn_by_item(art_id)
+                if worn_slot:
+                    char.remove_worn(worn_slot)
                 motes = art["mote_value"]
                 new_total, stage_changed, stage_name = self.tuft.feed(motes)
                 char.remove_from_inventory(art_id)
@@ -1481,8 +1485,15 @@ class Game:
                 display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
                 return
 
-            item_id, item = self._find_entity(list(char.inventory), item_name_str, self.items_db)
+            # Check inventory and worn items
+            worn_ids = [wid for wid in char.worn.values() if wid]
+            search_ids = list(char.inventory) + worn_ids
+            item_id, item = self._find_entity(search_ids, item_name_str, self.items_db)
             if item:
+                # If worn, unequip first (moves to inventory)
+                worn_slot = char.find_worn_by_item(item_id)
+                if worn_slot:
+                    char.remove_worn(worn_slot)
                 motes = item.get("mote_value", 1)
                 new_total, stage_changed, stage_name = self.tuft.feed(motes)
                 char.remove_from_inventory(item_id)
