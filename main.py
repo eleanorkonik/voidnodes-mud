@@ -1119,6 +1119,9 @@ class Game:
         self.state["current_phase"] = "explorer"
         day = self.state["day"]
 
+        # Sevarik starts where Miria found him (the prologue location)
+        self.state["explorer_location"] = self.state.get("prologue_location", "skerry_central")
+
         # Remove Sevarik-as-NPC (he's now the active explorer character)
         for room in self.rooms.values():
             if "sevarik" in room.npcs:

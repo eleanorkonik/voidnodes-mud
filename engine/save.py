@@ -190,7 +190,7 @@ def new_game_state():
         "artifacts_status": {},  # tracks discovered/kept/fed
         "event_log": [f"Day 1: You arrived at the skerry, a tiny island of solid ground in the endless void."],
         "extractions": 0,
-        "explorer_location": "skerry_landing",
+        "explorer_location": "skerry_shelter",
         "steward_location": "skerry_central",
         "prologue_location": "skerry_central",
         "tutorial_step": "awakening",
