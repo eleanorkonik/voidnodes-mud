@@ -809,6 +809,17 @@ class Game:
         print()
         display.display_status(self.explorer, "explorer")
         display.display_seed(self.seed.to_dict(), name=self.seed_name)
+
+        # World seed gives Sevarik direction
+        print()
+        display.seed_speak("Good. We have a steward. I'm stronger now.")
+        display.seed_speak(f"I can send you beyond the skerry to look for supplies.")
+        print()
+        display.seed_speak("I sense a derelict ship drifting in the debris field")
+        display.seed_speak("to the south. Could be survivors. Could be salvage.")
+        display.seed_speak("Are you interested in investigating it?")
+        print()
+        display.seed_speak("Head south when you're ready.")
         print()
 
         self.save_game(silent=True)
