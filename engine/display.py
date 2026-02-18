@@ -42,6 +42,11 @@ def npc_name(name):
     return f"{BRIGHT_CYAN}{name}{RESET}"
 
 
+def npc_speak(name, text):
+    """Attributed NPC dialogue."""
+    print(f"{BRIGHT_CYAN}{name}:{RESET} {WHITE}'{text}'{RESET}")
+
+
 def item_name(name):
     """Format an item name in yellow."""
     return f"{BRIGHT_YELLOW}{name}{RESET}"

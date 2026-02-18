@@ -994,14 +994,14 @@ class Game:
                     msg = dialogue.get("happy", dialogue.get("idle", "..."))
                 else:
                     msg = dialogue.get("idle", "...")
-                display.narrate(self._sub_dialogue(msg))
+                display.npc_speak(npc["name"], self._sub_dialogue(msg))
                 # Talking to recruited NPCs boosts loyalty slightly
                 if npc.get("loyalty", 0) < 10:
                     npc["loyalty"] = min(10, npc.get("loyalty", 0) + 1)
                     display.success(f"  {npc['name']}'s loyalty increases to {npc['loyalty']}.")
             else:
                 msg = dialogue.get("greeting", "They look at you warily.")
-                display.narrate(self._sub_dialogue(msg))
+                display.npc_speak(npc["name"], self._sub_dialogue(msg))
             return
 
         # Talk to inactive agent
@@ -1009,7 +1009,7 @@ class Game:
         if agent:
             dialogue = agent.get("dialogue", {})
             msg = dialogue.get("idle", f"{agent['name']} nods quietly.")
-            display.narrate(self._sub_dialogue(msg))
+            display.npc_speak(agent["name"], self._sub_dialogue(msg))
             return
 
         display.narrate(f"There's nobody called '{target}' here to talk to.")
