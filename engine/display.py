@@ -350,9 +350,9 @@ def title_screen():
 {BRIGHT_GREEN}
     ╔══════════════════════════════════════════╗
     ║                                          ║
-    ║     ✧  V O I D N O D E S  ✧             ║
+    ║       ✧  V O I D N O D E S  ✧            ║
     ║                                          ║
-    ║        The Skerry Chronicle              ║
+    ║          The Skerry Chronicle            ║
     ║                                          ║
     ╚══════════════════════════════════════════╝
 {RESET}

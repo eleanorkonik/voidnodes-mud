@@ -121,7 +121,7 @@ def after_command(cmd, args, game):
         print()
         room = game.current_room()
         if room and room.aspects:
-            aspect_list = ". ".join(room.aspects)
+            aspect_list = ". ".join(display.aspect_text(a) for a in room.aspects)
             display.seed_speak(f"See those? {aspect_list}.")
             display.seed_speak("Those are aspects — the deeper nature of things.")
             display.seed_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
