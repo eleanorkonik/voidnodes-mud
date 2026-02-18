@@ -25,7 +25,7 @@
                 "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
                 "aspects": ["Treasure Behind Sealed Doors", "Something Moves When You're Not Looking"],
                 "items": ["wire", "torn_fabric"],
-                "npcs": ["emmy", "varis"],
+                "npcs": ["emmy"],
                 "enemies": ["rat_swarm"],
                 "discovered": false
             },
@@ -37,7 +37,7 @@
                 "exits": {"west": "df_entrance", "north": "df_control_room"},
                 "aspects": ["One Wrong Move Draws Blood", "The Ship's Bones Laid Bare"],
                 "items": ["metal_scraps", "wire"],
-                "npcs": [],
+                "npcs": ["varis"],
                 "enemies": [],
                 "discovered": false
             },
