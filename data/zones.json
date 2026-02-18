@@ -73,7 +73,7 @@
                 "id": "rat_swarm",
                 "name": "Rat Swarm",
                 "description": "A chittering mass of pale, eyeless rats with translucent skin stretched tight over visible bones. They pour from cracks in the bulkhead like liquid, each one small but the whole swarm a gnawing tide.",
-                "aspects": ["Stronger Together Than Apart", "A Hundred Tiny Mouths"],
+                "aspects": ["Eyeless and Hunting by Sound", "Each One Fragile Alone"],
                 "skills": {"Fight": 2, "Notice": 1},
                 "stress": [false, false],
                 "consequences": {"mild": null},
