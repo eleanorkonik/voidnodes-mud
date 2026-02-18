@@ -549,6 +549,25 @@ class Game:
         if not has_contents:
             display.narrate("Nothing of interest here.")
 
+    def _narrate_void_crossing(self, from_room, to_room):
+        """Narrate the tendril FWOOM between skerry and a node."""
+        seed = self.seed_name
+        print()
+        if from_room.zone == "skerry":
+            display.narrate(f"{seed}'s tendril coils around you — warm, insistent — and pulls tight.")
+            print()
+            display.success("  FWOOM.")
+            print()
+            display.narrate("Void-dark. Rushing emptiness. Your stomach drops.")
+            display.narrate("Then ground under your feet, and the tendril loosens.")
+        else:
+            display.narrate(f"{seed}'s tendril tugs — homeward. You let go.")
+            print()
+            display.success("  FWOOM.")
+            print()
+            display.narrate("The skerry rises under your feet. The tendril loosens, satisfied.")
+        print()
+
     def cmd_go(self, args):
         if not args:
             display.error("Go where? Specify a direction (NORTH, SOUTH, EAST, WEST, UP, DOWN).")
@@ -581,6 +600,10 @@ class Game:
         else:
             self.state[f"{phase}_location"] = target_id
         target_room.discover()
+
+        # Void crossing narration between skerry and nodes
+        if room.zone != target_room.zone:
+            self._narrate_void_crossing(room, target_room)
 
         display.display_room(target_room, self.game_context())
 
@@ -813,7 +836,7 @@ class Game:
         # World seed gives Sevarik direction
         print()
         display.seed_speak("Good. We have a steward. I'm stronger now.")
-        display.seed_speak("I can send you beyond the skerry to look for supplies.")
+        display.seed_speak("I can send you beyond the skerry — my tendril will carry you.")
         print()
         display.seed_speak("I sense something to the south. It hums with memory —")
         display.seed_speak("something broken that remembers being whole. Doesn't feel big.")
@@ -1585,12 +1608,13 @@ class Game:
             display.warning(f"Emergency retreat! {self.seed_name} pulls you back to safety.")
             self._seed_extraction()
         else:
-            # Just go back to skerry
+            # FWOOM back to skerry
+            from_room = self.current_room()
+            to_room = self.rooms.get("skerry_landing")
             self.state["explorer_location"] = "skerry_landing"
-            display.narrate("You make your way back to the skerry.")
-            room = self.rooms.get("skerry_landing")
-            if room:
-                display.display_room(room, self.game_context())
+            if from_room and to_room and from_room.zone != "skerry":
+                self._narrate_void_crossing(from_room, to_room)
+            display.display_room(to_room, self.game_context())
 
     # ── Steward Commands ─────────────────────────────────────────
 
