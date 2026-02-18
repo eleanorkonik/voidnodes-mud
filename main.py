@@ -63,10 +63,8 @@ class Game:
         if saves:
             display.header("Save Files")
             for i, (name, meta) in enumerate(saves):
-                stage_names = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
-                stage = stage_names[meta["seed_stage"]] if isinstance(meta["seed_stage"], int) else "?"
                 seed = meta.get("seed_name", "Tuft")
-                print(f"  {i + 1}. {seed} — Day {meta['day']}, {meta['phase']} phase, {stage} stage")
+                print(f"  {i + 1}. {seed} — Day {meta['day']}, {meta['phase']} phase")
             print(f"  {len(saves) + 1}. New Game")
             print()
 
@@ -1383,7 +1381,7 @@ class Game:
         art_id, art = self._find_in_db(target, self.artifacts_db)
         if art and (art_id in char.inventory or self.state.get("artifacts_status", {}).get(art_id) == "discovered"):
             motes = art["mote_value"]
-            new_total, stage_changed, stage_name = self.seed.feed(motes)
+            new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "fed"
 
@@ -1393,7 +1391,7 @@ class Game:
                 display.success(f"You feed the {art['name']} to {self.seed_name}. +{motes} motes!")
 
             if stage_changed:
-                display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
+                display.success(f"\n  ✧ {self.seed_name.upper()} GROWS STRONGER! ✧")
                 display.seed_speak(self.seed.communicate(self.seed_name))
 
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
@@ -1403,12 +1401,12 @@ class Game:
         item_id, item = self._find_entity(list(char.inventory), target, self.items_db)
         if item:
             motes = item.get("mote_value", 1)
-            new_total, stage_changed, stage_name = self.seed.feed(motes)
+            new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(item_id)
 
             display.success(f"You feed {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
             if stage_changed:
-                display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
+                display.success(f"\n  ✧ {self.seed_name.upper()} GROWS STRONGER! ✧")
                 display.seed_speak(self.seed.communicate(self.seed_name))
 
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
@@ -1473,7 +1471,7 @@ class Game:
                 if worn_slot:
                     char.remove_worn(worn_slot)
                 motes = art["mote_value"]
-                new_total, stage_changed, stage_name = self.seed.feed(motes)
+                new_total, stage_changed = self.seed.feed(motes)
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "fed"
 
@@ -1483,7 +1481,7 @@ class Game:
                     display.success(f"You offer the {art['name']} to {self.seed_name}. +{motes} motes!")
 
                 if stage_changed:
-                    display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
+                    display.success(f"\n  ✧ {self.seed_name.upper()} GROWS STRONGER! ✧")
                     display.seed_speak(self.seed.communicate(self.seed_name))
 
                 display.display_seed(self.seed.to_dict(), name=self.seed_name)
@@ -1499,12 +1497,12 @@ class Game:
                 if worn_slot:
                     char.remove_worn(worn_slot)
                 motes = item.get("mote_value", 1)
-                new_total, stage_changed, stage_name = self.seed.feed(motes)
+                new_total, stage_changed = self.seed.feed(motes)
                 char.remove_from_inventory(item_id)
 
                 display.success(f"You offer {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
                 if stage_changed:
-                    display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
+                    display.success(f"\n  ✧ {self.seed_name.upper()} GROWS STRONGER! ✧")
                     display.seed_speak(self.seed.communicate(self.seed_name))
 
                 display.display_seed(self.seed.to_dict(), name=self.seed_name)

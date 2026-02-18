@@ -3,7 +3,10 @@
 import random
 
 
-STAGE_NAMES = ["Baby", "Tendril", "Aura", "Voyager", "Sun"]
+# Internal growth stages drive mechanics (communication, aspects, unlocks)
+# but are not exposed to the player — they just see motes toward maturation.
+_STAGE_COUNT = 5
+MATURATION_THRESHOLD = 300  # total motes fed to reach maturity
 
 # World seed communication flavor by growth stage.
 # {seed_name} is substituted at runtime via communicate().
@@ -57,7 +60,7 @@ class WorldSeed:
         self.alive = data.get("alive", True)
 
     def feed(self, mote_amount):
-        """Feed motes to the world seed. Returns (new_total, stage_changed, new_stage_name)."""
+        """Feed motes to the world seed. Returns (new_total, stage_changed)."""
         self.motes += mote_amount
         self.total_motes_fed += mote_amount
 
@@ -69,7 +72,7 @@ class WorldSeed:
             self._apply_stage_growth()
 
         stage_changed = self.growth_stage > old_stage
-        return self.motes, stage_changed, STAGE_NAMES[self.growth_stage]
+        return self.motes, stage_changed
 
     def spend_motes(self, amount):
         """Spend motes (for extraction, etc). Returns True if enough motes."""
@@ -102,10 +105,6 @@ class WorldSeed:
             self.aspects = ["World Seed Shaping the Skerry", "Voice of the Green"]
         elif stage == 4:  # Sun
             self.aspects = ["World Seed With Its Own Magic Field", "Memory of a World"]
-
-    def get_stage_name(self):
-        """Get current stage name."""
-        return STAGE_NAMES[self.growth_stage]
 
     def to_dict(self):
         """Serialize to dict."""

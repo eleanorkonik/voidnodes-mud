@@ -43,11 +43,10 @@ def list_saves():
             saves.append((f.stem, {
                 "day": data.get("day", 1),
                 "phase": data.get("current_phase", "explorer"),
-                "seed_stage": data.get("seed", data.get("tuft", {})).get("growth_stage", 0),
                 "seed_name": data.get("world_seed_name", "Tuft"),
             }))
         except (json.JSONDecodeError, KeyError):
-            saves.append((f.stem, {"day": "?", "phase": "?", "seed_stage": "?"}))
+            saves.append((f.stem, {"day": "?", "phase": "?"}))
     return saves
 
 

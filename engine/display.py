@@ -1,6 +1,6 @@
 """Display system — ANSI-colored text output for the MUD."""
 
-from models.world_seed import STAGE_NAMES
+from models.world_seed import MATURATION_THRESHOLD
 
 # ANSI color codes
 RESET = "\033[0m"
@@ -161,17 +161,14 @@ def display_status(character, phase):
 
 def display_seed(seed_data, name="Tuft"):
     """Display world seed status."""
-    stage = STAGE_NAMES[seed_data.get("growth_stage", 0)]
     motes = seed_data.get("motes", 0)
-    next_threshold = seed_data.get("stage_thresholds", [0, 30, 75, 150, 300])
-    current_stage = seed_data.get("growth_stage", 0)
-    if current_stage < 4:
-        next_t = next_threshold[current_stage + 1]
-        fed = seed_data.get("total_motes_fed", 0)
-        progress = f" ({fed}/{next_t} to next stage)"
+    fed = seed_data.get("total_motes_fed", 0)
+    remaining = max(0, MATURATION_THRESHOLD - fed)
+    if remaining > 0:
+        progress = f"  ({remaining} motes to maturation)"
     else:
-        progress = " (MAX)"
-    print(f"  {BRIGHT_GREEN}[{name}]{RESET} Motes: {motes}  Stage: {stage}{progress}")
+        progress = f"  (mature)"
+    print(f"  {BRIGHT_GREEN}[{name}]{RESET} Motes: {motes}{progress}")
 
 
 def _lookup_name(item_id, items_db, artifacts_db):
