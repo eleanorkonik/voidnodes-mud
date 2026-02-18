@@ -55,7 +55,7 @@ class WorldSeed:
         self.growth_stage = data.get("growth_stage", 0)
         self.stage_thresholds = data.get("stage_thresholds", [0, 30, 75, 150, 300])
         self.total_motes_fed = data.get("total_motes_fed", 0)
-        self.aspects = list(data.get("aspects", ["Baby Seed With Perfect Memory", "Hungry for Motes"]))
+        self.aspects = list(data.get("aspects", ["Remembers Everything, Understands Nothing", "Always Hungry, Never Full"]))
         self.stress = list(data.get("stress", [False, False]))
         self.alive = data.get("alive", True)
 
@@ -97,14 +97,14 @@ class WorldSeed:
         """Apply changes when the world seed reaches a new growth stage."""
         stage = self.growth_stage
         if stage == 1:  # Tendril
-            self.aspects = ["Growing Seed Anchoring the Skerry", "Hungry for Motes"]
+            self.aspects = ["Putting Down Roots Whether You Like It or Not", "Always Hungry, Never Full"]
             self.stress = [False, False, False]  # +1 stress box
         elif stage == 2:  # Aura
-            self.aspects = ["Protective Seed With Growing Awareness", "Connection to the Void"]
+            self.aspects = ["It Sees Through Your Eyes Now", "Connected to Everything Out There"]
         elif stage == 3:  # Voyager
-            self.aspects = ["World Seed Shaping the Skerry", "Voice of the Green"]
+            self.aspects = ["The Skerry Bends to Its Will", "When It Speaks, the Ground Listens"]
         elif stage == 4:  # Sun
-            self.aspects = ["World Seed With Its Own Magic Field", "Memory of a World"]
+            self.aspects = ["Reality Plays By Its Rules Here", "Remembers a World That No Longer Exists"]
 
     def to_dict(self):
         """Serialize to dict."""
