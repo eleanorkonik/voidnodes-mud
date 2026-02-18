@@ -14,19 +14,19 @@
                 "aspects": ["Everything Drifts If You Let Go", "The Wreckage Hums With Memory"],
                 "items": ["metal_scraps"],
                 "npcs": [],
-                "enemies": [],
+                "enemies": ["rat_swarm"],
                 "discovered": false
             },
             {
                 "id": "df_cargo_bay",
                 "name": "Shattered Cargo Bay",
-                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. Something skitters in the shadows between them.",
+                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. A young woman waves from atop one of the larger crates.",
                 "zone": "debris_field",
                 "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
-                "aspects": ["Treasure Behind Sealed Doors", "Something Moves When You're Not Looking"],
+                "aspects": ["Treasure Behind Sealed Doors", "Someone's Been Sorting Through This"],
                 "items": ["wire", "torn_fabric"],
                 "npcs": ["emmy"],
-                "enemies": ["rat_swarm"],
+                "enemies": [],
                 "discovered": false
             },
             {
