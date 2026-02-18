@@ -318,53 +318,7 @@ class Game:
 
     def handle_command(self, cmd, args):
         """Route a parsed command to its handler."""
-        phase = self.state["current_phase"]
-
-        handlers = {
-            "look": self.cmd_look,
-            "ih": self.cmd_ih,
-            "go": self.cmd_go,
-            "inventory": self.cmd_inventory,
-            "status": self.cmd_status,
-            "check": self.cmd_check,
-            "help": self.cmd_help,
-            "save": self.cmd_save,
-            "done": self.cmd_done,
-            "quit": self.cmd_quit,
-            "talk": self.cmd_talk,
-            "use": self.cmd_use,
-            "wear": self.cmd_wear,
-            "remove": self.cmd_remove,
-            "map": self.cmd_map,
-            "skip": self.cmd_skip,
-            "bond": self.cmd_bond,
-            "give": self.cmd_give,
-            "drop": self.cmd_drop,
-            "switch": self.cmd_switch,
-            "attack": self.cmd_attack,
-            "defend": self.cmd_defend,
-            "exploit": self.cmd_exploit,
-            "invoke": self.cmd_invoke,
-            "concede": self.cmd_concede,
-            "scavenge": self.cmd_scavenge,
-            "probe": self.cmd_probe,
-            "feed": self.cmd_feed,
-            "keep": self.cmd_keep,
-            "offer": self.cmd_offer,
-            "take": self.cmd_take,
-            "recruit": self.cmd_recruit,
-            "retreat": self.cmd_retreat,
-            "enter": self.cmd_enter,
-            "seek": self.cmd_seek,
-            "craft": self.cmd_craft,
-            "recipes": self.cmd_recipes,
-            "build": self.cmd_build,
-            "assign": self.cmd_assign,
-            "organize": self.cmd_organize,
-            "trade": self.cmd_trade,
-        }
-
-        handler = handlers.get(cmd)
+        handler = getattr(self, f"cmd_{cmd}", None)
         if handler:
             handler(args)
         else:
