@@ -1,4 +1,5 @@
 {
+    "aspect": "The One Place That's Ours",
     "rooms": [
         {
             "id": "skerry_central",
@@ -6,7 +7,7 @@
             "description": "The heart of the skerry — a small patch of solid ground amid the void. A faint warmth radiates from the world seed's presence below. From here, paths lead to the other areas of your fragile home.",
             "zone": "skerry",
             "exits": {"north": "skerry_shelter", "east": "skerry_hollow", "south": "skerry_landing", "west": "skerry_junkyard"},
-            "aspects": ["The One Place That's Ours", "The Ground Hums With Something Alive"],
+            "aspects": ["The Ground Hums With Something Alive"],
             "items": [],
             "npcs": [],
             "enemies": [],

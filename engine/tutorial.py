@@ -120,11 +120,18 @@ def after_command(cmd, args, game):
         display.seed_speak("You see that with your eyes.")
         print()
         room = game.current_room()
-        if room and room.aspects:
-            aspect_list = ". ".join(display.aspect_text(a) for a in room.aspects)
-            display.seed_speak(f"See those? {aspect_list}.")
-            display.seed_speak("Those are aspects — the deeper nature of things.")
-            display.seed_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
+        if room:
+            all_aspects = []
+            zone_aspect = game._get_zone_aspect(room)
+            if zone_aspect:
+                all_aspects.append(zone_aspect)
+            all_aspects.extend(room.aspects)
+            if all_aspects:
+                aspect_list = ". ".join(display.aspect_text(a) for a in all_aspects)
+                display.seed_speak(f"See those? {aspect_list}.")
+                display.seed_speak("Those are aspects — the deeper nature of things.")
+                display.seed_speak("The big one covers this whole zone. The others are specific to where you're standing.")
+                display.seed_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
             print()
         display.seed_speak("For now, survey our domain. Try walking.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")

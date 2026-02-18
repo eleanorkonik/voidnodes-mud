@@ -2,6 +2,7 @@
     "debris_field": {
         "name": "The Debris Field",
         "description": "A slowly tumbling mass of broken hull plating, cargo containers, and twisted metal. The remains of some great vessel, shattered and scattered across this pocket of void.",
+        "aspect": "A Dead Ship Still Full of Secrets",
         "difficulty": "easy",
         "rooms": [
             {
@@ -103,6 +104,7 @@
     "coral_thicket": {
         "name": "The Coral Thicket",
         "description": "A dense growth of crystallized organic matter, glowing with soft bioluminescence. The coral structures twist and branch in impossible patterns, creating a labyrinth of beauty and danger.",
+        "aspect": "Everything Here Grows Toward Something Hungry",
         "difficulty": "medium",
         "rooms": [
             {
@@ -204,6 +206,7 @@
     "frozen_wreck": {
         "name": "The Frozen Wreck",
         "description": "An ancient ship, petrified and encrusted with void-ice. It drifts in eerie silence, its surfaces glittering with frost. Whatever happened here happened long ago, and some things are best left undisturbed.",
+        "aspect": "The Cold Preserves What Should Have Been Forgotten",
         "difficulty": "hard",
         "rooms": [
             {

@@ -372,6 +372,12 @@ class Game:
             loc_key = f"{phase}_location"
         return self.rooms.get(self.state.get(loc_key))
 
+    def _get_zone_aspect(self, room):
+        """Get the zone-level aspect for the room's zone, if any."""
+        if room.zone == "skerry":
+            return self.state.get("skerry", {}).get("aspect")
+        return self.state.get("zones", {}).get(room.zone, {}).get("aspect")
+
     def game_context(self):
         return {
             "items_db": self.items_db,
@@ -503,7 +509,11 @@ class Game:
             display.narrate(f"  {item.get('description', '')}")
             return
 
-        # Look at aspect
+        # Look at aspect (zone + room)
+        zone_aspect = self._get_zone_aspect(room)
+        if zone_aspect and target in zone_aspect.lower():
+            print(f"  {display.aspect_text(zone_aspect)} — a zone aspect that can be invoked in rolls.")
+            return
         for aspect in room.aspects:
             if target in aspect.lower():
                 print(f"  {display.aspect_text(aspect)} — a room aspect that can be invoked in rolls.")
@@ -862,8 +872,13 @@ class Game:
             print()
             display.display_room(room, self.game_context())
             print()
-            if room.aspects:
-                aspect_list = ". ".join(room.aspects)
+            all_aspects = []
+            zone_aspect = self._get_zone_aspect(room)
+            if zone_aspect:
+                all_aspects.append(zone_aspect)
+            all_aspects.extend(room.aspects)
+            if all_aspects:
+                aspect_list = ". ".join(display.aspect_text(a) for a in all_aspects)
                 display.seed_speak(f"See those? {aspect_list}.")
             else:
                 display.seed_speak("See that?")
@@ -1437,6 +1452,9 @@ class Game:
         room = self.current_room()
         if room:
             all_aspects.extend(room.aspects)
+            zone_aspect = self._get_zone_aspect(room)
+            if zone_aspect:
+                all_aspects.append(zone_aspect)
         if self.combat_target:
             enemy = self.enemies_db.get(self.combat_target, {})
             all_aspects.extend(enemy.get("aspects", []))

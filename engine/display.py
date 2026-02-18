@@ -102,9 +102,15 @@ def display_room(room, game_state):
     room_name(room.name)
     room_desc(room.description)
 
-    if room.aspects and game_state.get("bonded_with_seed", True):
-        aspects = ", ".join(aspect_text(a) for a in room.aspects)
-        print(f"  Aspects: {aspects}")
+    if game_state.get("bonded_with_seed", True):
+        # Zone-wide aspect
+        zone_aspect = _get_zone_aspect(room, game_state)
+        if zone_aspect:
+            print(f"  Zone: {aspect_text(zone_aspect)}")
+        # Room aspects
+        if room.aspects:
+            aspects = ", ".join(aspect_text(a) for a in room.aspects)
+            print(f"  Aspects: {aspects}")
 
     if room.items:
         items = game_state.get("items_db", {})
@@ -182,6 +188,14 @@ def display_seed(seed_data, name="Tuft"):
     else:
         progress = f"  (mature)"
     print(f"  {BRIGHT_GREEN}[{name}]{RESET} Motes: {motes}{progress}")
+
+
+def _get_zone_aspect(room, game_state):
+    """Get the zone-level aspect for the room's zone, if any."""
+    if room.zone == "skerry":
+        return game_state.get("skerry", {}).get("aspect")
+    zones = game_state.get("zones", {})
+    return zones.get(room.zone, {}).get("aspect")
 
 
 def _lookup_name(item_id, items_db, artifacts_db):
