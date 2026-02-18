@@ -301,7 +301,7 @@
                 "id": "swarm_mites",
                 "name": "Swarm Mites",
                 "description": "Tiny crystalline insects that swarm in vast numbers. Each one is fragile, but together they can strip metal to the bone.",
-                "aspects": ["Always More Where Those Came From", "Tiny Jaws That Strip Metal Bare"],
+                "aspects": ["Fragile as Spun Glass", "Tiny Jaws That Strip Metal Bare"],
                 "skills": {"Fight": 2, "Notice": 1},
                 "stress": [false, false],
                 "consequences": {"mild": null},
