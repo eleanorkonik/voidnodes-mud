@@ -20,12 +20,12 @@
             {
                 "id": "df_cargo_bay",
                 "name": "Shattered Cargo Bay",
-                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. Two figures have made camp here among the containers.",
+                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. A young woman waves from atop one of the larger crates.",
                 "zone": "debris_field",
                 "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
                 "aspects": ["Treasure Behind Sealed Doors", "Someone's Been Sorting Through This"],
                 "items": ["wire", "torn_fabric"],
-                "npcs": ["emmy", "varis"],
+                "npcs": ["emmy"],
                 "enemies": [],
                 "discovered": false
             },

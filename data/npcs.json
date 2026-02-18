@@ -1,7 +1,7 @@
 {
     "varis": {
         "name": "Varis",
-        "location": "df_cargo_bay",
+        "location": null,
         "recruited": false,
         "aspects": {
             "high_concept": "Mysterious Wanderer Who Knows the Void",
