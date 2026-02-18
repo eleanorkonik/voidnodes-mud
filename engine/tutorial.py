@@ -276,8 +276,10 @@ def _show_the_split(game):
     display.narrate("fight threats, and find survivors.")
     print()
 
-    display.tuft_speak("I can only focus on one of you at a time, though —")
-    display.tuft_speak("although perhaps that will change later.")
+    display.tuft_speak("I can only focus on one of you at a time, though.")
+    display.tuft_speak("Perhaps that will change later, as we expand the skerry.")
+    display.tuft_speak("But I need more motes before I can grow. I'm limited")
+    display.tuft_speak("in what I can protect, for now.")
     print()
 
     # Quick reference
