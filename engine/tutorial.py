@@ -195,7 +195,7 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "explorer_void_cross"
         return False
 
-    if step == "explorer_void_cross" and cmd in ("enter", "go"):
+    if step == "explorer_void_cross" and cmd == "enter":
         room = game.current_room()
         if room and room.zone != "skerry":
             print()

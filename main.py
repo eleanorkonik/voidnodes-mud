@@ -678,9 +678,11 @@ class Game:
             display.error("That path leads nowhere. (This shouldn't happen.)")
             return
 
-        # Cross-zone movement — hand off to ENTER VOID
+        # Cross-zone movement — requires explicit ENTER VOID
         if room.zone != target_room.zone:
-            self.cmd_enter(["void", direction])
+            zone_name = target_room.zone.replace("_", " ").title()
+            display.narrate(f"The void stretches to the {direction}.")
+            display.info(f"  Type ENTER VOID {direction.upper()} to cross to {zone_name}.")
             return
 
         # Move
