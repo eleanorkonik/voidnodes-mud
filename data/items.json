@@ -68,7 +68,7 @@
     "seeds": {
         "id": "seeds",
         "name": "Seeds",
-        "description": "Hardy seeds from coral-adapted plants. They could grow in Tuft-nourished soil.",
+        "description": "Hardy seeds from coral-adapted plants. They could grow in {seed_name}-nourished soil.",
         "type": "material",
         "aspects": [],
         "mote_value": 2,
@@ -123,7 +123,7 @@
     "crystal_shards": {
         "id": "crystal_shards",
         "name": "Crystal Shards",
-        "description": "Fragments of crystalline material that hum faintly. They react to Tuft's presence.",
+        "description": "Fragments of crystalline material that hum faintly. They react to {seed_name}'s presence.",
         "type": "material",
         "aspects": [],
         "mote_value": 3,

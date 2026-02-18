@@ -18,7 +18,7 @@ class Skerry:
         """Get all skerry rooms."""
         return list(self.rooms.values())
 
-    def can_build(self, room_template, inventory_counts, npc_count, tuft_stage):
+    def can_build(self, room_template, inventory_counts, npc_count, seed_stage):
         """Check if an expandable room can be built."""
         requires = room_template.get("requires", {})
 
@@ -31,9 +31,9 @@ class Skerry:
         if npc_count < requires.get("npcs", 0):
             return False, f"Need at least {requires['npcs']} NPCs on the skerry"
 
-        # Check Tuft stage
-        if tuft_stage < requires.get("tuft_stage", 0):
-            return False, f"Tuft must reach {requires['tuft_stage']} stage"
+        # Check world seed stage
+        if seed_stage < requires.get("seed_stage", 0):
+            return False, f"World seed must reach stage {requires['seed_stage']}"
 
         return True, "Can build"
 

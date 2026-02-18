@@ -43,11 +43,11 @@ def list_saves():
             saves.append((f.stem, {
                 "day": data.get("day", 1),
                 "phase": data.get("current_phase", "explorer"),
-                "tuft_stage": data.get("tuft", {}).get("growth_stage", 0),
+                "seed_stage": data.get("seed", data.get("tuft", {})).get("growth_stage", 0),
                 "seed_name": data.get("world_seed_name", "Tuft"),
             }))
         except (json.JSONDecodeError, KeyError):
-            saves.append((f.stem, {"day": "?", "phase": "?", "tuft_stage": "?"}))
+            saves.append((f.stem, {"day": "?", "phase": "?", "seed_stage": "?"}))
     return saves
 
 
@@ -98,6 +98,11 @@ def _migrate_state(state):
     events = state.get("events", {})
     if "homekeeper_events" in events and "steward_events" not in events:
         events["steward_events"] = events.pop("homekeeper_events")
+    # Rename tuft → seed
+    if "tuft" in state and "seed" not in state:
+        state["seed"] = state.pop("tuft")
+    if "bonded_with_tuft" in state:
+        state["bonded_with_seed"] = state.pop("bonded_with_tuft")
     # Add new fields with defaults
     state.setdefault("explorer_name", "Sevarik")
     state.setdefault("steward_name", "Miria")
@@ -133,7 +138,7 @@ def new_game_state():
     items = load_data_file("items.json")
     artifacts = load_data_file("artifacts.json")
     recipes = load_data_file("recipes.json")
-    tuft_data = load_data_file("tuft.json")
+    seed_data = load_data_file("tuft.json")  # data file keeps its name
     events = load_data_file("events.json")
 
     # Build room lookup from zones
@@ -158,7 +163,7 @@ def new_game_state():
         "current_phase": "prologue",
         "explorer": characters["sevarik"],
         "steward": characters["miria"],
-        "tuft": tuft_data,
+        "seed": seed_data,
         "skerry": skerry,
         "npcs": npcs,
         "zones": zones,
@@ -176,7 +181,7 @@ def new_game_state():
         "prologue_location": "skerry_central",
         "tutorial_step": "awakening",
         "tutorial_complete": False,
-        "bonded_with_tuft": False,
+        "bonded_with_seed": False,
         "explorer_name": "Sevarik",
         "steward_name": "Miria",
         "world_seed_name": "Tuft",

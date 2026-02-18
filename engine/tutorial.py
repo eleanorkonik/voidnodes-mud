@@ -1,4 +1,4 @@
-"""Interactive tutorial — Tuft guides new players through the prologue."""
+"""Interactive tutorial — world seed guides new players through the prologue."""
 
 import random
 from engine import display
@@ -76,7 +76,7 @@ def show_skip_message():
 def after_command(cmd, args, game):
     """Called after each command during the prologue.
 
-    Tuft guides the player through each step, advancing when
+    The world seed guides the player through each step, advancing when
     appropriate. Returns True if the tutorial is complete.
     """
     step = game.state.get("tutorial_step", "awakening")

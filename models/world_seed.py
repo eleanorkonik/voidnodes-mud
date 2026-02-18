@@ -1,11 +1,12 @@
-"""Tuft model — the baby world seed."""
+"""WorldSeed model — the baby world seed that anchors the skerry."""
 
 import random
 
 
 STAGE_NAMES = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
 
-# Tuft communication flavor by growth stage
+# World seed communication flavor by growth stage.
+# {seed_name} is substituted at runtime via communicate().
 FEELINGS = {
     0: [  # Mote — colors and feelings
         "A warm pulse of golden light.",
@@ -15,37 +16,37 @@ FEELINGS = {
         "A gentle lavender drowsiness.",
     ],
     1: [  # Tendril — sensations
-        "You feel Tuft reaching, stretching, testing the edges of the skerry.",
-        "A vibration through your feet — Tuft is excited.",
-        "Tuft tugs gently at your awareness, wanting attention.",
-        "The ground feels warmer where Tuft's roots spread.",
-        "A faint hum rises from Tuft's hollow, almost musical.",
+        "You feel {seed_name} reaching, stretching, testing the edges of the skerry.",
+        "A vibration through your feet — {seed_name} is excited.",
+        "{seed_name} tugs gently at your awareness, wanting attention.",
+        "The ground feels warmer where {seed_name}'s roots spread.",
+        "A faint hum rises from {seed_name}'s hollow, almost musical.",
     ],
     2: [  # Aura — images
         "An image flashes in your mind: the skerry seen from above, glowing.",
-        "You briefly see through Tuft's awareness — every root, every stone.",
-        "A mental picture of a great tree appears, then fades. Tuft dreams.",
-        "Tuft shows you a memory: a void-whale passing far overhead.",
+        "You briefly see through {seed_name}'s awareness — every root, every stone.",
+        "A mental picture of a great tree appears, then fades. {seed_name} dreams.",
+        "{seed_name} shows you a memory: a void-whale passing far overhead.",
         "A fleeting vision of rain falling on leaves that don't exist yet.",
     ],
     3: [  # Canopy — words
         "A whisper at the edge of thought: 'Safe. Home. Growing.'",
-        "Tuft murmurs wordlessly — you understand it means 'thank you.'",
-        "'More,' Tuft's presence suggests. 'Bring more. We grow.'",
+        "{seed_name} murmurs wordlessly — you understand it means 'thank you.'",
+        "'More,' {seed_name}'s presence suggests. 'Bring more. We grow.'",
         "A sleepy thought drifts up from below: 'Good day. Rest now.'",
-        "Tuft thinks at you: 'Others coming. Can feel them. Far away.'",
+        "{seed_name} thinks at you: 'Others coming. Can feel them. Far away.'",
     ],
     4: [  # Beacon — conversation
-        "Tuft speaks clearly in your mind: 'I can feel other seeds, far across the void. We are not alone.'",
-        "'The skerry strengthens,' Tuft says. 'Soon we will be a place worth finding.'",
-        "'I remember the ship I came from,' Tuft muses. 'It was vast. We will be vast again.'",
-        "'Protect the others,' Tuft asks gently. 'They are fragile but they matter.'",
+        "{seed_name} speaks clearly in your mind: 'I can feel other seeds, far across the void. We are not alone.'",
+        "'The skerry strengthens,' {seed_name} says. 'Soon we will be a place worth finding.'",
+        "'I remember the ship I came from,' {seed_name} muses. 'It was vast. We will be vast again.'",
+        "'Protect the others,' {seed_name} asks gently. 'They are fragile but they matter.'",
         "'When I was small, I only knew light and dark. Now I know names. Yours is my favorite.'",
     ],
 }
 
 
-class Tuft:
+class WorldSeed:
     def __init__(self, data):
         self.motes = data.get("motes", 15)
         self.growth_stage = data.get("growth_stage", 0)
@@ -56,7 +57,7 @@ class Tuft:
         self.alive = data.get("alive", True)
 
     def feed(self, mote_amount):
-        """Feed motes to Tuft. Returns (new_total, stage_changed, new_stage_name)."""
+        """Feed motes to the world seed. Returns (new_total, stage_changed, new_stage_name)."""
         self.motes += mote_amount
         self.total_motes_fed += mote_amount
 
@@ -87,10 +88,10 @@ class Tuft:
         """Get a random world seed communication based on growth stage."""
         messages = FEELINGS.get(self.growth_stage, FEELINGS[0])
         msg = random.choice(messages)
-        return msg.replace("Tuft", name)
+        return msg.format(seed_name=name)
 
     def _apply_stage_growth(self):
-        """Apply changes when Tuft reaches a new growth stage."""
+        """Apply changes when the world seed reaches a new growth stage."""
         stage = self.growth_stage
         if stage == 1:  # Tendril
             self.aspects = ["Growing Seed Anchoring the Skerry", "Hungry for Motes"]

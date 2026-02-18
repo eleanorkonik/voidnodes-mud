@@ -83,7 +83,7 @@
             "exits": {"south": "skerry_central"},
             "connect_to": {"skerry_central": "north"},
             "aspects": ["Growing Things", "Seed-Nourished Soil"],
-            "requires": {"materials": {"seeds": 2, "resin": 1}, "npcs": 1, "tuft_stage": 1},
+            "requires": {"materials": {"seeds": 2, "resin": 1}, "npcs": 1, "seed_stage": 1},
             "structures": ["garden"],
             "assigned_npcs": [],
             "resources": {}
@@ -96,7 +96,7 @@
             "exits": {"east": "skerry_hollow"},
             "connect_to": {"skerry_hollow": "west"},
             "aspects": ["Purified Water", "Crystal Array"],
-            "requires": {"materials": {"crystal_shards": 2, "frozen_water": 1}, "tuft_stage": 1},
+            "requires": {"materials": {"crystal_shards": 2, "frozen_water": 1}, "seed_stage": 1},
             "structures": ["water_collection"],
             "assigned_npcs": [],
             "resources": {}

@@ -11,7 +11,7 @@ import random
 from engine import parser, display, save, dice, tutorial, map_renderer
 from models.character import Character, BODY_SLOTS
 from models.room import Room
-from models.tuft import Tuft
+from models.world_seed import WorldSeed
 from models.skerry import Skerry
 from models.item import Item
 
@@ -23,7 +23,7 @@ class Game:
         self.state = None
         self.explorer = None
         self.steward = None
-        self.tuft = None
+        self.seed = None
         self.skerry = None
         self.rooms = {}       # all rooms by ID
         self.items_db = {}    # item templates
@@ -43,6 +43,10 @@ class Game:
         """The player-chosen name for the world seed."""
         return self.state.get("world_seed_name", "Tuft") if self.state else "Tuft"
 
+    def sub(self, text):
+        """Substitute {seed_name} (and future placeholders) in data file text."""
+        return text.format(seed_name=self.seed_name)
+
     @property
     def explorer_name(self):
         return self.state.get("explorer_name", "Sevarik") if self.state else "Sevarik"
@@ -60,7 +64,7 @@ class Game:
             display.header("Save Files")
             for i, (name, meta) in enumerate(saves):
                 stage_names = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
-                stage = stage_names[meta["tuft_stage"]] if isinstance(meta["tuft_stage"], int) else "?"
+                stage = stage_names[meta["seed_stage"]] if isinstance(meta["seed_stage"], int) else "?"
                 seed = meta.get("seed_name", "Tuft")
                 print(f"  {i + 1}. {seed} — Day {meta['day']}, {meta['phase']} phase, {stage} stage")
             print(f"  {len(saves) + 1}. New Game")
@@ -93,7 +97,7 @@ class Game:
         self.state = save.new_game_state()
         self._hydrate()
 
-        # Tutorial prologue — atmospheric intro with Tuft as guide
+        # Tutorial prologue — atmospheric intro with world seed as guide
         tutorial.show_prologue_intro()
 
     def load(self, slot_name):
@@ -114,7 +118,7 @@ class Game:
         """Populate live objects from state dict."""
         self.explorer = Character(self.state["explorer"])
         self.steward = Character(self.state["steward"])
-        self.tuft = Tuft(self.state["tuft"])
+        self.seed = WorldSeed(self.state["seed"])
         self.skerry = Skerry(self.state["skerry"])
         self.items_db = self.state.get("items_db", {})
         self.artifacts_db = self.state.get("artifacts", {})
@@ -137,7 +141,7 @@ class Game:
         """Write live objects back to state dict for saving."""
         self.state["explorer"] = self.explorer.to_dict()
         self.state["steward"] = self.steward.to_dict()
-        self.state["tuft"] = self.tuft.to_dict()
+        self.state["seed"] = self.seed.to_dict()
         self.state["skerry"] = self.skerry.to_dict()
         self.state["agents"] = self.agents_db
 
@@ -239,7 +243,7 @@ class Game:
                 current_room.discover()
                 display.display_room(current_room, self.game_context())
             display.display_status(current_char, phase)
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
             print()
 
         while self.running:
@@ -380,7 +384,7 @@ class Game:
             "npcs_db": self.npcs_db,
             "enemies_db": self.enemies_db,
             "agents_db": self.agents_db,
-            "bonded_with_tuft": self.state.get("bonded_with_tuft", False),
+            "bonded_with_seed": self.state.get("bonded_with_seed", False),
         }
 
     # ── Universal Commands ────────────────────────────────────────
@@ -587,10 +591,10 @@ class Game:
 
         display.display_room(target_room, self.game_context())
 
-        # Tuft flavor message occasionally
+        # World seed flavor message occasionally
         if random.random() < 0.3:
             print()
-            display.seed_speak(self.tuft.communicate(self.seed_name))
+            display.seed_speak(self.seed.communicate(self.seed_name))
 
     def cmd_inventory(self, args):
         display.display_inventory(self.current_character(), self.items_db, self.artifacts_db)
@@ -599,7 +603,7 @@ class Game:
         char = self.current_character()
         display.display_character_sheet(char)
         print()
-        display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+        display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
     def cmd_check(self, args):
         if not args:
@@ -610,13 +614,13 @@ class Game:
 
         if target in ("seed", "tuft", self.seed_name.lower()):
             display.header(f"{self.seed_name} — The World Seed")
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
-            print(f"  Aspects: {', '.join(display.aspect_text(a) for a in self.tuft.aspects)}")
-            stress_str = "".join("[X]" if s else "[ ]" for s in self.tuft.stress)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
+            print(f"  Aspects: {', '.join(display.aspect_text(a) for a in self.seed.aspects)}")
+            stress_str = "".join("[X]" if s else "[ ]" for s in self.seed.stress)
             print(f"  Stress: {stress_str}")
-            print(f"  Alive: {'Yes' if self.tuft.alive else 'NO — GAME OVER'}")
+            print(f"  Alive: {'Yes' if self.seed.alive else 'NO — GAME OVER'}")
             print()
-            display.seed_speak(self.tuft.communicate(self.seed_name))
+            display.seed_speak(self.seed.communicate(self.seed_name))
             return
 
         if target == "skerry":
@@ -711,22 +715,22 @@ class Game:
         tutorial.show_skip_message()
         self.state["tutorial_step"] = "complete"
         self.state["tutorial_complete"] = True
-        self.state["bonded_with_tuft"] = True
+        self.state["bonded_with_seed"] = True
         self._transition_to_day1()
 
     def cmd_bond(self, args):
-        if self.state.get("bonded_with_tuft"):
+        if self.state.get("bonded_with_seed"):
             display.narrate("The tendril hums. Warm. Alive.")
             display.seed_speak("We're already connected. I'm right here.")
             return
 
-        # Must be near Tuft (hollow or at least on the skerry)
+        # Must be near the world seed (hollow or at least on the skerry)
         room = self.current_room()
         if not room or not room.id.startswith("skerry_"):
             display.seed_speak("You're too far away. Come back to the skerry.")
             return
 
-        self.state["bonded_with_tuft"] = True
+        self.state["bonded_with_seed"] = True
 
         if self.state["current_phase"] == "prologue":
             # During the tutorial — tendril comes from the void,
@@ -827,7 +831,7 @@ class Game:
 
         print()
         display.display_status(self.explorer, "explorer")
-        display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+        display.display_seed(self.seed.to_dict(), name=self.seed_name)
         print()
 
         self.save_game(silent=True)
@@ -934,7 +938,7 @@ class Game:
             if room:
                 display.display_room(room, self.game_context())
             display.display_status(self.steward, "steward")
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         else:
             # Steward → Explorer (day increment)
@@ -965,7 +969,7 @@ class Game:
             if room:
                 display.display_room(room, self.game_context())
             display.display_status(self.explorer, "explorer")
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         self.save_game(silent=True)
         print()
@@ -1174,7 +1178,7 @@ class Game:
 
             if taken_out:
                 display.warning(f"\n  {self.explorer.name} is taken out!")
-                self._tuft_extraction()
+                self._seed_extraction()
                 return
 
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
@@ -1212,7 +1216,7 @@ class Game:
             taken_out = self.explorer.apply_damage(shifts)
             if taken_out:
                 display.warning(f"\n  {self.explorer.name} is taken out!")
-                self._tuft_extraction()
+                self._seed_extraction()
                 return
         else:
             display.success("  You successfully defend against the attack.")
@@ -1344,24 +1348,24 @@ class Game:
         if art and art.get("room") == room.id:
             if art_id not in self.state.get("artifacts_status", {}):
                 display.header(art["name"])
-                display.narrate(art.get("discovery_text", art["description"]))
+                display.narrate(self.sub(art.get("discovery_text", art["description"])))
                 self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
                 display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
                 if art.get("stat_bonuses"):
                     bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
                     display.info(f"  Keep for: {bonuses}")
                 if art.get("keep_effect"):
-                    display.info(f"  Special: {art['keep_effect'][:80]}...")
+                    display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
             else:
                 display.header(art["name"])
-                display.narrate(art["description"])
+                display.narrate(self.sub(art["description"]))
             return
 
         # Check items in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
         if item:
             display.header(item["name"])
-            display.narrate(item["description"])
+            display.narrate(self.sub(item["description"]))
             display.info(f"  Mote value: {item.get('mote_value', 1)}")
             return
 
@@ -1379,35 +1383,35 @@ class Game:
         art_id, art = self._find_in_db(target, self.artifacts_db)
         if art and (art_id in char.inventory or self.state.get("artifacts_status", {}).get(art_id) == "discovered"):
             motes = art["mote_value"]
-            new_total, stage_changed, stage_name = self.tuft.feed(motes)
+            new_total, stage_changed, stage_name = self.seed.feed(motes)
             char.remove_from_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "fed"
 
             if art.get("feed_effect"):
-                display.narrate(art["feed_effect"])
+                display.narrate(self.sub(art["feed_effect"]))
             else:
                 display.success(f"You feed the {art['name']} to {self.seed_name}. +{motes} motes!")
 
             if stage_changed:
                 display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                display.seed_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.seed.communicate(self.seed_name))
 
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
             return
 
         # Check regular items
         item_id, item = self._find_entity(list(char.inventory), target, self.items_db)
         if item:
             motes = item.get("mote_value", 1)
-            new_total, stage_changed, stage_name = self.tuft.feed(motes)
+            new_total, stage_changed, stage_name = self.seed.feed(motes)
             char.remove_from_inventory(item_id)
 
             display.success(f"You feed {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
             if stage_changed:
                 display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                display.seed_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.seed.communicate(self.seed_name))
 
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
             return
 
         display.narrate(f"You don't have '{target}' to feed.")
@@ -1435,7 +1439,7 @@ class Game:
                     for skill, bonus in art["stat_bonuses"].items():
                         display.success(f"  +{bonus} {skill} while carried!")
                 if art.get("keep_effect"):
-                    display.narrate(art["keep_effect"])
+                    display.narrate(self.sub(art["keep_effect"]))
                 return
 
         display.narrate(f"No artifact called '{target}' to keep here.")
@@ -1469,20 +1473,20 @@ class Game:
                 if worn_slot:
                     char.remove_worn(worn_slot)
                 motes = art["mote_value"]
-                new_total, stage_changed, stage_name = self.tuft.feed(motes)
+                new_total, stage_changed, stage_name = self.seed.feed(motes)
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "fed"
 
                 if art.get("feed_effect"):
-                    display.narrate(art["feed_effect"])
+                    display.narrate(self.sub(art["feed_effect"]))
                 else:
                     display.success(f"You offer the {art['name']} to {self.seed_name}. +{motes} motes!")
 
                 if stage_changed:
                     display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                    display.seed_speak(self.tuft.communicate(self.seed_name))
+                    display.seed_speak(self.seed.communicate(self.seed_name))
 
-                display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+                display.display_seed(self.seed.to_dict(), name=self.seed_name)
                 return
 
             # Check inventory and worn items
@@ -1495,15 +1499,15 @@ class Game:
                 if worn_slot:
                     char.remove_worn(worn_slot)
                 motes = item.get("mote_value", 1)
-                new_total, stage_changed, stage_name = self.tuft.feed(motes)
+                new_total, stage_changed, stage_name = self.seed.feed(motes)
                 char.remove_from_inventory(item_id)
 
                 display.success(f"You offer {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
                 if stage_changed:
                     display.success(f"\n  ✧ {self.seed_name.upper()} GROWS! Now at stage: {stage_name}! ✧")
-                    display.seed_speak(self.tuft.communicate(self.seed_name))
+                    display.seed_speak(self.seed.communicate(self.seed_name))
 
-                display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+                display.display_seed(self.seed.to_dict(), name=self.seed_name)
                 return
 
             display.narrate(f"You don't have '{item_name_str}' to offer.")
@@ -1591,7 +1595,7 @@ class Game:
     def cmd_retreat(self, args):
         if self.in_combat:
             display.warning(f"Emergency retreat! {self.seed_name} pulls you back to safety.")
-            self._tuft_extraction()
+            self._seed_extraction()
         else:
             # Just go back to skerry
             self.state["explorer_location"] = "skerry_landing"
@@ -1733,7 +1737,7 @@ class Game:
                 inv_counts = self._inventory_counts(self.steward)
 
                 npc_count = len(self.state.get("recruited_npcs", []))
-                can, reason = self.skerry.can_build(tmpl, inv_counts, npc_count, self.tuft.growth_stage)
+                can, reason = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
 
                 if not can:
                     display.error(f"Can't build {tmpl['name']}: {reason}")
@@ -1919,11 +1923,11 @@ class Game:
         enemy_data["consequences"] = enemy_cons
         return False
 
-    def _tuft_extraction(self):
-        """Handle Tuft emergency extraction."""
-        cost = self.tuft.extraction_cost(self.state["extractions"])
+    def _seed_extraction(self):
+        """Handle world seed emergency extraction."""
+        cost = self.seed.extraction_cost(self.state["extractions"])
 
-        if self.tuft.spend_motes(cost):
+        if self.seed.spend_motes(cost):
             self.state["extractions"] += 1
             self.in_combat = False
             self.combat_target = None
@@ -1936,9 +1940,9 @@ class Game:
             self.state["explorer_location"] = "skerry_landing"
 
             display.warning(f"\n  {self.seed_name} spends {cost} motes to yank you back to the skerry!")
-            display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
-            if not self.tuft.alive:
+            if not self.seed.alive:
                 display.error(f"\n  ═══ {self.seed_name.upper()}'S MOTES ARE DEPLETED ═══")
                 display.error("  The world seed flickers and goes dark.")
                 display.error(f"  Without {self.seed_name}, the skerry crumbles into the void.")
@@ -1946,9 +1950,9 @@ class Game:
                 self.running = False
             else:
                 display.narrate(f"You collapse on the landing pad, gasping. {self.seed_name} saved you — but at a cost.")
-                display.seed_speak(self.tuft.communicate(self.seed_name))
+                display.seed_speak(self.seed.communicate(self.seed_name))
         else:
-            display.error(f"  {self.seed_name} doesn't have enough motes ({cost} needed, {self.tuft.motes} available)!")
+            display.error(f"  {self.seed_name} doesn't have enough motes ({cost} needed, {self.seed.motes} available)!")
             display.error(f"\n  ═══ {self.seed_name.upper()} CANNOT SAVE YOU ═══")
             display.error("  ═══ GAME OVER ═══\n")
             self.running = False
@@ -1957,8 +1961,8 @@ class Game:
         """Handle end-of-day events."""
         day = self.state["day"]
 
-        # Tuft growth check
-        display.seed_speak(self.tuft.communicate(self.seed_name))
+        # World seed growth check
+        display.seed_speak(self.seed.communicate(self.seed_name))
 
         # NPC mood updates
         for npc_id, npc in self.npcs_db.items():
@@ -2002,8 +2006,8 @@ class Game:
                 if eligible:
                     weights = [e.get("weight", 1) for e in eligible]
                     event = random.choices(eligible, weights=weights, k=1)[0]
-                    display.header(f"Event: {event['name']}")
-                    display.narrate(f"  {event['description']}")
+                    display.header(f"Event: {self.sub(event['name'])}")
+                    display.narrate(f"  {self.sub(event['description'])}")
 
                     if event.get("skill_check"):
                         sc = event["skill_check"]
@@ -2012,10 +2016,10 @@ class Game:
                         print(f"  {dice.roll_description(dice_result, self.steward.get_skill(sc['skill']), sc['skill'])}")
 
                         if shifts >= 0:
-                            display.success(f"  {event['success']}")
+                            display.success(f"  {self.sub(event['success'])}")
                             effect = event.get("success_effect", {})
                             if effect.get("mote_bonus"):
-                                self.tuft.feed(effect["mote_bonus"])
+                                self.seed.feed(effect["mote_bonus"])
                             if effect.get("random_item"):
                                 item = random.choice(["metal_scraps", "wire", "torn_fabric"])
                                 self.steward.add_to_inventory(item)
@@ -2024,7 +2028,7 @@ class Game:
                                     if n.get("recruited"):
                                         n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
                         else:
-                            display.warning(f"  {event['failure']}")
+                            display.warning(f"  {self.sub(event['failure'])}")
                             effect = event.get("failure_effect", {})
                             if effect.get("stress"):
                                 self.steward.apply_damage(effect["stress"])
@@ -2033,17 +2037,17 @@ class Game:
                                     if n.get("recruited") and n.get("mood") == "content":
                                         n["mood"] = "restless"
                     else:
-                        display.success(f"  {event['success']}")
+                        display.success(f"  {self.sub(event['success'])}")
                         effect = event.get("success_effect", {})
                         if effect.get("mote_bonus"):
-                            self.tuft.feed(effect["mote_bonus"])
+                            self.seed.feed(effect["mote_bonus"])
                         if effect.get("mood_bonus"):
                             for nid, n in self.npcs_db.items():
                                 if n.get("recruited"):
                                     n["mood"] = "content"
 
         self.state["event_log"].append(f"Day {day}: The skerry endures.")
-        display.display_tuft(self.tuft.to_dict(), name=self.seed_name)
+        display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
 
 if __name__ == "__main__":

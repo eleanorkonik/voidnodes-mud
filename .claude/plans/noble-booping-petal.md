@@ -1,151 +1,220 @@
-# Plan: Starter Artifact Tutorial + IH Command + Aspect Teaching
+# Plan: Wearable Item System
 
 ## Context
 
-The tutorial currently jumps from the split explanation to "SWITCH FOCUS TO SEVARIK" without teaching key mechanics. This adds a guided artifact interaction between the split and the handoff, teaching IH, EXAMINE, aspects, and the KEEP/OFFER resource tension. Also makes IH its own command (focused room contents list) instead of a LOOK alias.
+Adding a WEAR/REMOVE system inspired by Lusternia's unified item handling. Any item with a `slot` field can be worn — clothing, artifacts, crafted gear, whatever. Both characters start wearing clothes. EXAMINE SELF shows worn items alongside character aspects. Artifacts like Silver Slippers (feet) and Red Clown Nose (head) are wearable too.
 
-## Artifacts
+## Body Slots
 
-Two starter artifacts, one chosen randomly per playthrough. Added to `data/artifacts.json`, placed in the player's current room dynamically during tutorial.
+Five slots: `head`, `torso`, `legs`, `feet`, `hands`. Defined as `BODY_SLOTS` constant in `models/character.py`.
 
-**Silver Slippers** — aspect: *There's No Place Like Home*
-- Effect: emergency teleport back to skerry (like retreat but free)
-- Mote value: 5
-- Backend lore: Wizard of Oz (not exposed to player)
+## New Clothing Items (`data/items.json`)
 
-**Red Clown Nose** — aspect: *Uglier Than I Am*
-- Effect: reduces NPC resentment/envy by 1
-- Mote value: 5
-- Backend lore: Harrison Bergeron (not exposed to player)
+Four items with `"type": "clothing"` and a `"slot"` field. No stat bonuses. `mote_value: 2`. These are normal Earth clothes — the characters arrived from a regular world.
 
-Both artifacts are placed dynamically into the player's current room when the tutorial reaches the artifact step. In `artifacts.json` they're stored without a room assignment until then.
+**Sevarik:**
+- `khaki_jumpsuit` — torso — "A sturdy khaki jumpsuit, the kind you'd wear for fieldwork. Scuffed at the knees and elbows but still holding together."
+- `work_boots` — feet — "Worn-in leather work boots. They've seen better days but they're broken in just right."
 
-## New Tutorial Steps
+**Miria:**
+- `red_sundress` — torso — "A cheerful red sundress, incongruous against the void. It's the kind of thing you'd wear to a garden party, not the end of the world."
+- `canvas_flats` — feet — "Simple canvas flats, slightly muddy. Comfortable enough for a long day on your feet."
 
-Insert 4 steps between split explanation and handoff:
+## Artifact Slot Updates (`data/artifacts.json`)
 
+Add `"slot"` field to wearable artifacts:
+- `silver_slippers` → `"slot": "feet"`
+- `red_clown_nose` → `"slot": "head"`
+
+Other artifacts (stabilization_engine, growth_lattice, eliok_house) get no slot — they're carried, not worn.
+
+## Character Model (`models/character.py`)
+
+```python
+BODY_SLOTS = ["head", "torso", "legs", "feet", "hands"]
 ```
-... exploring → (sevarik encounter + split) →
-  artifact_ih → artifact_examine → artifact_use → artifact_choice →
-  handoff → complete
+
+**Constructor** (after `self.inventory`): `self.worn = dict(data.get("worn", {}))`
+
+**New methods:**
+- `wear_item(item_id, slot)` — remove from inventory, set `worn[slot] = item_id`. Returns False if slot occupied or item not in inventory.
+- `remove_worn(slot)` — set `worn[slot] = None`, add item back to inventory. Returns item_id or None.
+- `get_worn_item(slot)` — return item_id or None.
+- `get_all_worn()` — return `{slot: item_id}` for occupied slots only.
+- `find_worn_by_item(item_id)` — return slot name or None.
+
+**`to_dict`**: Add `"worn": self.worn`.
+
+## Item Model (`models/item.py`)
+
+Add `self.slot = data.get("slot", None)` and include in `to_dict()`. Keeps the model consistent with the JSON schema even though items_db entries are accessed as raw dicts.
+
+## Starting Outfits (`data/characters.json`)
+
+Add `worn` field to both characters:
+- **Sevarik**: `{"torso": "khaki_jumpsuit", "feet": "work_boots"}`
+- **Miria**: `{"torso": "red_sundress", "feet": "canvas_flats"}`
+
+## Parser (`engine/parser.py`)
+
+- **Remove** `"wear": "use"` from COMMAND_ALIASES
+- **Add** to COMMANDS:
+  - `"wear": {"phases": ["explorer", "steward", "prologue"], "args": "required"}`
+  - `"remove": {"phases": ["explorer", "steward", "prologue"], "args": "required"}`
+- **Add** to COMMAND_ALIASES: `"equip": "wear"`, `"unequip": "remove"`, `"unwear": "remove"`
+
+## Command Handlers (`main.py`)
+
+### `cmd_wear(args)`
+1. Find item in inventory — check **both** `items_db` and `artifacts_db`
+2. Check for a `slot` field — reject items without one ("You can't wear that.")
+3. Check slot not occupied — tell player to REMOVE first if occupied
+4. Call `char.wear_item(item_id, slot)`
+5. Success message
+
+### `cmd_remove(args)`
+1. Try target as slot name (`REMOVE torso`)
+2. Then match item name against worn items (checking both `items_db` and `artifacts_db` for name lookup)
+3. Call `char.remove_worn(slot)` — item goes back to inventory
+4. Success message
+
+### Register in handler dict (line ~344)
+```python
+"wear": self.cmd_wear,
+"remove": self.cmd_remove,
 ```
 
-### Step: `artifact_ih`
-Tuft: "Hold on. I can feel something nearby. Our bond lets you sense objects. Type IH to see what's here."
-Player types **IH** → sees artifact listed.
-Tuft: "See that? Look more closely. EXAMINE it."
+### `_examine_target`: Add "self"/"me"/"myself"
+Insert at top of method (before NPC check, line 400):
+```python
+if target in ("self", "me", "myself"):
+    display.display_self(char, self.items_db, self.artifacts_db)
+    return
+```
 
-### Step: `artifact_examine`
-Player types **EXAMINE <artifact>** (aliases to PROBE).
-Tuft describes it, reveals the aspect concept:
-"See that shimmer? That's an aspect — *[aspect name]*. Aspects are the deeper nature of things. When you need strength, you can INVOKE an aspect for a bonus."
-Then: "Take it. It shouldn't just sit on the ground."
+### `_examine_target`: Search worn items
+After searching inventory items (line ~463), add a block to search worn items. Build a list of worn item IDs, check against both `items_db` and `artifacts_db`:
+```python
+worn_ids = [wid for wid in char.worn.values() if wid is not None]
+art_id, art = self._find_entity(worn_ids, target, self.artifacts_db)
+if art:
+    # show artifact details (description, aspects, stat_bonuses, mote value)
+    return
+item_id, item = self._find_entity(worn_ids, target, self.items_db)
+if item:
+    # show item details
+    return
+```
 
-### Step: `artifact_use`
-Player types **TAKE <artifact>** → pickup message.
-Then Tuft prompts: "Now try it on. USE it."
-Player types **USE/WEAR <artifact>** → Tuft describes the effect:
-- Slippers: Player clicks the heels together three times. Tuft: "You feel a tug — toward here, toward the skerry. Lost in the void, click your heels and these will pull you home."
-- Nose: Player puts on the nose. "Something shifts. People's eyes slide right past you. Less sharp, less jealous."
-Tuft then prompts the choice.
+## Display (`engine/display.py`)
 
-### Step: `artifact_choice`
-Tuft: "Now. A choice. You can KEEP it — carry it, use its power. Or you can OFFER it TO me. I'll break it down into motes and grow stronger. Your power or mine. There's always a trade."
-Player types **KEEP** → stays in inventory.
-Player types **OFFER <artifact> TO <seed>** → removed from inventory, motes added.
-After choice → advance to `handoff` → "SWITCH FOCUS TO <explorer>."
+### New `display_self(character, items_db, artifacts_db=None)`
+```
+═══ Sevarik ═══
+  Fae-Lands Warrior Stranded in the Void
 
-## IH Command
+  Wearing:
+    Head     (nothing)
+    Torso    Scout Jacket
+    Legs     Field Trousers
+    Feet     Void Boots
+    Hands    (nothing)
 
-### Parser (`engine/parser.py`)
-- Remove `"ih": "look"` from COMMAND_ALIASES
-- Add to COMMANDS: `"ih": {"phases": ["explorer", "steward", "prologue"], "args": "optional"}`
+  Aspects:
+    Fae-Lands Warrior Stranded in the Void
+    Honor-Bound to Protect Everyone
+    Battle-Scarred Veteran
+    Reluctant Leader
+```
 
-### `cmd_ih` (`main.py`)
-- **No args**: focused list of interactable room contents — items (checking both `items_db` and `artifacts_db` for names), NPCs, inactive agents. No room name/description, no exits. Just what you can interact with.
-- **With args**: delegates to shared `_examine_target(target)` helper
+Looks up item names from both `items_db` and `artifacts_db`. Uses `item_name()` for worn items, `aspect_text()` for aspects. Empty slots show dim `(nothing)`.
 
-### Refactor: extract `_examine_target(target)` from `cmd_look`
-The target-examination logic (current lines 388-445 of cmd_look) becomes `_examine_target(target)`. Both `cmd_look <thing>` and `cmd_ih <thing>` call it. `cmd_look` with no args still shows full room via `display_room()`.
+### Help text
+Add to universal commands in `display_help`:
+```python
+("WEAR <item>", "Put on a piece of clothing or artifact"),
+("REMOVE <item>", "Take off something you're wearing"),
+("EXAMINE SELF", "See your appearance, worn items, and aspects"),
+```
 
-## Other Parser/Alias Changes
+### `display_inventory` — worn section
+After inventory listing, show worn items:
+```python
+worn = {s: i for s, i in character.worn.items() if i} if hasattr(character, 'worn') else {}
+if worn:
+    print(f"  {BOLD}Wearing:{RESET}")
+    for slot, item_id in worn.items():
+        name = _lookup_name(item_id, items_db, artifacts_db)
+        print(f"    {slot.capitalize()}: {item_name(name)}")
+```
 
-| Change | In `engine/parser.py` |
-|--------|-----------------------|
-| `"examine": "probe"` (currently `"examine": "look"`) | COMMAND_ALIASES |
-| Add `"wear": "use"` | COMMAND_ALIASES |
-| Add `"prologue"` to `take` phases | COMMANDS |
-| Add `"prologue"` to `probe` phases | COMMANDS |
-| Add `"prologue"` to `keep` phases | COMMANDS |
+Where `_lookup_name` is a small helper that checks items_db then artifacts_db then falls back to title-case formatting. Used in both `display_self` and `display_inventory` — single source of truth.
 
-## OFFER Command (new, NOT an alias)
+## Save Migration (`engine/save.py`)
 
-OFFER is its own verb — `"offer": {"phases": ["explorer", "steward", "prologue"], "args": "required"}`. Syntax: `OFFER <item> TO <target>`.
+Add to `_migrate_state`:
+```python
+for char_key in ("explorer", "steward"):
+    if char_key in state:
+        state[char_key].setdefault("worn", {})
+```
 
-**`cmd_offer` in main.py**: Parses `OFFER <item> TO <target>`. Splits args on "to" to get item name and target name. If target matches the world seed name → does the same logic as feeding (remove from inventory, add motes, show Tuft's reaction). If target is an NPC → future functionality, for now: `"They don't seem interested."` This keeps OFFER extensible for NPC gifting later without being a dumb alias for FEED.
+## KEEP Interaction
 
-## cmd_keep: Bug fix
+KEEP stays as-is for artifacts. A player who KEEPs a slotted artifact gets it in inventory — they can then WEAR it from inventory to equip it on the body slot. KEEP → inventory, WEAR → body slot. Both are valid. This means during the tutorial, after the player TAKEs the artifact, they have three choices:
+- KEEP (stays in inventory, passive)
+- WEAR (equips to body slot, visible on EXAMINE SELF)
+- OFFER TO <seed> (fed for motes)
 
-Line 1223: `self.explorer.add_to_inventory(art_id)` → `self.current_character().add_to_inventory(art_id)`. Currently hardcoded to explorer; steward can't keep artifacts.
+No code changes to cmd_keep needed for this.
 
-## display_room: Artifact name fallback
+## Tutorial Updates (`engine/tutorial.py`)
 
-When an item ID in `room.items` isn't in `items_db`, also check `artifacts_db` before falling back to title-case formatting. Needed for starter artifacts to display with proper names.
+The `"wear": "use"` alias is removed, so WEAR is now its own command. The tutorial's `artifact_use` step needs to accept both USE and WEAR as valid actions after TAKE.
 
-## Starting Inventory (`data/characters.json`)
+**Line 15 comment**: Change to `# TAKE then USE or WEAR the artifact`
 
-- **Sevarik**: `["preserved_food"]` (restores 1 stress — already in items_db — plausible for a scout)
-- **Miria**: stays empty (she'll learn INVENTORY from the artifact interaction)
+**`after_command` for `artifact_use` step** (line 194):
+- Change `if cmd == "use"` to `if cmd in ("use", "wear")`
+- Both commands are valid ways to interact with the artifact after picking it up
 
-## Tutorial Implementation (`engine/tutorial.py`)
+**Prompt text** (line 191):
+- Change `_tutorial_prompt(f"Type USE {art_name.upper()}")` to `_tutorial_prompt(f"Type WEAR {art_name.upper()}")`
+- WEAR is more natural for equipping things to your body; USE is for activating consumables/effects
 
-### `_show_the_split` ending
-Replace current ending (sets step to `handoff`) with artifact setup:
-1. Pick random artifact from `["silver_slippers", "red_clown_nose"]`
-2. Store in `game.state["starter_artifact"]`
-3. Set artifact's `room` in `artifacts_db` to player's current room
-4. Add artifact ID to current room's `items` list
-5. Set step to `artifact_ih`
-6. Tuft: "Hold on. I can feel something nearby..."
+**Tuft's line** (line 190):
+- Change `"Good. Now try it on."` — keep this, it works for both
 
-### New `after_command` branches
-Handle each artifact step: `artifact_ih` + `ih`, `artifact_examine` + `probe`, `artifact_use` + `take`/`use`, `artifact_choice` + `keep`/`offer`.
-
-The `artifact_use` step handles TWO commands in sequence — first TAKE, then USE/WEAR. After TAKE, show pickup and prompt USE. After USE, advance to `artifact_choice`.
-
-### New `get_current_hint` entries
-Add resume hints for all 4 artifact steps.
-
-## cmd_use: Handle artifact effects in tutorial
-
-Extend `cmd_use` to handle artifacts by ID. When artifact is in inventory: show the artifact-specific effect narration for the tutorial. Slippers show teleport tug, nose shows camouflage effect.
-
-## Help Text Updates (`engine/display.py`)
-
-Split the current `"LOOK / IH [thing]"` entry into:
-- `"LOOK [thing]"` → "Examine surroundings or a specific thing"
-- `"IH [thing]"` → "List objects here, or examine something"
+**`get_current_hint`** (line 372):
+- Change `"Try it on. USE the {art_name}."` to `"Try it on. WEAR the {art_name}."`
+- Change `_tutorial_prompt(f"Type USE {art_name.upper()}")` to `_tutorial_prompt(f"Type WEAR {art_name.upper()}")`
 
 ## Files Summary
 
 | File | Changes |
 |------|---------|
-| `data/artifacts.json` | Add `silver_slippers` + `red_clown_nose` |
-| `data/characters.json` | Starting inventory for Sevarik and Miria |
-| `engine/parser.py` | IH as own command; OFFER as own command; examine→probe; wear→use aliases; prologue phases for take/probe/keep |
-| `engine/tutorial.py` | 4 new steps in STEPS list; `_show_the_split` ending; `after_command` branches; `get_current_hint` entries |
-| `engine/display.py` | Help text; `display_room` artifact name fallback |
-| `main.py` | `cmd_ih`; `cmd_offer`; `_examine_target` refactor; `cmd_keep` bug fix; `cmd_use` artifact handling; `"ih"` + `"offer"` in handlers |
+| `models/character.py` | `BODY_SLOTS` constant, `worn` dict, wear/remove methods, `to_dict` |
+| `models/item.py` | Add `slot` field |
+| `data/items.json` | 4 clothing items |
+| `data/artifacts.json` | Add `slot` to silver_slippers + red_clown_nose |
+| `data/characters.json` | `worn` field for both characters |
+| `engine/parser.py` | Remove `wear→use` alias, add WEAR + REMOVE commands, aliases |
+| `main.py` | `cmd_wear`, `cmd_remove`, handler dict, `_examine_target` self + worn search |
+| `engine/display.py` | `display_self()`, `_lookup_name()` helper, help text, inventory worn section |
+| `engine/save.py` | `worn` migration |
+| `engine/tutorial.py` | Accept WEAR in artifact_use step, update prompts/hints |
 
 ## Verification
 
-1. New game → prologue flows through all 4 artifact steps
-2. IH no args → lists room contents (items, NPCs, agents — not full room desc)
-3. IH <thing> → examines same as LOOK <thing>
-4. EXAMINE <artifact> → probe with Tuft aspect commentary
-5. TAKE <artifact> → picks up, shows in inventory
-6. USE/WEAR <artifact> → Tuft describes effect
-7. KEEP → stays in inventory | OFFER TO <seed> → motes added
-8. After choice → handoff → SWITCH FOCUS works
-9. LOOK still shows full room description as before
-10. Both characters have starting inventory items
+1. New game → both characters wearing starting clothes
+2. EXAMINE SELF / EXAMINE ME → shows description, worn items by slot, aspects
+3. WEAR <item> → equips to correct slot (works for clothing AND artifacts)
+4. WEAR when slot occupied → "REMOVE it first"
+5. WEAR non-slotted item → "You can't wear that"
+6. REMOVE <item name> → unequips, returns to inventory
+7. REMOVE <slot name> → same by slot
+8. INVENTORY → shows carried items AND worn section
+9. LOOK <worn item> → examines it (description, aspects, stat info)
+10. Old saves load without crash (worn defaults to empty)
+11. Tutorial artifact flow unchanged (USE still works for special effects)
+12. Silver Slippers wearable on feet, Red Clown Nose wearable on head

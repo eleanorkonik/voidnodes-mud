@@ -25,7 +25,7 @@
         "special": null,
         "zone": "coral_thicket",
         "room": "ct_heart",
-        "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. Tuft stirs in your awareness — it can feel this thing, and it wants it."
+        "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness — it can feel this thing, and it wants it."
     },
     "eliok_house": {
         "id": "eliok_house",
@@ -39,9 +39,9 @@
         "special": "eliok_house",
         "zone": "frozen_wreck",
         "room": "fw_vault",
-        "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House — a home that remembers what home means.\n\nFeed it to Tuft for 25 motes — the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
+        "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House — a home that remembers what home means.\n\nFeed it to {seed_name} for 25 motes — the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
         "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges — a remnant of the Eliok civilization — and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
-        "feed_effect": "Tuft absorbs the Eliok House and surges with growth. 25 motes flood into the world seed. For a moment, you see what Tuft sees — a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but Tuft remembers."
+        "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees — a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers."
     },
     "silver_slippers": {
         "id": "silver_slippers",

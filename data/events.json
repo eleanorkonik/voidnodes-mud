@@ -31,11 +31,11 @@
             "weight": 2
         },
         {
-            "id": "tuft_warning",
-            "name": "Tuft's Warning",
-            "description": "Tuft pulses urgently — it senses something nearby.",
+            "id": "seed_warning",
+            "name": "{seed_name}'s Warning",
+            "description": "{seed_name} pulses urgently — it senses something nearby.",
             "skill_check": null,
-            "success": "Tuft's awareness reveals a hidden danger in the next room. You'll be prepared.",
+            "success": "{seed_name}'s awareness reveals a hidden danger in the next room. You'll be prepared.",
             "success_effect": {"next_room_bonus": 2},
             "weight": 1
         }
@@ -64,11 +64,11 @@
             "weight": 2
         },
         {
-            "id": "tuft_growth_spurt",
-            "name": "Tuft Growth Spurt",
-            "description": "Tuft pulses with sudden energy, its roots spreading visibly.",
+            "id": "seed_growth_spurt",
+            "name": "{seed_name} Growth Spurt",
+            "description": "{seed_name} pulses with sudden energy, its roots spreading visibly.",
             "skill_check": null,
-            "success": "Tuft grows a little stronger! The skerry feels more alive.",
+            "success": "{seed_name} grows a little stronger! The skerry feels more alive.",
             "success_effect": {"mote_bonus": 3},
             "weight": 2
         },

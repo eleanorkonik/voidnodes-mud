@@ -95,7 +95,7 @@ def display_room(room, game_state):
     room_name(room.name)
     room_desc(room.description)
 
-    if room.aspects and game_state.get("bonded_with_tuft", True):
+    if room.aspects and game_state.get("bonded_with_seed", True):
         aspects = ", ".join(aspect_text(a) for a in room.aspects)
         print(f"  Aspects: {aspects}")
 
@@ -157,16 +157,16 @@ def display_status(character, phase):
         print(f"  Consequences: {cons_str}")
 
 
-def display_tuft(tuft, name="Tuft"):
+def display_seed(seed_data, name="Tuft"):
     """Display world seed status."""
     stage_names = ["Mote", "Tendril", "Aura", "Canopy", "Beacon"]
-    stage = stage_names[tuft.get("growth_stage", 0)]
-    motes = tuft.get("motes", 0)
-    next_threshold = tuft.get("stage_thresholds", [0, 30, 75, 150, 300])
-    current_stage = tuft.get("growth_stage", 0)
+    stage = stage_names[seed_data.get("growth_stage", 0)]
+    motes = seed_data.get("motes", 0)
+    next_threshold = seed_data.get("stage_thresholds", [0, 30, 75, 150, 300])
+    current_stage = seed_data.get("growth_stage", 0)
     if current_stage < 4:
         next_t = next_threshold[current_stage + 1]
-        fed = tuft.get("total_motes_fed", 0)
+        fed = seed_data.get("total_motes_fed", 0)
         progress = f" ({fed}/{next_t} to next stage)"
     else:
         progress = " (MAX)"
