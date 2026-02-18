@@ -170,11 +170,6 @@ class Game:
         day = self.state["day"]
 
         if phase == "prologue":
-            # Hide Varis during prologue — she's resting in the shelter
-            central = self.rooms.get("skerry_central")
-            if central and "varis" in central.npcs:
-                central.remove_npc("varis")
-
             # Place Sevarik at the shelter during prologue
             shelter = self.rooms.get("skerry_shelter")
             if shelter and "sevarik" not in shelter.npcs:
@@ -802,13 +797,6 @@ class Game:
         # Miria becomes an inactive agent on the skerry
         self._deactivate_agent("steward")
 
-        # Varis appears at the landing pad to see Sevarik off
-        landing = self.rooms.get("skerry_landing")
-        if landing and "varis" not in landing.npcs:
-            landing.add_npc("varis")
-        varis = self.npcs_db.get("varis", {})
-        varis["location"] = "skerry_landing"
-
         print()
         display.phase_banner("explorer", day, self.explorer_name, self.steward_name)
 
@@ -817,15 +805,6 @@ class Game:
         if room:
             room.discover()
             display.display_room(room, self.game_context())
-
-        # Varis greets Sevarik
-        print()
-        display.narrate("A figure steps forward — lean, watchful, with the look of")
-        display.narrate("someone who's been surviving alone for too long.")
-        print()
-        varis_name = varis.get("name", "Varis")
-        print(f"  {display.npc_name(varis_name)}: \"You're heading out there? Good.")
-        print(f"  I've been waiting for someone brave enough. Be careful.\"")
 
         print()
         display.display_status(self.explorer, "explorer")

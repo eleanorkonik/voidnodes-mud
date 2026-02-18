@@ -1,8 +1,8 @@
 {
     "varis": {
         "name": "Varis",
-        "location": "skerry_central",
-        "recruited": true,
+        "location": "df_cargo_bay",
+        "recruited": false,
         "aspects": {
             "high_concept": "Mysterious Wanderer Who Found the Skerry First",
             "trouble": "Secrets That Could Help or Harm",
@@ -16,17 +16,19 @@
         },
         "stress": [false, false],
         "consequences": {"mild": null, "moderate": null},
-        "loyalty": 5,
+        "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
-        "house_level": 1,
+        "house_level": 0,
         "dialogue": {
-            "greeting": "Varis nods as you approach. 'The void is restless today. Can you feel it?'",
+            "greeting": "A lean figure steps out from behind a cargo crate, watchful but not hostile. 'Another survivor. I was starting to think I was the last one.'",
             "idle": "'There's work to be done. The skerry won't grow itself — well, {seed_name} will, but it needs help.'",
             "happy": "'This place is starting to feel like it could be something. Keep at it.'",
-            "quest": "'The frozen wreck to the west... I've seen lights there that shouldn't exist. Be careful if you go.'"
+            "quest": "'The frozen wreck to the west... I've seen lights there that shouldn't exist. Be careful if you go.'",
+            "recruit_success": "Varis considers for a moment, then nods. 'A world seed. Haven't seen one of those in a long time. Alright, I'll come. You'll want someone who knows the void.'",
+            "recruit_fail": "'I've survived out here alone this long. I'll need a better reason than that to move.'"
         },
-        "recruit_dc": null,
+        "recruit_dc": 1,
         "recruit_condition": null
     },
     "emmy": {

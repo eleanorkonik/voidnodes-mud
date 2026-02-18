@@ -8,7 +8,7 @@
             "exits": {"north": "skerry_shelter", "east": "skerry_hollow", "south": "skerry_landing"},
             "aspects": ["Safe Haven", "Seed's Presence"],
             "items": [],
-            "npcs": ["varis"],
+            "npcs": [],
             "enemies": [],
             "discovered": true,
             "structures": [],

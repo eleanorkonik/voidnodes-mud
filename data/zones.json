@@ -24,7 +24,7 @@
                 "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
                 "aspects": ["Sealed Cargo Crates", "Skittering Shadows"],
                 "items": ["wire", "torn_fabric"],
-                "npcs": ["emmy"],
+                "npcs": ["emmy", "varis"],
                 "enemies": ["void_vermin_pack"],
                 "discovered": false
             },
