@@ -15,9 +15,9 @@ STEPS = [
 
     # Act 2 — Sevarik Explorer
     "explorer_navigate",     # guide to landing pad
-    "explorer_void_cross",   # ENTER VOID — first crossing
+    "explorer_void_cross",   # SEEK — first void crossing
     "explorer_free",         # flexible exploration: combat, invoke, artifact, recruit
-    "explorer_return",       # ENTER VOID back to skerry
+    "explorer_return",       # SEEK HOME back to skerry
     "explorer_artifact",     # resolve artifact: KEEP, OFFER, or GIVE
     "explorer_stash",        # go to junkyard, DROP materials
     "explorer_handoff",      # SWITCH FOCUS TO MIRIA
@@ -190,12 +190,12 @@ def after_command(cmd, args, game):
         loc = game.state.get("explorer_location")
         if loc == "skerry_landing":
             print()
-            display.seed_speak("Here. The edge of everything we have. ENTER VOID to cross.")
-            _tutorial_prompt("ENTER VOID to cross to the debris field.")
+            game._show_sensed_nodes(game.current_room())
+            _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")
             game.state["tutorial_step"] = "explorer_void_cross"
         return False
 
-    if step == "explorer_void_cross" and cmd == "enter":
+    if step == "explorer_void_cross" and cmd == "seek":
         room = game.current_room()
         if room and room.zone != "skerry":
             print()
@@ -214,12 +214,12 @@ def after_command(cmd, args, game):
                 game.state.get("tutorial_recruit_done")):
             print()
             display.seed_speak("You've done well. Head back to the skerry.")
-            display.seed_speak("South, then ENTER VOID.")
-            _tutorial_prompt("Head south and ENTER VOID to go home.")
+            display.seed_speak("Head south to the entry room, then SEEK home.")
+            _tutorial_prompt("Head south, then SEEK HOME to return.")
             game.state["tutorial_step"] = "explorer_return"
         return False
 
-    if step == "explorer_return" and cmd == "enter":
+    if step == "explorer_return" and cmd in ("seek", "enter"):
         room = game.current_room()
         if room and room.zone == "skerry":
             # Move Miria to landing pad to greet Sevarik
@@ -585,13 +585,13 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_navigate":
         _tutorial_prompt("GO SOUTH to the landing pad.")
     elif step == "explorer_void_cross":
-        display.seed_speak("ENTER VOID to cross to the debris field.")
-        _tutorial_prompt("ENTER VOID.")
+        display.seed_speak("I sense a node... A Dead Ship Full of Secrets.")
+        _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")
     elif step == "explorer_free":
         _explorer_free_resume_hint(gs)
     elif step == "explorer_return":
-        display.seed_speak("Head back south and ENTER VOID to go home.")
-        _tutorial_prompt("ENTER VOID to return to the skerry.")
+        display.seed_speak("Head south to the entry room, then SEEK home.")
+        _tutorial_prompt("SEEK HOME to return to the skerry.")
     elif step == "explorer_artifact":
         display.seed_speak(f"What will you do with the artifact?")
         display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
@@ -639,7 +639,7 @@ def _explorer_free_resume_hint(gs):
     elif not recruit_done:
         display.seed_speak("Find survivors and RECRUIT them.")
     else:
-        display.seed_speak("Head back to the skerry. South, then ENTER VOID.")
+        display.seed_speak("Head south to the entry room, then SEEK HOME.")
 
 
 def _tutorial_prompt(text):

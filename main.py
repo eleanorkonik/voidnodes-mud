@@ -593,7 +593,6 @@ class Game:
 
     def _get_void_crossings(self, room):
         """Find exits from this room that cross into a different zone."""
-        from engine.parser import DIRECTION_ALIASES
         crossings = {}
         for direction, target_id in room.exits.items():
             target = self.rooms.get(target_id)
@@ -601,12 +600,79 @@ class Game:
                 crossings[direction] = target
         return crossings
 
-    def cmd_enter(self, args):
-        """Handle ENTER VOID [direction] — cross between skerry and nodes."""
-        from engine.parser import DIRECTION_ALIASES
+    def _get_zone_aspect_for_zone(self, zone_id):
+        """Get the aspect string for a zone by its ID."""
+        if zone_id == "skerry":
+            return self.state.get("skerry", {}).get("aspect", "")
+        return self.state.get("zones", {}).get(zone_id, {}).get("aspect", "")
 
-        if not args or args[0].lower() != "void":
-            display.error("Enter what? Use ENTER VOID to cross into the void.")
+    def _show_sensed_nodes(self, room):
+        """Have the seed announce what void nodes it senses from this room."""
+        crossings = self._get_void_crossings(room)
+        if not crossings:
+            return
+        print()
+        display.seed_speak("I sense nodes in the void...")
+        for direction, target in crossings.items():
+            aspect = self._get_zone_aspect_for_zone(target.zone)
+            if aspect:
+                print(f"    {display.DIM}{direction.upper():<6}{display.RESET} {display.aspect_text(aspect)}")
+            else:
+                zone_name = target.zone.replace("_", " ").title()
+                print(f"    {display.DIM}{direction.upper():<6}{display.RESET} {zone_name}")
+        print()
+        display.seed_speak("SEEK an aspect to follow it.")
+
+    def _match_zone_by_aspect(self, keywords, room):
+        """Match player keywords against zone aspects of reachable crossings.
+
+        Returns (direction, target_room) or (None, None).
+        """
+        crossings = self._get_void_crossings(room)
+        query = " ".join(keywords).lower()
+
+        # Strip trailing "in void" or "in the void" from query
+        for suffix in (" in the void", " in void"):
+            if query.endswith(suffix):
+                query = query[:-len(suffix)].strip()
+
+        if not query:
+            return None, None
+
+        # "home" and "skerry" are shortcuts for the skerry zone
+        if query in ("home", "skerry", "back"):
+            for direction, target in crossings.items():
+                if target.zone == "skerry":
+                    return direction, target
+            display.error("There's no path home from here.")
+            return None, None
+
+        # Try each crossing — check if all query words appear in the zone aspect
+        query_words = query.split()
+        matches = []
+        for direction, target in crossings.items():
+            aspect = self._get_zone_aspect_for_zone(target.zone).lower()
+            if not aspect:
+                continue
+            if all(w in aspect for w in query_words):
+                matches.append((direction, target))
+
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            # Ambiguous — show what matched
+            display.error("That matches more than one node. Be more specific:")
+            for d, t in matches:
+                aspect = self._get_zone_aspect_for_zone(t.zone)
+                print(f"    {display.aspect_text(aspect)}")
+            return None, None
+
+        return None, None
+
+    def cmd_seek(self, args):
+        """Handle SEEK <aspect keywords> [IN VOID] — cross to a void node by its aspect."""
+        if not args:
+            display.error("Seek what? SEEK <aspect> to follow a node's resonance.")
             return
 
         if self.in_combat:
@@ -619,29 +685,14 @@ class Game:
 
         crossings = self._get_void_crossings(room)
         if not crossings:
-            display.error("There's no void to cross here.")
+            display.error("There are no void crossings from here.")
             return
 
-        # Check for direction argument
-        direction = None
-        if len(args) > 1:
-            raw_dir = args[1].lower()
-            direction = DIRECTION_ALIASES.get(raw_dir, raw_dir)
-
-        if direction:
-            if direction not in crossings:
-                display.error(f"No void crossing to the {direction}.")
-                return
-            target_room = crossings[direction]
-        elif len(crossings) == 1:
-            direction = list(crossings.keys())[0]
-            target_room = crossings[direction]
-        else:
-            display.narrate("The void stretches in several directions:")
-            for d, t in crossings.items():
-                zone_name = t.zone.replace("_", " ").title()
-                display.narrate(f"  {d.upper()} — {zone_name}")
-            display.info("Specify a direction: ENTER VOID <direction>")
+        direction, target_room = self._match_zone_by_aspect(args, room)
+        if not direction:
+            # No match found
+            display.error("No node resonates with that.")
+            self._show_sensed_nodes(room)
             return
 
         # Move and FWOOM
@@ -652,6 +703,40 @@ class Game:
 
         self._narrate_void_crossing(room, target_room)
         display.display_room(target_room, self.game_context())
+
+    def cmd_enter(self, args):
+        """Handle ENTER VOID — legacy command, redirects to SEEK."""
+        if not args or args[0].lower() != "void":
+            display.error("Enter what?")
+            return
+
+        room = self.current_room()
+        if not room:
+            return
+
+        crossings = self._get_void_crossings(room)
+        if not crossings:
+            display.error("There's no void to cross here.")
+            return
+
+        # If only one crossing, allow it (convenience for returning home)
+        if len(crossings) == 1:
+            if self.in_combat:
+                display.error("You're in combat! RETREAT, CONCEDE, or finish the fight.")
+                return
+            direction = list(crossings.keys())[0]
+            target_room = crossings[direction]
+            target_id = room.exits[direction]
+            phase = self.state["current_phase"]
+            self.state[f"{phase}_location"] = target_id
+            target_room.discover()
+            self._narrate_void_crossing(room, target_room)
+            display.display_room(target_room, self.game_context())
+            return
+
+        # Multiple crossings — show what the seed senses and prompt SEEK
+        self._show_sensed_nodes(room)
+
 
     def cmd_go(self, args):
         if not args:
@@ -678,11 +763,19 @@ class Game:
             display.error("That path leads nowhere. (This shouldn't happen.)")
             return
 
-        # Cross-zone movement — requires explicit ENTER VOID
+        # Cross-zone movement — requires SEEK
         if room.zone != target_room.zone:
-            zone_name = target_room.zone.replace("_", " ").title()
-            display.narrate(f"The void stretches to the {direction}.")
-            display.info(f"  Type ENTER VOID {direction.upper()} to cross to {zone_name}.")
+            display.narrate("The void stretches before you.")
+            if target_room.zone == "skerry":
+                display.seed_speak("I feel the skerry pulling us back.")
+                display.info("  SEEK HOME to return.")
+            else:
+                aspect = self._get_zone_aspect_for_zone(target_room.zone)
+                if aspect:
+                    display.seed_speak(f"I sense it — {display.aspect_text(aspect)}")
+                    display.info(f"  SEEK {aspect.split()[0].upper()} to follow it.")
+                else:
+                    display.info("  Use SEEK to cross.")
             return
 
         # Move
@@ -1038,8 +1131,9 @@ class Game:
         display.seed_speak("Good. We have a steward. I'm stronger now.")
         display.seed_speak("I can send you beyond the skerry — my tendril will carry you.")
         print()
-        display.seed_speak("I sense something out there. It hums with memory —")
-        display.seed_speak("something broken that remembers being whole.")
+        display.seed_speak("I sense a node in the void. It hums with memory —")
+        display.seed_speak(f"  {display.aspect_text('A Dead Ship Still Full of Secrets')}")
+        display.seed_speak("Head to the landing pad. I'll tell you more there.")
         print()
 
         self.save_game(silent=True)
