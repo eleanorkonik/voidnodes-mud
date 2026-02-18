@@ -181,7 +181,7 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "explorer_navigate"
             game._transition_to_day1()
             print()
-            _tutorial_prompt("GO SOUTH to the landing pad.")
+            _tutorial_prompt("Head south to the landing pad.")
         return False
 
     # ── Act 2: Sevarik Explorer ──
@@ -193,6 +193,10 @@ def after_command(cmd, args, game):
             game._show_sensed_nodes(game.current_room())
             _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")
             game.state["tutorial_step"] = "explorer_void_cross"
+        else:
+            # Not there yet — nudge toward landing pad
+            print()
+            display.seed_speak("Keep heading south. The landing pad is at the edge.")
         return False
 
     if step == "explorer_void_cross" and cmd == "seek":
@@ -615,7 +619,7 @@ def get_current_hint(step, game_state=None):
         display.seed_speak(f"Is it OK if I switch my focus to {explorer_name}?")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
     elif step == "explorer_navigate":
-        _tutorial_prompt("GO SOUTH to the landing pad.")
+        _tutorial_prompt("Head south to the landing pad.")
     elif step == "explorer_void_cross":
         display.seed_speak("I sense a node... A Dead Ship Full of Secrets.")
         _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")

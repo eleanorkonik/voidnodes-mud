@@ -16,6 +16,15 @@ from models.skerry import Skerry
 from models.item import Item
 
 
+SKIP_WORDS = {"a", "an", "the", "of", "in", "is", "it", "that", "and", "but", "with", "for", "from", "to", "by"}
+
+
+def _aspect_hint_words(aspect, count=2):
+    """Pick the first few meaningful words from an aspect for a SEEK hint."""
+    words = [w for w in aspect.split() if w.lower() not in SKIP_WORDS]
+    return " ".join(words[:count]).upper() if words else aspect.split()[0].upper()
+
+
 class Game:
     """Main game controller."""
 
@@ -617,15 +626,22 @@ class Game:
         crossings = self._get_void_crossings(room)
         if not crossings:
             return
-        print()
-        display.seed_speak("I sense nodes in the void...")
+        # Deduplicate — multiple exits can lead to the same zone
+        seen_zones = set()
+        aspects = []
         for direction, target in crossings.items():
+            if target.zone in seen_zones:
+                continue
+            seen_zones.add(target.zone)
             aspect = self._get_zone_aspect_for_zone(target.zone)
             if aspect:
-                print(f"    {display.DIM}{direction.upper():<6}{display.RESET} {display.aspect_text(aspect)}")
+                aspects.append(aspect)
             else:
-                zone_name = target.zone.replace("_", " ").title()
-                print(f"    {display.DIM}{direction.upper():<6}{display.RESET} {zone_name}")
+                aspects.append(target.zone.replace("_", " ").title())
+        print()
+        display.seed_speak("I sense nodes in the void...")
+        for aspect in aspects:
+            print(f"    {display.aspect_text(aspect)}")
         print()
         display.seed_speak("SEEK an aspect to follow it.")
 
@@ -785,7 +801,8 @@ class Game:
                 aspect = self._get_zone_aspect_for_zone(target_room.zone)
                 if aspect:
                     display.seed_speak(f"I sense it — {display.aspect_text(aspect)}")
-                    display.info(f"  SEEK {aspect.split()[0].upper()} to follow it.")
+                    hint_words = _aspect_hint_words(aspect)
+                    display.info(f"  SEEK {hint_words} to follow it.")
                 else:
                     display.info("  Use SEEK to cross.")
             return
