@@ -340,6 +340,7 @@ class Game:
             "take": self.cmd_take,
             "recruit": self.cmd_recruit,
             "retreat": self.cmd_retreat,
+            "enter": self.cmd_enter,
             "craft": self.cmd_craft,
             "recipes": self.cmd_recipes,
             "build": self.cmd_build,
@@ -568,6 +569,68 @@ class Game:
             display.narrate("The skerry rises under your feet. The tendril loosens, satisfied.")
         print()
 
+    def _get_void_crossings(self, room):
+        """Find exits from this room that cross into a different zone."""
+        from engine.parser import DIRECTION_ALIASES
+        crossings = {}
+        for direction, target_id in room.exits.items():
+            target = self.rooms.get(target_id)
+            if target and target.zone != room.zone:
+                crossings[direction] = target
+        return crossings
+
+    def cmd_enter(self, args):
+        """Handle ENTER VOID [direction] — cross between skerry and nodes."""
+        from engine.parser import DIRECTION_ALIASES
+
+        if not args or args[0].lower() != "void":
+            display.error("Enter what? Use ENTER VOID to cross into the void.")
+            return
+
+        if self.in_combat:
+            display.error("You're in combat! RETREAT, CONCEDE, or finish the fight.")
+            return
+
+        room = self.current_room()
+        if not room:
+            return
+
+        crossings = self._get_void_crossings(room)
+        if not crossings:
+            display.error("There's no void to cross here.")
+            return
+
+        # Check for direction argument
+        direction = None
+        if len(args) > 1:
+            raw_dir = args[1].lower()
+            direction = DIRECTION_ALIASES.get(raw_dir, raw_dir)
+
+        if direction:
+            if direction not in crossings:
+                display.error(f"No void crossing to the {direction}.")
+                return
+            target_room = crossings[direction]
+        elif len(crossings) == 1:
+            direction = list(crossings.keys())[0]
+            target_room = crossings[direction]
+        else:
+            display.narrate("The void stretches in several directions:")
+            for d, t in crossings.items():
+                zone_name = t.zone.replace("_", " ").title()
+                display.narrate(f"  {d.upper()} — {zone_name}")
+            display.info("Specify a direction: ENTER VOID <direction>")
+            return
+
+        # Move and FWOOM
+        target_id = room.exits[direction]
+        phase = self.state["current_phase"]
+        self.state[f"{phase}_location"] = target_id
+        target_room.discover()
+
+        self._narrate_void_crossing(room, target_room)
+        display.display_room(target_room, self.game_context())
+
     def cmd_go(self, args):
         if not args:
             display.error("Go where? Specify a direction (NORTH, SOUTH, EAST, WEST, UP, DOWN).")
@@ -601,9 +664,10 @@ class Game:
             self.state[f"{phase}_location"] = target_id
         target_room.discover()
 
-        # Void crossing narration between skerry and nodes
+        # Block cross-zone movement — requires ENTER VOID
         if room.zone != target_room.zone:
-            self._narrate_void_crossing(room, target_room)
+            display.narrate("The void stretches before you. Type ENTER VOID to cross.")
+            return
 
         display.display_room(target_room, self.game_context())
 
@@ -842,7 +906,7 @@ class Game:
         display.seed_speak("something broken that remembers being whole. Doesn't feel big.")
         display.seed_speak("Are you interested in investigating it?")
         print()
-        display.seed_speak("Head south when you're ready.")
+        display.seed_speak("Go south to the landing pad, then ENTER VOID.")
         print()
 
         self.save_game(silent=True)

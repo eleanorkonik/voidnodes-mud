@@ -302,6 +302,7 @@ def display_help(phase, seed_name="Tuft"):
         ("KEEP <item>", "Keep an artifact for its stat bonus"),
         ("TAKE <item>", "Pick up an item"),
         ("RECRUIT <npc>", "Try to recruit an NPC"),
+        ("ENTER VOID [dir]", "Cross the void to a node (or back to skerry)"),
         ("RETREAT", f"Emergency retreat (costs {seed_name} motes)"),
     ]
     steward_cmds = [
