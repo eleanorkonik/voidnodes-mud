@@ -525,8 +525,9 @@ def _explorer_free_hints(cmd, args, game):
             _tutorial_prompt("SCAVENGE to search for materials.")
         return
 
-    # Just scavenged successfully
-    if cmd == "scavenge" and scavenge_done:
+    # Just scavenged successfully (first time only)
+    if cmd == "scavenge" and scavenge_done and not game.state.get("tutorial_scavenge_hinted"):
+        game.state["tutorial_scavenge_hinted"] = True
         if not artifact_found:
             print()
             display.seed_speak("Good haul. Keep an eye out for artifacts")
