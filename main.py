@@ -391,6 +391,8 @@ class Game:
             "agents_db": self.agents_db,
             "bonded_with_seed": self.state.get("bonded_with_seed", False),
             "artifacts_status": self.state.get("artifacts_status", {}),
+            "skerry": self.state.get("skerry", {}),
+            "zones": self.state.get("zones", {}),
         }
 
     # ── Universal Commands ────────────────────────────────────────
