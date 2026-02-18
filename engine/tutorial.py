@@ -262,14 +262,8 @@ def _show_the_split(game):
     display.tuft_speak("Listen. There's something you need to understand.")
     print()
 
-    display.narrate("The skerry is tiny. The void is vast. To survive here,")
-    display.narrate("you need to be in two places at once — someone out there")
-    display.narrate("finding what you need, and someone here keeping everything")
-    display.narrate("from falling apart.")
-    print()
-
-    display.tuft_speak("I can extend tendrils to both of you — but I can only")
-    display.tuft_speak("actively focus through one at a time.")
+    display.tuft_speak("We can't survive here alone. Not for long. It takes")
+    display.tuft_speak("a team.")
     print()
 
     display.narrate(f"You are {display.GREEN}{steward_name}{display.RESET} — a healer, an organizer, the one who")
@@ -282,12 +276,7 @@ def _show_the_split(game):
     display.narrate("fight threats, and find survivors.")
     print()
 
-    display.tuft_speak("A world seed needs multiple agents to grow and thrive.")
-    display.tuft_speak("Like parents. Someone to explore the void and bring back")
-    display.tuft_speak("resources, and someone to tend to hearth and home.")
-    print()
-
-    display.tuft_speak("I can only focus on one of you at a time, right now —")
+    display.tuft_speak("I can only focus on one of you at a time, though —")
     display.tuft_speak("although perhaps that will change later.")
     print()
 
