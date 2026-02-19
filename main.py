@@ -2738,12 +2738,16 @@ class Game:
             display.error(f"Missing materials: {', '.join(missing)}")
             return
 
-        # Skill check
+        # Skill check (DC 0 auto-succeeds — no roll needed)
         skill_name = recipe.get("skill", "Craft")
         dc = recipe["difficulty"]
-        total, shifts, dice_result = dice.skill_check(char.get_skill(skill_name), dc)
-        print(f"  {skill_name}: {dice.roll_description(dice_result, char.get_skill(skill_name), skill_name)}")
-        print(f"  DC: +{dc}")
+        if dc == 0:
+            shifts = char.get_skill(skill_name)  # auto-succeed, shifts = skill value
+            print(f"  Simple enough — no roll needed.")
+        else:
+            total, shifts, dice_result = dice.skill_check(char.get_skill(skill_name), dc)
+            print(f"  {skill_name}: {dice.roll_description(dice_result, char.get_skill(skill_name), skill_name)}")
+            print(f"  DC: +{dc}")
 
         if shifts >= 0:
             # Consume materials — take from room first, then inventory

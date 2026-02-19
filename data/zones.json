@@ -341,7 +341,7 @@
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_airlock", "north": "vw_greenhouse", "west": "vw_tanks", "east": "vw_nursery"},
                 "aspects": ["Echoes of a Crew Long Gone"],
-                "items": [],
+                "items": ["luminous_moss"],
                 "npcs": [],
                 "enemies": [],
                 "discovered": false
