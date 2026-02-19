@@ -2719,7 +2719,7 @@ class Game:
             return
 
         # Check materials — inventory + room items
-        char = self.steward
+        char = self.current_character()
         room = self.current_room()
         inv_counts = self._inventory_counts(char)
         # Also count materials in the room
