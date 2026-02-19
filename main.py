@@ -2240,20 +2240,15 @@ class Game:
         self.recruit_state = None
 
     def _get_artifact_hint(self, zone):
-        """Find the artifact in a zone and return its recruit_hint. Returns None if no artifact or already found."""
+        """Find an artifact currently in a zone's rooms and return its recruit_hint."""
         if not zone:
             return None
-        for art_id, art in self.artifacts_db.items():
-            spawn = art.get("spawn_spot")
-            if not spawn:
+        for room in self.rooms.values():
+            if room.zone != zone:
                 continue
-            spawn_room = self.rooms.get(spawn)
-            if not spawn_room or spawn_room.zone != zone:
-                continue
-            status = self.state.get("artifacts_status", {}).get(art_id)
-            if status in ("kept", "fed"):
-                return None  # already found
-            return art.get("recruit_hint")
+            for item_id in room.items:
+                if item_id in self.artifacts_db:
+                    return self.artifacts_db[item_id].get("recruit_hint")
         return None
 
     def _move_followers(self, target_room_id):
