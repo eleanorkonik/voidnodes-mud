@@ -2162,7 +2162,8 @@ class Game:
         # Show initial board
         recruit.display_board(state, npc["name"])
         flavor = recruit.get_npc_flavor(state, state["score"] / threshold)
-        display.narrate(f"  {flavor}")
+        if flavor:
+            display.narrate(f"  {flavor}")
         print()
 
     def _handle_recruit_input(self, raw):
@@ -2175,7 +2176,8 @@ class Game:
         if not raw:
             recruit.display_board(state, npc_name)
             flavor = recruit.get_npc_flavor(state, state["score"] / state["threshold"])
-            display.narrate(f"  {flavor}")
+            if flavor:
+                display.narrate(f"  {flavor}")
             return
 
         cmd = raw.lower().strip()
@@ -2234,7 +2236,8 @@ class Game:
         # Redisplay board
         recruit.display_board(state, npc_name)
         flavor = recruit.get_npc_flavor(state, state["score"] / state["threshold"])
-        display.narrate(f"  {flavor}")
+        if flavor:
+            display.narrate(f"  {flavor}")
 
     def _resolve_recruit(self, won):
         """Handle the end of a recruit minigame."""

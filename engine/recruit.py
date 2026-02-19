@@ -482,7 +482,10 @@ def get_step_flavor(recruit_state, progress_ratio, rng=None):
 
 
 def get_npc_flavor(recruit_state, progress_ratio):
-    """Get NPC-specific atmosphere text based on progress."""
+    """Get NPC-specific atmosphere text based on progress.
+
+    Returns the text, or None if the atmosphere hasn't changed since last shown.
+    """
     flavor_data = recruit_state.get("npc_data", {}).get("recruit_flavor", _GENERIC_FLAVOR)
     atmosphere = flavor_data.get("atmosphere", _GENERIC_FLAVOR["atmosphere"])
 
@@ -497,6 +500,11 @@ def get_npc_flavor(recruit_state, progress_ratio):
         idx = 3
 
     idx = min(idx, len(atmosphere) - 1)
+
+    # Only show when the bracket changes
+    if idx == recruit_state.get("_last_atmosphere_idx"):
+        return None
+    recruit_state["_last_atmosphere_idx"] = idx
     return atmosphere[idx]
 
 
