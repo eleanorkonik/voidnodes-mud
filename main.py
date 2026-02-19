@@ -1414,6 +1414,9 @@ class Game:
         # Try matching against items in inventory
         item_id_q, item_q = self._find_entity(char.inventory, target, self.items_db)
         if item_id_q and room:
+            # Lira stops you from burning her biodome if she's still living here
+            if self._lira_blocks_torch(item_id_q, room):
+                return
             biodome_was_burning = self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning")
             handled, consumed = handle_quest_use(item_id_q, room.id, self.state, char, self.rooms)
             if handled:
@@ -3178,6 +3181,34 @@ class Game:
 
         else:
             display.error("Type ACCEPT or REFUSE.")
+
+    def _lira_blocks_torch(self, item_id, room):
+        """Lira physically stops you from torching her biodome if she hasn't been recruited."""
+        if item_id != "torch" or room.id != "vw_root_wall":
+            return False
+        quest = self.state.get("quests", {}).get("verdant_bloom", {})
+        if not quest.get("roots_weakened") or quest.get("roots_cleared"):
+            return False
+        lira = self.npcs_db.get("lira")
+        if not lira or lira.get("recruited"):
+            return False
+        # Lira is still living in the biodome — she won't let you burn it
+        print()
+        display.narrate("You raise the torch toward the weakened roots —")
+        print()
+        display.narrate("A hand grabs your wrist. Hard.")
+        print()
+        print(f"  {display.npc_name('Lira')}: \"What are you DOING?\"")
+        print()
+        print(f"  {display.npc_name('Lira')}: \"I live here. This is my home. You set that fire")
+        print(f"  {display.npc_name('Lira')}: and everything in this biodome burns — including me.\"")
+        print()
+        display.narrate("She lets go, but stands between you and the roots.")
+        print()
+        print(f"  {display.npc_name('Lira')}: \"Use the Growth Controller. Or take me with you first.\"")
+        print(f"  {display.npc_name('Lira')}: \"But you are not setting my life's work on fire")
+        print(f"  {display.npc_name('Lira')}: while I'm still standing in it.\"")
+        return True
 
     def _lira_fire_reaction(self):
         """Lira reacts to the biodome being set on fire, if she's following."""
