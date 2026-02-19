@@ -540,10 +540,11 @@ def _explorer_free_hints(cmd, args, game):
     # Just scavenged successfully (first time only)
     if cmd == "scavenge" and scavenge_done and not game.state.get("tutorial_scavenge_hinted"):
         game.state["tutorial_scavenge_hinted"] = True
+        print()
+        display.seed_speak("Good haul. You can make things with what you find —")
+        display.seed_speak("type RECIPES to see what you know, then CRAFT to build.")
         if not artifact_found:
-            print()
-            display.seed_speak("Good haul. Keep an eye out for artifacts")
-            display.seed_speak("and survivors too.")
+            display.seed_speak("Keep an eye out for artifacts and survivors too.")
         return
 
     # Room has undiscovered artifact
