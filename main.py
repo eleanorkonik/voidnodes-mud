@@ -2117,14 +2117,14 @@ class Game:
 
         # Parse direction
         direction_map = {
-            "n": "NORTH", "north": "NORTH",
-            "s": "SOUTH", "south": "SOUTH",
-            "e": "EAST", "east": "EAST",
-            "w": "WEST", "west": "WEST",
+            "w": "WHEEDLE", "wheedle": "WHEEDLE",
+            "a": "APPEAL", "appeal": "APPEAL",
+            "s": "SUGGEST", "suggest": "SUGGEST",
+            "d": "DESCRIBE", "describe": "DESCRIBE",
         }
         direction = direction_map.get(cmd)
         if not direction:
-            display.error("Type a direction (N/S/E/W), QUIT, or HELP.")
+            display.error("Type a tactic (W/A/S/D), QUIT, or HELP.")
             return
 
         # Apply move

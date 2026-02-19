@@ -189,10 +189,10 @@ def get_available_directions(state):
     directions = []
 
     checks = [
-        (-1, 0, "NORTH"),
-        (1, 0, "SOUTH"),
-        (0, -1, "WEST"),
-        (0, 1, "EAST"),
+        (-1, 0, "WHEEDLE"),
+        (1, 0, "SUGGEST"),
+        (0, -1, "APPEAL"),
+        (0, 1, "DESCRIBE"),
     ]
     for dr, dc, name in checks:
         nr, nc = r + dr, c + dc
@@ -210,10 +210,10 @@ def has_valid_moves(state):
 def direction_to_delta(direction):
     """Convert a direction string to (dr, dc)."""
     return {
-        "NORTH": (-1, 0),
-        "SOUTH": (1, 0),
-        "WEST": (0, -1),
-        "EAST": (0, 1),
+        "WHEEDLE": (-1, 0),
+        "SUGGEST": (1, 0),
+        "APPEAL": (0, -1),
+        "DESCRIBE": (0, 1),
     }.get(direction.upper())
 
 
@@ -407,11 +407,11 @@ def display_board(state, npc_name):
 
     print()
 
-    # Available directions
+    # Available moves
     dirs = get_available_directions(state)
     if dirs:
         dir_str = ", ".join(f"{display.BOLD}{d}{display.RESET}" for d in dirs)
-        print(f"  You can go: {dir_str}")
+        print(f"  You could: {dir_str}")
     else:
         print(f"  {display.DIM}No valid moves remain.{display.RESET}")
 
@@ -426,24 +426,25 @@ def display_help_text():
   You're trying to persuade an NPC to join your skerry by navigating a
   grid of colored tiles. Each color represents a line of argument.
 
-  {display.BOLD}Movement:{display.RESET} Type {display.BOLD}N{display.RESET}/{display.BOLD}S{display.RESET}/{display.BOLD}E{display.RESET}/{display.BOLD}W{display.RESET} (or NORTH/SOUTH/EAST/WEST) to step onto
-  adjacent tiles. You can't revisit tiles you've already stepped on.
+  {display.BOLD}Tactics:{display.RESET} Choose how to steer the conversation:
+    {display.BOLD}W{display.RESET} / WHEEDLE     Coax them — nudge upward
+    {display.BOLD}A{display.RESET} / APPEAL       Appeal to emotion — press left
+    {display.BOLD}S{display.RESET} / SUGGEST      Plant an idea — push downward
+    {display.BOLD}D{display.RESET} / DESCRIBE     Paint a picture — reach right
+
+  You can't revisit a point you've already made.
 
   {display.BOLD}Counters:{display.RESET} Each color has a counter (starts at {MAX_COUNTER}). When you step
   on a color, its counter resets to {MAX_COUNTER}. All OTHER colors lose 1.
 
   {display.BOLD}Elimination:{display.RESET} When a counter hits 0, all unvisited tiles of that
-  color are removed from the board. Balance your path carefully!
+  color are removed from the board. Balance your approach carefully!
 
-  {display.BOLD}Scoring:{display.RESET} Each step = 1 point. Reach the threshold to succeed.
+  {display.BOLD}Scoring:{display.RESET} Each move = 1 point. Reach the threshold to succeed.
 
-  {display.BOLD}Game Over:{display.RESET} When you have no valid adjacent moves remaining.
+  {display.BOLD}Game Over:{display.RESET} When you have no valid moves remaining.
 
-  {display.BOLD}Commands:{display.RESET}
-    N / NORTH        Move north (up)
-    S / SOUTH        Move south (down)
-    E / EAST         Move east (right)
-    W / WEST         Move west (left)
+  {display.BOLD}Other:{display.RESET}
     QUIT / ABANDON   Give up this attempt
     HELP / ?         Show this help
     (empty)          Redisplay the board
