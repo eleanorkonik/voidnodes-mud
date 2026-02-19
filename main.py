@@ -1572,6 +1572,13 @@ class Game:
             target = " ".join(args).lower()
             enemy_id, enemy_data = self._find_entity(room.enemies, target, self.enemies_db)
             if not enemy_data:
+                # Check if attacking Lira after she warned you
+                quest = self.state.get("quests", {}).get("verdant_bloom", {})
+                if target == "lira" and quest.get("lira_warned") and not quest.get("lira_defeated"):
+                    lira = self.npcs_db.get("lira")
+                    if lira and not lira.get("recruited"):
+                        self._lira_attacks(room)
+                        return  # combat started — player acts next turn
                 display.error(f"There's nothing called '{target}' to attack here.")
                 return
             self._start_combat(enemy_id)
@@ -3183,7 +3190,10 @@ class Game:
             display.error("Type ACCEPT or REFUSE.")
 
     def _lira_blocks_torch(self, item_id, room):
-        """Lira physically stops you from torching her biodome if she hasn't been recruited."""
+        """Lira stops you from torching her biodome if she hasn't been recruited.
+
+        First time: warning. Second time: she attacks.
+        """
         if item_id != "torch" or room.id != "vw_root_wall":
             return False
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
@@ -3192,23 +3202,76 @@ class Game:
         lira = self.npcs_db.get("lira")
         if not lira or lira.get("recruited"):
             return False
-        # Lira is still living in the biodome — she won't let you burn it
+        if quest.get("lira_defeated"):
+            return False
+
+        if not quest.get("lira_warned"):
+            # First attempt — she confronts you
+            quest["lira_warned"] = True
+            print()
+            display.narrate("You raise the torch toward the weakened roots —")
+            print()
+            display.narrate("A hand grabs your wrist. Hard.")
+            print()
+            print(f"  {display.npc_name('Lira')}: \"What are you DOING?\"")
+            print()
+            print(f"  {display.npc_name('Lira')}: \"I live here. This is my home. You set that fire")
+            print(f"  {display.npc_name('Lira')}: and everything in this biodome burns — including me.\"")
+            print()
+            display.narrate("She stands between you and the roots.")
+            print()
+            print(f"  {display.npc_name('Lira')}: \"Use the Growth Controller. Or take me with you first.\"")
+            return True
+        else:
+            # Second attempt — she attacks
+            self._lira_attacks(room)
+            return True
+
+    def _lira_attacks(self, room):
+        """Lira attacks you to defend her biodome."""
         print()
-        display.narrate("You raise the torch toward the weakened roots —")
+        display.narrate("You raise the torch again. Lira's eyes go wide.")
         print()
-        display.narrate("A hand grabs your wrist. Hard.")
+        print(f"  {display.npc_name('Lira')}: \"No!\"")
         print()
-        print(f"  {display.npc_name('Lira')}: \"What are you DOING?\"")
+        display.narrate("She rips a thorny vine from the wall and swings at you.")
         print()
-        print(f"  {display.npc_name('Lira')}: \"I live here. This is my home. You set that fire")
-        print(f"  {display.npc_name('Lira')}: and everything in this biodome burns — including me.\"")
+        # Set up Lira as a temporary enemy
+        lira_enemy = {
+            "id": "lira_hostile",
+            "name": "Lira",
+            "aspects": ["Botanist Without a Ship", "Knows Every Root by Name"],
+            "skills": {"Fight": 1, "Notice": 2},
+            "stress": [False, False],
+            "consequences": {"mild": None},
+            "aggressive": False,
+            "loot": [],
+            "_is_npc": True,
+        }
+        self.enemies_db["lira_hostile"] = lira_enemy
+        room.enemies.append("lira_hostile")
+        self._start_combat("lira_hostile")
+        display.warning(f"  Lira attacks!")
+
+    def _handle_lira_defeat(self):
+        """Handle Lira being defeated in combat — she can no longer be recruited."""
+        quest = self.state.get("quests", {}).get("verdant_bloom", {})
+        quest["lira_defeated"] = True
+        lira = self.npcs_db.get("lira")
+        if lira:
+            # Remove her from her room
+            greenhouse = self.rooms.get("vw_greenhouse")
+            if greenhouse and "lira" in greenhouse.npcs:
+                greenhouse.npcs.remove("lira")
         print()
-        display.narrate("She lets go, but stands between you and the roots.")
+        display.narrate("Lira slumps against the wall, clutching her side.")
         print()
-        print(f"  {display.npc_name('Lira')}: \"Use the Growth Controller. Or take me with you first.\"")
-        print(f"  {display.npc_name('Lira')}: \"But you are not setting my life's work on fire")
-        print(f"  {display.npc_name('Lira')}: while I'm still standing in it.\"")
-        return True
+        print(f"  {display.npc_name('Lira')}: \"You... you'd really...\"")
+        print()
+        display.narrate("She pulls herself up and stumbles south, into the smoke.")
+        display.narrate("You hear the airlock cycle. She's gone.")
+        print()
+        display.warning("  Lira can no longer be recruited.")
 
     def _lira_fire_reaction(self):
         """Lira reacts to the biodome being set on fire, if she's following."""
@@ -3319,9 +3382,16 @@ class Game:
 
         if not absorbed:
             # Enemy defeated!
-            display.success(f"\n  {enemy_data['name']} is defeated!")
             room.remove_enemy(enemy_id)
             self._end_combat()
+
+            # Special handling for NPC combatants
+            if enemy_data.get("_is_npc"):
+                if enemy_id == "lira_hostile":
+                    self._handle_lira_defeat()
+                return True
+
+            display.success(f"\n  {enemy_data['name']} is defeated!")
             loot = enemy_data.get("loot", [])
             if loot:
                 dropped = random.choice(loot)
