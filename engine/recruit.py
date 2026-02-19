@@ -393,10 +393,10 @@ def display_board(state, npc_name):
                 cell = f"{display.BOLD}\033[97m @  {display.RESET}"
             elif (r, c) in visited:
                 # Already visited
-                cell = f"{display.DIM} ..  {display.RESET}"
+                cell = f"{display.DIM}..  {display.RESET}"
             elif (r, c) in eliminated:
                 # Eliminated
-                cell = f"\033[2m\033[90m ··  {display.RESET}"
+                cell = f"\033[2m\033[90m··  {display.RESET}"
             else:
                 color_char = board[r][c]
                 counter_val = counters.get(color_char, 0)
