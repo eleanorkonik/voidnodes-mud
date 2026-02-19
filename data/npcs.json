@@ -487,6 +487,7 @@
             "quest_options": "If you have tools, the Growth Control room is west of the root wall — the console might still work if you can repair it. The roots would retract cleanly. Otherwise... you could weaken the roots with solvent and burn through. It would work, but these roots are the biodome's lifeline.",
             "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit.",
             "quest_forceful_done": "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
+            "quest_forceful_done_witnessed": "Don't talk to me about it. I can still smell the smoke in my hair. Weeks of work. Years of growth. For a crystal with five charges.",
             "quest_complete": "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
             "recruit_success": "Lira brushes soil from her hands and stands. 'That tendril — whatever it is — it's a living growth source. I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
             "recruit_fail": "'I can't leave yet. There's too much data in this biodome — growth patterns, root networks, the crystallization process. Come back when I've finished my survey.'"

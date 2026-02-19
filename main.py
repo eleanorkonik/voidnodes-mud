@@ -1414,10 +1414,14 @@ class Game:
         # Try matching against items in inventory
         item_id_q, item_q = self._find_entity(char.inventory, target, self.items_db)
         if item_id_q and room:
+            biodome_was_burning = self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning")
             handled, consumed = handle_quest_use(item_id_q, room.id, self.state, char, self.rooms)
             if handled:
                 if consumed:
                     char.remove_from_inventory(item_id_q)
+                # Lira reacts to watching her biodome burn
+                if not biodome_was_burning and self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning"):
+                    self._lira_fire_reaction()
                 return
 
         # Check artifacts in inventory
@@ -3177,6 +3181,30 @@ class Game:
 
         else:
             display.error("Type ACCEPT or REFUSE.")
+
+    def _lira_fire_reaction(self):
+        """Lira reacts to the biodome being set on fire, if she's following."""
+        lira = self.npcs_db.get("lira")
+        if not lira or not lira.get("following"):
+            return
+        explorer_loc = self.state.get("explorer_location")
+        if lira.get("location") != explorer_loc:
+            return
+        print()
+        print(f"  {display.npc_name('Lira')}: \"What have you — \"")
+        print()
+        display.narrate("She stops mid-sentence. The canopy above is already catching.")
+        display.narrate("Weeks of dried vines and leaf litter, all fuel. Her face goes white.")
+        print()
+        print(f"  {display.npc_name('Lira')}: \"Every root. Every — do you understand what you've — \"")
+        print()
+        display.narrate("She breaks off, coughing. The smoke is already thickening.")
+        print(f"  {display.npc_name('Lira')}: \"Get the bloom. Get it and let's go.\"")
+        print()
+        # Mood and mechanical impact
+        lira["mood"] = "angry"
+        quest = self.state.get("quests", {}).get("verdant_bloom", {})
+        quest["lira_witnessed_fire"] = True
 
     def _on_room_enter(self, room):
         """Check for hazards and aggressive enemies when entering a room."""

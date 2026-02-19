@@ -147,6 +147,8 @@ def get_quest_talk(npc_id, npc, game_state):
         if path == "careful":
             return {"lines": [dialogue.get("quest_careful_done", "...")]}
         elif path == "forceful":
+            if quest.get("lira_witnessed_fire"):
+                return {"lines": [dialogue.get("quest_forceful_done_witnessed", dialogue.get("quest_forceful_done", "..."))]}
             return {"lines": [dialogue.get("quest_forceful_done", "...")]}
         return {"lines": [dialogue.get("quest_complete", "...")]}
 
