@@ -103,9 +103,11 @@ def after_command(cmd, args, game):
         if room:
             room.discover()
             display.room_name(room.name)
-            display.narrate("Solid ground. Rough soil under your feet, a few")
-            display.narrate("scraggly plants, the faint hum of something alive")
-            display.narrate("beneath the surface.")
+            display.room_desc(room.description)
+            exits = room.get_exit_directions()
+            if exits:
+                exit_parts = [f"{display.BOLD}{e.upper()}{display.RESET}" for e in exits]
+                print(f"  Exits: {', '.join(exit_parts)}")
         print()
         display.seed_speak("I hold this ground together — without me, it's all")
         display.seed_speak("just dust in the void. But I can't do it alone anymore.")
