@@ -191,7 +191,6 @@ def after_command(cmd, args, game):
         if loc == "skerry_landing":
             print()
             game._show_sensed_nodes(game.current_room())
-            _tutorial_prompt("SEEK an aspect to follow it into the void.")
             game.state["tutorial_step"] = "explorer_void_cross"
         else:
             # Not there yet — nudge toward landing pad
@@ -654,7 +653,6 @@ def get_current_hint(step, game_state=None):
         _tutorial_prompt("Head south to the landing pad.")
     elif step == "explorer_void_cross":
         game._show_sensed_nodes(game.current_room())
-        _tutorial_prompt("SEEK an aspect to follow it into the void.")
     elif step == "explorer_free":
         _explorer_free_resume_hint(gs)
     elif step == "explorer_return":
