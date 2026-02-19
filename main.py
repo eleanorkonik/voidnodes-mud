@@ -3085,53 +3085,79 @@ class Game:
         if not compel:
             return
         self.compel_triggered = True
-        self.compel_data = compel
-        self.in_compel = True
         self._present_compel(compel)
 
-    def _present_compel(self, compel):
+    def _present_compel(self, compel, environmental=False):
         """Display a compel prompt to the player."""
         char = self.current_character()
+        self.in_compel = True
+        self.compel_data = compel
+        self.compel_data["_environmental"] = environmental
         print()
-        print(f"{display.BOLD}{display.BRIGHT_YELLOW}═══ Compel ═══{display.RESET}")
-        print(f"  Your {display.aspect_text(compel['aspect'])} —")
+        if environmental:
+            print(f"{display.BOLD}{display.BRIGHT_RED}═══ Hazard ═══{display.RESET}")
+            print(f"  {display.aspect_text(compel['aspect'])} —")
+        else:
+            print(f"{display.BOLD}{display.BRIGHT_YELLOW}═══ Compel ═══{display.RESET}")
+            print(f"  Your {display.aspect_text(compel['aspect'])} —")
         print(f"  {compel['text']}")
         print()
-        print(f"  {display.BRIGHT_GREEN}ACCEPT{display.RESET}: Suffer the effect. Gain 1 FP.")
-        if char.fate_points > 0:
-            print(f"  {display.BRIGHT_RED}REFUSE{display.RESET}: Spend 1 FP to resist. (You have {char.fate_points} FP)")
+        if environmental:
+            print(f"  {display.BRIGHT_GREEN}ACCEPT{display.RESET}: Push through. Take {compel.get('stress', 1)} stress.")
+            if char.fate_points > 0:
+                print(f"  {display.BRIGHT_RED}REFUSE{display.RESET}: Spend 1 FP to find a safer path. (You have {char.fate_points} FP)")
+            else:
+                print(f"  {display.DIM}REFUSE: Not available — no fate points.{display.RESET}")
         else:
-            print(f"  {display.DIM}REFUSE: Not available — no fate points to resist.{display.RESET}")
+            print(f"  {display.BRIGHT_GREEN}ACCEPT{display.RESET}: Suffer the effect. Gain 1 FP.")
+            if char.fate_points > 0:
+                print(f"  {display.BRIGHT_RED}REFUSE{display.RESET}: Spend 1 FP to resist. (You have {char.fate_points} FP)")
+            else:
+                print(f"  {display.DIM}REFUSE: Not available — no fate points to resist.{display.RESET}")
         print()
 
     def _handle_compel_input(self, raw):
         """Handle ACCEPT/REFUSE input during a compel."""
         cmd = raw.lower().strip()
         char = self.current_character()
+        environmental = self.compel_data.get("_environmental", False)
 
         if cmd in ("accept", "a", "yes"):
             self.in_compel = False
             compel = self.compel_data
             self.compel_data = None
-            effect = compel["accept_effect"]
 
-            messages = aspects.resolve_compel_accept(self, compel)
-            for msg in messages:
-                if msg == "TAKEN_OUT":
+            if environmental:
+                # Environmental: take stress, no FP gain
+                display.narrate(compel["accept_text"])
+                stress_amount = compel.get("stress", 1)
+                taken_out = char.apply_damage(stress_amount)
+                stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
+                display.info(f"  ({stress_amount} stress — {stress_str})")
+                if taken_out:
                     display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
                     display.narrate(f"  {self.seed_name} reaches across the void...")
                     self._seed_extraction()
                     return
-                else:
-                    display.narrate(msg)
-
-            # Lose turn — enemy gets a free attack
-            if effect == "lose_turn":
-                self._enemy_turn()
+            else:
+                # Character compel: suffer effect, gain FP
+                effect = compel["accept_effect"]
+                messages = aspects.resolve_compel_accept(self, compel)
+                for msg in messages:
+                    if msg == "TAKEN_OUT":
+                        display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
+                        display.narrate(f"  {self.seed_name} reaches across the void...")
+                        self._seed_extraction()
+                        return
+                    else:
+                        display.narrate(msg)
+                # Lose turn — enemy gets a free attack
+                if effect == "lose_turn":
+                    self._enemy_turn()
 
         elif cmd in ("refuse", "r", "no"):
             if char.fate_points <= 0:
-                display.error("You can't refuse — no fate points to resist.")
+                display.error("You can't refuse — no fate points.")
                 display.info("  Type ACCEPT.")
                 return
 
@@ -3139,15 +3165,28 @@ class Game:
             compel = self.compel_data
             self.compel_data = None
 
-            messages = aspects.resolve_compel_refuse(self, compel)
-            for msg in messages:
-                display.narrate(msg)
+            if environmental:
+                # Environmental: spend FP, find a safer path
+                char.spend_fate_point()
+                display.narrate("You spot a safer route and duck through, avoiding the worst of it.")
+                display.info(f"  (-1 Fate Point — you now have {char.fate_points})")
+            else:
+                messages = aspects.resolve_compel_refuse(self, compel)
+                for msg in messages:
+                    display.narrate(msg)
 
         else:
             display.error("Type ACCEPT or REFUSE.")
 
     def _on_room_enter(self, room):
-        """Check for aggressive enemies when entering a room. Called after room display."""
+        """Check for hazards and aggressive enemies when entering a room."""
+        # Environmental compels (burning biodome, etc.)
+        from engine.quest import check_fire_compel
+        fire_compel = check_fire_compel(self)
+        if fire_compel:
+            self._present_compel(fire_compel, environmental=True)
+            return  # don't also trigger enemy ambush in a burning room
+
         if not room.enemies:
             return
 

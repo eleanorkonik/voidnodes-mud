@@ -93,9 +93,14 @@ def handle_quest_use(item_id, room_id, game_state, character, rooms=None):
             display.narrate("You hold the torch to the weakened roots. They catch")
             display.narrate("instantly, curling and blackening. In moments, a narrow")
             display.narrate("passage opens to the north, revealing a green glow beyond.")
+            print()
+            display.warning("The fire doesn't stop. It leaps to the canopy overhead,")
+            display.warning("racing along dry vines. Smoke billows through the corridor.")
+            display.warning("You need to get the bloom and get out. Fast.")
             quest["roots_cleared"] = True
             quest["path"] = "forceful"
-            _update_room_aspect(game_state, "vw_root_wall", ["Charred Passage"], rooms)
+            quest["biodome_burning"] = True
+            _set_fire_aspects(game_state, rooms)
             return True, False  # torch not consumed
 
         if item_id == "torch" and not quest.get("roots_weakened"):
@@ -183,6 +188,66 @@ def apply_quest_talk_effects(result, game_state, rooms, character):
             room.exits[direction] = target_id
             game_state["quests"]["verdant_bloom"]["control_revealed"] = True
             display.info("  [Lira points west — a hidden corridor behind the roots.]")
+
+
+# ── Biodome Fire ─────────────────────────────────────────────
+
+FIRE_ASPECTS = {
+    "vw_root_wall": ["Charred Passage", "Smoke Pouring Through the Gap"],
+    "vw_greenhouse": ["The Canopy Is on Fire", "Burning Debris Falling From Above"],
+    "vw_promenade": ["Choking Smoke Fills the Corridor"],
+    "vw_airlock": ["Heat at Your Back"],
+}
+
+FIRE_COMPELS = {
+    "vw_root_wall": {
+        "aspect": "Smoke Pouring Through the Gap",
+        "text": "Thick smoke rolls through the passage. Every breath burns.",
+        "accept_text": "You push through the smoke, lungs screaming. The heat sears your arms as you stumble past the charred roots.",
+        "accept_effect": "take_stress",
+        "stress": 1,
+    },
+    "vw_greenhouse": {
+        "aspect": "The Canopy Is on Fire",
+        "text": "Burning branches crash down around you. The greenhouse is an inferno.",
+        "accept_text": "A flaming branch clips your shoulder. You stagger but keep moving, sparks in your hair.",
+        "accept_effect": "take_stress",
+        "stress": 1,
+    },
+    "vw_promenade": {
+        "aspect": "Choking Smoke Fills the Corridor",
+        "text": "You can barely see the floor. The smoke is so thick your eyes stream.",
+        "accept_text": "You drop low and crawl, but the heat blisters your hands on the tiles. You make it through, coughing.",
+        "accept_effect": "take_stress",
+        "stress": 1,
+    },
+}
+
+
+def _set_fire_aspects(game_state, rooms=None):
+    """Set fire aspects on multiple rooms after burning the roots."""
+    for room_id, new_aspects in FIRE_ASPECTS.items():
+        _update_room_aspect(game_state, room_id, new_aspects, rooms)
+
+
+def check_fire_compel(game):
+    """Check if the current room has a fire hazard compel.
+
+    Returns compel data dict (same shape as character compels) or None.
+    """
+    quest = game.state.get("quests", {}).get("verdant_bloom", {})
+    if not quest.get("biodome_burning"):
+        return None
+
+    room = game.current_room()
+    if not room:
+        return None
+
+    compel = FIRE_COMPELS.get(room.id)
+    if not compel:
+        return None
+
+    return dict(compel)
 
 
 # ── Internal Helpers ─────────────────────────────────────────
