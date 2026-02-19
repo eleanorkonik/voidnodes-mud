@@ -1179,9 +1179,8 @@ class Game:
         display.seed_speak("Good. We have a steward. I'm stronger now.")
         display.seed_speak("I can send you beyond the skerry — my tendril will carry you.")
         print()
-        display.seed_speak("I sense a node in the void. It hums with memory —")
-        display.seed_speak(f"  {display.aspect_text('A Dead Ship Still Full of Secrets')}")
-        display.seed_speak("Head to the landing pad. I'll tell you more there.")
+        display.seed_speak("I sense nodes in the void. They may have things of use.")
+        display.seed_speak("Head south to the landing pad.")
         print()
 
         self.save_game(silent=True)
