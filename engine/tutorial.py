@@ -217,6 +217,7 @@ def after_command(cmd, args, game):
             else:
                 display.seed_speak("The debris field. Stay sharp.")
             display.seed_speak("Explore carefully, and watch for danger.")
+            display.seed_speak("And SCAVENGE everything you can. We need materials.")
             game.state["tutorial_step"] = "explorer_free"
         return False
 
