@@ -2194,7 +2194,6 @@ class Game:
             npc["recruited"] = True
             npc["following"] = True
             npc["location"] = self.state.get("explorer_location", "skerry_central")
-            npc["origin_zone"] = state.get("origin_zone")
             self.state.setdefault("recruited_npcs", []).append(npc_id)
 
             room = self.current_room()
@@ -2208,6 +2207,8 @@ class Game:
             over = max(0, state["score"] - state["threshold"])
             bonus_tiers = over // 5
             base_loyalty = 3
+            # Zone the NPC knows about (from where they were when recruited)
+            npc_zone = state.get("origin_zone")
 
             if bonus_tiers >= 1:
                 # Tier 1: extra loyalty
@@ -2215,8 +2216,8 @@ class Game:
                 display.success(f"  Bonus: {npc_name} is impressed. (+2 loyalty)")
 
             if bonus_tiers >= 2:
-                # Tier 2: artifact hint from their zone
-                hint = self._get_artifact_hint(state.get("origin_zone"))
+                # Tier 2: artifact hint from what they've seen in their zone
+                hint = self._get_artifact_hint(npc_zone)
                 if hint:
                     print()
                     display.npc_speak(npc_name, hint)
@@ -2224,6 +2225,10 @@ class Game:
                     # Already found the artifact — extra loyalty instead
                     base_loyalty += 2
                     display.success(f"  Bonus: {npc_name} shares everything they know. (+2 loyalty)")
+
+            # Future: tier 2+ could also grant quests (e.g. NPC asks you to
+            # retrieve something from their zone, escort them somewhere, or
+            # investigate a mystery they noticed). Hook point for quest system.
 
             if bonus_tiers >= 3:
                 # Tier 3: exceptional rapport — happy mood + high loyalty

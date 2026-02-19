@@ -127,7 +127,6 @@ def _migrate_state(state):
             npc["assignment"] = "salvage"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
-        npc.setdefault("origin_zone", None)
 
 
 def delete_save(slot_name):
