@@ -191,7 +191,7 @@ def after_command(cmd, args, game):
         if loc == "skerry_landing":
             print()
             game._show_sensed_nodes(game.current_room())
-            _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")
+            _tutorial_prompt("SEEK an aspect to follow it into the void.")
             game.state["tutorial_step"] = "explorer_void_cross"
         else:
             # Not there yet — nudge toward landing pad
@@ -203,8 +203,16 @@ def after_command(cmd, args, game):
         room = game.current_room()
         if room and room.zone != "skerry":
             print()
-            display.seed_speak("The debris field. Stay sharp. Explore carefully,")
-            display.seed_speak("and watch for danger.")
+            zone = room.zone
+            if zone == "verdant_wreck":
+                display.seed_speak("A biodome. Life everywhere. Let's see what grew here.")
+            elif zone == "frozen_wreck":
+                display.seed_speak("Cold. Everything preserved. Be careful what you thaw.")
+            elif zone == "coral_thicket":
+                display.seed_speak("The coral hums. Something hungry grew here.")
+            else:
+                display.seed_speak("The debris field. Stay sharp.")
+            display.seed_speak("Explore carefully, and watch for danger.")
             game.state["tutorial_step"] = "explorer_free"
         return False
 
@@ -645,8 +653,8 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_navigate":
         _tutorial_prompt("Head south to the landing pad.")
     elif step == "explorer_void_cross":
-        display.seed_speak("I sense a node... A Dead Ship Full of Secrets.")
-        _tutorial_prompt("SEEK DEAD SHIP to follow it into the void.")
+        game._show_sensed_nodes(game.current_room())
+        _tutorial_prompt("SEEK an aspect to follow it into the void.")
     elif step == "explorer_free":
         _explorer_free_resume_hint(gs)
     elif step == "explorer_return":

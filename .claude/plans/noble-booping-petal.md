@@ -1,678 +1,556 @@
-# Plan: Extended Tutorial (Explorer + Steward Acts)
+# Plan: Tutorial Quest System — The Verdant Wreck
 
 ## Context
 
-The tutorial currently ends at the "handoff" step when Miria switches focus to Sevarik. After that, the player is dumped into free play with just a seed hint ("Go south, ENTER VOID"). This leaves them to figure out combat, recruiting, artifact handling, crafting, and building on their own.
+The tutorial currently teaches combat, exploit, invoke, scavenge, artifact discovery, and recruitment — all via the debris_field zone. Eleanor wants a QUEST system that gates artifact discovery behind multi-step puzzle-solving: talk to an NPC, gather/use items contextually, unlock blocked passages. Inspired by Imperian Zones quest patterns. Should be "more interesting than just combat."
 
-The tutorial needs to continue through Sevarik's first expedition (Act 2) and Miria's first steward turn (Act 3) before the player is on their own. Additionally, the artifact teaching (IH → PROBE → KEEP/OFFER) currently happens in Miria's prologue with a random starter artifact — Eleanor wants this moved to Sevarik's exploration when he finds a real artifact in the debris field.
+The new zone has NO enemies — pure exploration and environmental puzzle-solving, contrasting with debris_field's combat focus. This teaches the player that not all void nodes are hostile, and that items have contextual uses beyond combat.
 
-## New Tutorial Steps
+New artifact: causes plants to instantly bear fruit, 5 uses before degrading, mote_value = 5.
 
-```python
-STEPS = [
-    # Act 1 — Miria Prologue (SIMPLIFIED — artifact steps removed)
-    "awakening",
-    "naming",
-    "first_look",
-    "movement",
-    "exploring",
-    "check_seed",           # CHECK SEED — learn about motes and seed mechanics
-    "handoff",              # Tuft asks permission to switch focus to Sevarik
+## New Zone: The Verdant Wreck
 
-    # Act 2 — Sevarik Explorer (NEW)
-    "explorer_navigate",     # guide to landing pad
-    "explorer_void_cross",   # ENTER VOID — first FWOOM
-    "explorer_free",         # flexible exploration: combat, invoke, artifact, recruit
-    "explorer_return",       # ENTER VOID back to skerry
-    "explorer_artifact",     # resolve artifact: KEEP, OFFER TO SEED, or GIVE TO MIRIA
-    "explorer_stash",        # go to junkyard, DROP materials
-    "explorer_handoff",      # SWITCH FOCUS TO MIRIA
+A massive biodome ship fragment — the growing section of a colony ship. When it broke apart, the growth systems kept running, fueled by void energy. Now it's a small jungle floating in nothing. Warm, humid air. Bioluminescent flora. One optional enemy (a mutated tangle-vine), but the zone is primarily exploration and puzzle-solving.
 
-    # Act 3 — Miria Steward (NEW)
-    "steward_arrive",        # orientation narration
-    "steward_recipes",       # RECIPES
-    "steward_craft",         # CRAFT basic_tools
-    "steward_assign",        # ASSIGN recruited NPC
-    "steward_complete",      # tutorial done
+Inspired by the Imperian zone designs — Latonin Island's multi-NPC quest structure (give item → get info → make choice with different consequences) and the Barrow/Cave of Tombs (hidden doors, keys, possessed creatures with a free-or-kill choice).
 
-    "complete",
-]
+**Aspect:** `"Life That Outlasted Its Makers"`
+**Difficulty:** `"easy"`
+**Entry room:** `vw_airlock`
+
+### Rooms (10 rooms)
+
+```
+                [vw_observation]
+                      |
+                  (up/down)
+                      |
+[vw_control] ← [vw_root_wall] → [vw_canopy]
+  (hidden        |                  (enemy)
+   exit)     [vw_greenhouse]
+                  |
+              [vw_promenade]
+             /       |       \
+    [vw_tanks]  [vw_airlock]  [vw_nursery]
+                     |
+              skerry_landing
+
+              [vw_heart] — behind the root wall (north, LOCKED)
 ```
 
-## Act 1 — Miria Prologue (Changes)
-
-### Remove artifact steps
-
-Current steps `artifact_ih`, `artifact_examine`, `artifact_use`, `artifact_choice` are removed from the prologue.
-
-### `_show_the_split()` changes
-
-Remove the starter artifact placement code (lines 319-335 of `engine/tutorial.py`):
-- Remove `random.choice(["silver_slippers", "red_clown_nose"])` and `state["starter_artifact"]`
-- Remove `room.add_item(artifact_id)`
-- Instead, after the Quick Reference, prompt the player to CHECK the seed:
-
-```python
-display.seed_speak("Before we go further — CHECK me. See how I'm doing.")
-_tutorial_prompt(f"CHECK {seed_name.upper()} to see the seed's status.")
-game.state["tutorial_step"] = "check_seed"
-```
-
-### New `check_seed` step
-
-After the player does CHECK SEED/TUFT, the seed explains motes and what they mean, then asks permission to switch focus to the explorer:
-
-```python
-if step == "check_seed" and cmd == "check":
-    seed_name = game.state.get("world_seed_name", "Tuft")
-    explorer_name = game.state.get("explorer_name", "Sevarik")
-    print()
-    display.seed_speak("See? I have motes. That's what keeps us alive here.")
-    display.seed_speak("Feed me artifacts and materials, and I grow stronger.")
-    display.seed_speak("The more motes I have, the more I can do for all of us.")
-    print()
-    display.seed_speak(f"Now... is it OK if I switch my focus to {explorer_name}?")
-    display.seed_speak("Now that you're here, it's safe to let him explore.")
-    _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
-    game.state["tutorial_step"] = "handoff"
-    return False
-```
-
-### `handoff` step changes
-
-Instead of completing the tutorial, it continues to Act 2:
-
-```python
-if step == "handoff" and cmd == "switch":
-    words = [w for w in args if w not in ("focus", "to")]
-    target = " ".join(words).lower() if words else ""
-    explorer_name = game.state.get("explorer_name", "Sevarik").lower()
-    if target in (explorer_name, "explorer"):
-        game.state["tutorial_step"] = "explorer_navigate"
-        game._transition_to_day1()  # tutorial calls it directly
-```
-
-## Act 2 — Sevarik Explorer
-
-### Step: `explorer_navigate`
-
-**Trigger**: Prologue "handoff" step completes → `_transition_to_day1()` runs → seed gives direction.
-
-**Advance when**: Player reaches `skerry_landing` (any `cmd == "go"` that lands them there).
-
-**Seed guidance**: The seed already says "Go south to the landing pad, then ENTER VOID" in `_transition_to_day1()`. When the player arrives at landing pad, seed says: "Here. The edge of everything we have. ENTER VOID to cross."
-
-### Step: `explorer_void_cross`
-
-**Advance when**: Player's current room zone is NOT "skerry" (any `cmd == "enter"` that crosses zone boundary).
-
-**Seed guidance**: After FWOOM and room display, seed says: "The debris field. Stay sharp. Explore carefully, and watch for danger."
-
-### Step: `explorer_free`
-
-This is the big flexible step. **Five objectives** tracked independently:
-
-1. `tutorial_combat_done` — an enemy was defeated
-2. `tutorial_invoke_done` — player successfully used INVOKE in combat
-3. `tutorial_scavenge_done` — player successfully SCAVENGEd for materials
-4. `tutorial_artifact_found` — player PROBEd and TAKEd an artifact (resolution deferred to skerry)
-5. `tutorial_recruit_done` — player recruited an NPC
-
-**FATE combat teaching flow:**
-
-The tutorial teaches the full FATE combat loop: ATTACK to engage → INVOKE an aspect for +2 tactical advantage. This is the core FATE RPG mechanic.
-
-Likely first encounter: the enemies in the Cargo Bay (Fight 2, 2 stress boxes + mild consequence). Sevarik has Fight 4, so expected +2 shifts on first ATTACK → absorbed by stress box 2, enemy survives. This lets the seed naturally prompt INVOKE after round 1.
-
-**Enemy rename** in `zones.json`:
-- `void_vermin_pack` → `rat_swarm` ("Rat Swarm") — cargo bay, Fight 2, the pack enemy
-- `void_vermin_scout` → `hound_of_annwn` ("Hound of Annwn") — engine room, Fight 1, the lone enemy
-- Update descriptions and aspects to match (rats = vermin swarm, hound = Welsh mythological spectral hound)
-- Enemy aspects need updating: "You Can See Right Through Them" → something fitting for rats; "Separated From the Pack and Desperate" → something fitting for a lone otherworldly hound
-
-Available aspects for the invoke tutorial (dynamically read from data):
-- **Enemy**: First aspect of the current enemy — tutorial reads it dynamically
-- **Sevarik**: "Battle-Scarred Veteran" — personal aspect
-- **Room (cargo bay)**: "Something Moves When You're Not Looking"
-
-**Artifact teaching flow:**
-
-The stabilization_engine is in `df_engine_room` (along with an enemy). When Sevarik enters a room with a zone artifact, the seed detects it and guides:
-1. IH to see what's here → PROBE to examine it → TAKE it → seed says "Bring it home. You'll decide what to do with it there."
-
-KEEP/OFFER are **skerry-only** — the player can't resolve artifacts in the field. Resolution happens in the `explorer_artifact` step after returning home. The player can KEEP (stat bonus), OFFER TO SEED (motes), or GIVE TO MIRIA.
-
-Bug fixes needed:
-- **IH and display_room don't show zone artifacts** — they only check `room.items`, but zone artifacts are matched via `art.get("room") == room.id` in `artifacts_db`. Fix both `cmd_ih` and `display_room`.
-- **TAKE doesn't work for zone artifacts** — same root cause. Fix `cmd_take` to also check `artifacts_db` for artifacts whose `room` field matches.
-- **KEEP and OFFER need skerry restriction** — add zone check to `cmd_keep` and `cmd_offer`.
-
-**Contextual hints** (after each command in this step):
-
-| Situation | Seed Says |
-|-----------|-----------|
-| Room has enemies, not in combat, combat not done | "Those creatures! ATTACK them before they swarm you." |
-| Just ATTACKed, enemy survived, invoke not done | "They're tough. Look — their aspects betray weaknesses. See '{first_enemy_aspect}'? INVOKE {aspect_shorthand} to use it against them. Costs a fate point, gives +2." (Dynamically reads the enemy's first aspect.) |
-| Just ATTACKed, enemy died first hit, invoke not done | "Well fought. But aspects are your real weapon. Find another enemy and try INVOKE [aspect] during combat." |
-| Just INVOKEd successfully | "That's it! Invoking aspects is the heart of combat. Use your aspects, the room's, even your enemy's." |
-| Enemy defeated, loot on floor | "Don't leave that behind — TAKE it." |
-| Combat+invoke done, scavenge not done | "Good fighting. Now SCAVENGE this area — Miria needs materials to work with." |
-| Just SCAVENGEd successfully | "Good haul. Keep an eye out for artifacts and survivors too." |
-| Room has undiscovered artifact, artifact not found | "I sense something powerful here. Try IH to see what's around, then PROBE it." |
-| Just PROBEd an artifact | "Take it with you. TAKE it. We'll decide what to do with it back home." |
-| Just TAKEd an artifact (artifact found) | "Good. Carry it home. You can decide its fate on the skerry." |
-| Combat+invoke done, artifact found, room has NPCs, recruit not done | "Survivors! They could use a safe place. Try RECRUIT." |
-| Combat+invoke done, artifact found, no NPCs visible, recruit not done | "There are survivors somewhere in this debris field. Find them and RECRUIT." |
-| Just recruited | "Good. We could use the help. Head home — south and ENTER VOID." |
-| All five objectives done | "You've done well. Head back to the skerry. South, then ENTER VOID." |
-
-**Edge case — enemy one-shotted before invoke:** Seed guides player to find another enemy. Debris field has 3 enemies total across cargo bay, control room, and engine room.
-
-**Advance when**: All five flags are True.
-
-### Step: `explorer_return`
-
-**Advance when**: Player's current room zone is "skerry" (after ENTER VOID back).
-
-**What happens on advance:**
-1. Move Miria's agent to `skerry_landing` (she comes to greet Sevarik):
-   ```python
-   miria_id = game.steward_name.lower()
-   if miria_id in game.agents_db:
-       game.agents_db[miria_id]["location"] = "skerry_landing"
-   ```
-2. Narration: `"Miria hurries out to the landing pad as you arrive."`
-3. Advances to `explorer_artifact` (seed guides artifact resolution).
-
-### Step: `explorer_artifact`
-
-**Triggered** after `explorer_return` narration.
-
-**Seed guidance**: "Now, what about that artifact you brought back? You have three choices: KEEP it for the stat bonus. OFFER it TO me for motes. Or GIVE it TO {steward_name}."
-
-**Advance when**: `tutorial_artifact_resolved` is True — set by:
-- `cmd_keep` (when artifact status set to "kept")
-- `cmd_offer` (when artifact fed to seed)
-- `cmd_give` (when artifact given to another character)
-
-**Skip if**: Player has no unresolved artifacts in inventory (unlikely — seed guided them to TAKE one).
-
-### Step: `explorer_stash`
-
-**Seed guidance**: After artifact resolved: "Drop your salvage at the junkyard — Miria will know where to find it. Head west from the clearing."
-
-**Advance when**: Player is in `skerry_junkyard` and does `cmd == "drop"` (materials dropped).
-
-**Note**: Player should have materials from SCAVENGE (required objective) + combat loot. If somehow empty, skip — seed says "Nothing to stash. SWITCH FOCUS TO MIRIA."
-
-### Step: `explorer_handoff`
-
-**Advance when**: `cmd == "switch"` and phase changed to "steward".
-
-## Act 3 — Miria Steward
-
-### Step: `steward_arrive`
-
-**Triggered immediately** when explorer_handoff advances. NOT waiting for a command.
-
-**What happens**:
-1. Seed: "Good haul. Head to the junkyard and see what you can make. Type RECIPES to check."
-
-**Advance**: Immediately to `steward_recipes`.
-
-### Step: `steward_recipes`
-
-**Advance when**: `cmd == "recipes"`.
-
-**Seed guidance**: After recipes display, seed says: "See anything you can make? Head to the junkyard — GO WEST — and try CRAFT BASIC TOOLS."
-
-### Step: `steward_craft`
-
-**Advance when**: `cmd == "craft"` and crafting succeeded. (Craft now checks room items too, so Miria can craft in the junkyard using stored materials.)
-
-**Seed guidance**: On success: "Well done. Now put your recruit to work. ASSIGN {npc_name} SALVAGE — she can sort what comes in."
-**On failure**: "That didn't work. Make sure you're in the junkyard with the materials."
-
-### Step: `steward_assign`
-
-**Advance when**: `cmd == "assign"` and an NPC has a non-idle assignment.
-
-**Seed guidance**: On success: "Perfect. They'll process salvage while you focus on other things."
-
-Closing speech: "That's the rhythm. Explorer gathers, steward builds. Keep going — you know what to do now. HELP is always there if you need it."
-
-### Step: `steward_complete`
-
-Set `tutorial_complete = True`. Tutorial done.
-
-## New: GIVE Command (`main.py`)
-
-Replace the stub `cmd_give` (line 866) with a working command. GIVE is for non-material items (artifacts, tools, etc.) between characters. Materials go to the junkyard via DROP.
-
-**Syntax**: `GIVE <item> TO <name>`
-
-**Implementation**:
-```python
-def cmd_give(self, args):
-    if not args:
-        display.error("Give what to whom? Usage: GIVE <item> TO <name>")
-        return
-
-    raw = " ".join(args)
-    parts = raw.split(" to ", 1)
-    if len(parts) < 2:
-        display.error("Give what to whom? Usage: GIVE <item> TO <name>")
-        return
-
-    item_part = parts[0].strip().lower()
-    target_name = parts[1].strip().lower()
-    room = self.current_room()
-    char = self.current_character()
-
-    if not item_part:
-        display.error("Give what? Usage: GIVE <item> TO <name>")
-        return
-
-    # Find target agent in room
-    agent_id, agent_data = self._find_agent_in_room(target_name, room.id)
-    if not agent_data:
-        display.error(f"There's nobody called '{target_name}' here to give things to.")
-        return
-
-    # Determine target character object
-    target_role = agent_data.get("role")
-    target_char = self.steward if target_role == "steward" else self.explorer
-
-    # Check artifacts first, then items
-    art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
-    if art:
-        char.remove_from_inventory(art_id)
-        target_char.add_to_inventory(art_id)
-        self.state.setdefault("artifacts_status", {})[art_id] = "given"
-        display.success(f"You give the {art['name']} to {agent_data['name']}.")
-        return
-
-    item_id, item = self._find_entity(char.inventory, item_part, self.items_db)
-    if not item:
-        display.error(f"You don't have anything called '{item_part}'.")
-        return
-
-    char.remove_from_inventory(item_id)
-    target_char.add_to_inventory(item_id)
-    display.success(f"You give {item['name']} to {agent_data['name']}.")
-```
-
-**Parser**: `give` is already registered in COMMANDS (line 49 of parser.py).
-
-## New: DROP Command (`main.py`)
-
-See Junkyard/Warehouse section below for implementation.
-
-**Parser**: Add `"drop"` to COMMANDS dict and COMMAND_ALIASES.
-
-## Bug Fixes: Zone Artifacts + Skerry-Only Restrictions
-
-### `cmd_ih` (`main.py` ~line 526)
-
-After showing `room.items`, also check `artifacts_db` for artifacts whose `room` matches:
-
-```python
-# Zone artifacts (not in room.items but matched by room field)
-for art_id, art in self.artifacts_db.items():
-    if art.get("room") == room.id and art_id not in room.items:
-        status = self.state.get("artifacts_status", {}).get(art_id)
-        if status not in ("kept", "fed"):
-            print(f"  {display.item_name(art['name'])}")
-            has_contents = True
-```
-
-### `display_room` (`engine/display.py` ~line 109)
-
-Similar addition after the items section. Add after the items display:
-
-```python
-# Zone artifacts
-artifacts = game_state.get("artifacts_db", {})
-artifacts_status = game_state.get("artifacts_status", {})
-for art_id, art in artifacts.items():
-    if art.get("room") == room.id and art_id not in room.items:
-        if artifacts_status.get(art_id) not in ("kept", "fed"):
-            print(f"  You see: {item_name(art['name'])}")
-```
-
-Also need `artifacts_status` in `game_context()` return dict.
-
-### `cmd_take` (`main.py` ~line 1594)
-
-After the existing `room.items` artifact check (which only catches artifacts placed directly in room.items), add a check for zone artifacts:
-
-```python
-# Check zone artifacts (not in room.items but matched by room field)
-art_id, art = self._find_in_db(target, self.artifacts_db)
-if art and art.get("room") == room.id:
-    status = self.state.get("artifacts_status", {}).get(art_id)
-    if status not in ("kept", "fed"):
-        art["room"] = None  # Remove from room
-        self.current_character().add_to_inventory(art_id)
-        display.success(f"You pick up the {art.get('name', art_id)}.")
-        return
-```
-
-### `cmd_keep` (`main.py` ~line 1494) — skerry restriction
-
-Add zone check at the top, after finding the artifact:
-
-```python
-room = self.current_room()
-if room and room.zone != "skerry":
-    display.error("You need to be back at the skerry to decide what to do with artifacts.")
-    return
-```
-
-### `cmd_offer` (`main.py` ~line 1522) — skerry restriction for artifacts
-
-When offering an artifact to the seed, add zone check:
-
-```python
-room = self.current_room()
-if room and room.zone != "skerry":
-    display.error(f"You need to be near {self.seed_name} on the skerry to offer artifacts.")
-    return
-```
-
-Note: OFFER for regular items (feeding materials to seed) should also be skerry-only since the seed is physically there.
-
-## Junkyard/Warehouse Room
-
-Materials are stored in a **physical junkyard room** on the skerry, not transferred between characters. Sevarik drops materials there; Miria crafts there.
-
-### New room in `data/skerry.json`
-
-Add to `rooms` array:
+| Room ID | Name | Aspects | Contents |
+|---------|------|---------|----------|
+| `vw_airlock` | Overgrown Airlock | `["Roots Through Steel"]` | Entry point. Roots cracking through hull plates, warm humid air. Exits: south→skerry_landing, north→vw_promenade |
+| `vw_promenade` | The Promenade | `["Echoes of a Crew Long Gone"]` | Wide corridor, vine-covered benches, faded signs pointing to GREENHOUSE and AQUAPONICS. Exits: south→vw_airlock, north→vw_greenhouse, west→vw_tanks, east→vw_nursery |
+| `vw_tanks` | Aquaponics Tanks | `["Still Water, Still Alive"]` | Cracked tanks, murky water, bioluminescent eels darting inside, mushroom clusters where water drips. Scavengeable: coral_fragments, luminous_moss. Exits: east→vw_promenade |
+| `vw_nursery` | The Nursery | `["Seeds of a Dead World"]` | Shattered seed trays, seedlings grown into twisted ceiling-pressing trees, thick pollen. Scavengeable: seeds, resin. Item: `scattered_notes` (botanist's journal about the growth going wrong). Exits: west→vw_promenade |
+| `vw_greenhouse` | The Greenhouse | `["Wild Growth", "Someone Has Been Tending This"]` | Main growing dome — transparent panels showing void overhead, riot of green, cleared paths between planter beds. **NPC: Lira** (quest giver). Exits: south→vw_promenade, north→vw_root_wall, east→vw_canopy |
+| `vw_canopy` | The Canopy | `["Predators Adapt"]` | Trees grown so tall they form a canopy. Vines like curtains. Something rustles above. **Enemy: tangle_vine** (mutated predatory plant, optional combat). Exits: west→vw_greenhouse |
+| `vw_root_wall` | Root Wall | `["Impenetrable Roots"]` | Corridor ends in interwoven roots thick as a person's torso, pulsing with green light. Something glows beyond. LOCKED exit north→vw_heart. Hidden exit west→vw_control (revealed after talking to Lira). Exits: south→vw_greenhouse, up→vw_observation |
+| `vw_observation` | Observation Platform | `["The Whole Picture"]` | Metal platform above the tree line. Through cracked dome panels — void in every direction, skerry a speck of light. Can see the entire root system from here. NPC: a nesting void-swift (flavor creature). Exits: down→vw_root_wall |
+| `vw_control` | Growth Control Room | `["The Machine Still Remembers"]` | Cramped room, dead consoles, one flickering panel — the Growth Controller. Automated system that directed biodome plant growth. USE BASIC_TOOLS to repair → roots retract (the careful path). Exits: east→vw_root_wall |
+| `vw_heart` | The Verdant Heart | `["Crystallized Mid-Bloom", "The Last Garden"]` | Biodome core. Enormous plant crystallized mid-bloom, roots threading every wall. Bloom Catalyst at its base. Exits: south→vw_root_wall |
+
+`vw_root_wall` aspects change to `["Charred Passage"]` after burning (forceful path) or `["Roots Retracted"]` after Growth Controller repair (careful path).
+
+### Zone Connection
+
+`skerry_landing` gets a new void crossing exit to `vw_airlock`. Zone aspect `"Life That Outlasted Its Makers"` is matched via SEEK — player types `SEEK LIFE` or `SEEK OUTLASTED`.
+
+### Enemy: Tangle-Vine
+
+In `vw_canopy`. A mutated predatory plant — optional combat encounter for players who explore east from the greenhouse. Teaches that void zones can have unexpected dangers even in "peaceful" areas.
 
 ```json
 {
-    "id": "skerry_junkyard",
-    "name": "The Junkyard",
-    "description": "A rough clearing where salvage gets piled. Metal scraps, wire coils, torn fabric — everything Sevarik drags back from the void ends up here, sorted by Miria into rough categories. It's not pretty, but it's organized enough to find what you need.",
-    "zone": "skerry",
-    "exits": {"east": "skerry_central"},
-    "aspects": ["One Person's Trash Is Another's Foundation", "It Smells Like Rust and Ambition"],
-    "items": [],
-    "npcs": [],
-    "enemies": [],
-    "discovered": true,
-    "structures": ["junkyard"],
-    "assigned_npcs": [],
-    "resources": {}
+    "id": "tangle_vine",
+    "name": "Tangle-Vine",
+    "description": "Thick tendrils lash out from the canopy above — a plant that's learned to hunt.",
+    "skills": {"Fight": 1, "Athletics": 2},
+    "stress": [false, false, false],
+    "consequences": {"mild": null},
+    "aspects": ["Rooted But Reaching", "Slow to React"],
+    "loot": ["resin", "seeds"],
+    "aggressive": false
 }
 ```
 
-Add `"west": "skerry_junkyard"` to `skerry_central` exits.
+Not aggressive — only attacks if you ATTACK first. Low difficulty.
 
-### New DROP command
+### Flavor Item: Scattered Notes
 
-**Parser**: Add `"drop"` to COMMANDS dict with phases `["explorer", "steward", "prologue"]`, args `"required"`.
+In `vw_nursery`. A botanist's journal fragment about the biodome's growth going haywire. LOOK/PROBE to read. Provides lore context. Not a quest item — pure environmental storytelling.
 
-**Syntax**: `DROP <item>` or `DROP ALL` / `DROP MATERIALS`
+### The Quest: Two Paths (Inspired by Imperian Choices)
 
+Like the Barrow's "free or kill Valkafor" and Latonin's "Captain or First Mate" choices, the quest has two valid approaches with different narrative consequences:
+
+**Path A — The Careful Way (Growth Controller):**
+1. TALK LIRA → learn about root wall + she mentions the Growth Controller
+2. This reveals hidden west exit from `vw_root_wall` to `vw_control`
+3. GO WEST to control room
+4. USE BASIC_TOOLS → repair console → roots retract automatically
+5. GO NORTH from root_wall to vw_heart → find artifact
+6. Lira's reaction: impressed, offers to visit skerry someday, gives extra seeds as thanks
+7. Root_wall aspect becomes `["Roots Retracted"]`
+
+**Path B — The Forceful Way (Burn Through):**
+1. TALK LIRA → same info (she mentions both options)
+2. USE RESIN at `vw_root_wall` → weakens roots (consumes resin)
+3. USE TORCH at `vw_root_wall` → burns through (torch NOT consumed)
+4. GO NORTH to vw_heart → find artifact
+5. Lira's reaction: "The root system... you've damaged something irreplaceable."
+6. Root_wall aspect becomes `["Charred Passage"]`
+
+**Both paths:** Artifact has 5 uses, mote_value 5. The consequence is narrative, not mechanical — this is a tutorial, so the player shouldn't be punished for either choice. They're learning that choices exist.
+
+**Quest state tracks which path was taken:**
 ```python
-def cmd_drop(self, args):
-    if not args:
-        display.error("Drop what? DROP <item> or DROP ALL.")
-        return
-
-    target = " ".join(args).lower()
-    char = self.current_character()
-    room = self.current_room()
-
-    if target in ("all", "materials"):
-        dropped = []
-        for item_id in list(char.inventory):
-            if self.items_db.get(item_id, {}).get("type") == "material":
-                char.remove_from_inventory(item_id)
-                room.add_item(item_id)
-                dropped.append(item_id)
-        if dropped:
-            counts = {}
-            for mid in dropped:
-                name = self.items_db.get(mid, {}).get("name", mid)
-                counts[name] = counts.get(name, 0) + 1
-            display.narrate("You pile your salvage on the ground.")
-            for name, count in counts.items():
-                if count > 1:
-                    display.info(f"  {display.item_name(name)} x{count}")
-                else:
-                    display.info(f"  {display.item_name(name)}")
-        else:
-            display.narrate("You don't have any materials to drop.")
-        return
-
-    # Drop specific item
-    item_id, item = self._find_entity(char.inventory, target, self.items_db)
-    if item:
-        char.remove_from_inventory(item_id)
-        room.add_item(item_id)
-        display.success(f"You set down the {item['name']}.")
-        return
-
-    display.error(f"You don't have anything called '{target}'.")
+state["quests"]["verdant_bloom"]["path"] = "careful" | "forceful" | None
 ```
 
-### Craft modification (`main.py` cmd_craft ~line 1700)
+## New Artifact: Bloom Catalyst
 
-Craft now checks both inventory AND current room items for materials:
+Added to `data/artifacts.json`:
+
+- **name**: Bloom Catalyst
+- **description**: A crystallized flower bud that pulses with deep green energy. When held near dormant plants, they erupt into instant growth — flowers, fruit, seeds, all at once. The crystal dims slightly each time it's used.
+- **aspects**: `["Instant Harvest", "Five Blooms Remain"]`
+- **mote_value**: 5
+- **stat_bonuses**: `{}` (no passive bonus — its value is in the USE mechanic)
+- **special**: `"bloom_catalyst"`
+- **uses_remaining**: 5 (new field, specific to this artifact)
+- **location**: `{"type": "room", "id": "vw_heart"}`
+- **discovery_text**: "At the base of the crystallized plant, a single bud glows with concentrated life. The Bloom Catalyst. When you pick it up, every plant in the chamber shivers."
+- **hint_sensory**: "concentrated life — a green pulse, like a heartbeat, deep inside the overgrowth"
+
+### USE Mechanic
+
+In `cmd_use` (main.py:1332), add handler for `bloom_catalyst`:
 
 ```python
-# Check materials — inventory + room items
-char = self.steward
+elif art_id == "bloom_catalyst":
+    uses = art.get("uses_remaining", 0)
+    if uses <= 0:
+        display.narrate("The crystal is spent. It crumbles to dust in your hands.")
+        # remove from inventory + mark spent
+        return
+    art["uses_remaining"] = uses - 1
+    # Generate food + seeds
+    char.add_to_inventory("preserved_food")
+    char.add_to_inventory("seeds")
+    remaining = uses - 1
+    display.success("The Bloom Catalyst pulses. Nearby vegetation erupts into")
+    display.success("flower and fruit. You gather what you can.")
+    display.info(f"  Gained: preserved food, seeds. ({remaining} bloom{'s' if remaining != 1 else ''} remaining)")
+    # Update aspect text
+    if remaining > 0:
+        words = ["Zero", "One", "Two", "Three", "Four", "Five"]
+        art["aspects"] = ["Instant Harvest", f"{words[remaining]} Bloom{'s' if remaining != 1 else ''} Remain{'s' if remaining == 1 else ''}"]
+    else:
+        display.narrate("The crystal dims and crumbles to dust. Its blooms are spent.")
+        char.remove_from_inventory(art_id)
+        self.state.get("artifacts_status", {})[art_id] = "spent"
+```
+
+FEED works normally — 5 motes regardless of remaining uses.
+
+## New NPC: Lira
+
+Added to `data/npcs.json`. Non-recruitable botanist who provides quest direction. Inspired by the Latonin Island sailor (shares info after TALK, gives both options).
+
+- **location**: `vw_greenhouse`
+- **recruited**: false
+- **aspects**: `["Botanist Without a Ship", "Patient Observer"]`
+- **skills**: `{"Commune": 3, "Craft": 2, "Lore": 2, "Rapport": 1}`
+- **recruit_dc**: `null` (not recruitable during tutorial; future hook)
+- **dialogue**:
+  - `greeting`: "You have a world seed? I can feel it from here. The plants are leaning toward you."
+  - `idle`: "Lira examines a vine, murmuring to herself about growth patterns."
+  - `quest_intro`: "I've been studying this biodome for weeks. There's something incredible at the heart of it — a crystallized bloom that pulses with raw growth energy. But massive roots block the way north."
+  - `quest_options`: "There are two ways through. There's a Growth Control room somewhere west of the root wall — the console might still work if you can repair it. The roots would retract cleanly. Or... you could weaken them with solvent and burn through. It would work, but these roots are the biodome's lifeline."
+  - `quest_careful_done`: "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit."
+  - `quest_forceful_done`: "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable."
+  - `quest_complete`: "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates."
+
+## Quest State
+
+```python
+state["quests"] = {
+    "verdant_bloom": {
+        "status": "inactive",     # inactive → active → complete
+        "roots_weakened": False,   # True after USE RESIN at vw_root_wall
+        "roots_cleared": False,    # True after clearing via either path
+        "path": None,             # "careful" or "forceful" — tracks which approach
+        "control_revealed": False, # True after Lira reveals hidden exit
+    }
+}
+```
+
+## Locked Exits & Hidden Exits
+
+Two new mechanics, both inspired by Imperian patterns:
+
+1. **Locked exits** — visible but impassable until a condition is met (Root Wall → Verdant Heart)
+2. **Hidden exits** — invisible until revealed by quest progress (Root Wall → Control Room)
+
+### Room Model Changes (`models/room.py`)
+
+Add `locked_exits` field:
+
+```python
+def __init__(self, data):
+    # ... existing fields ...
+    self.locked_exits = dict(data.get("locked_exits", {}))
+
+def to_dict(self):
+    d = { ... }  # existing
+    if self.locked_exits:
+        d["locked_exits"] = self.locked_exits
+    return d
+```
+
+Condition resolver (in `engine/quest.py`):
+
+```python
+def check_lock_condition(condition, game_state):
+    """Resolve a locked_exit condition string against game state."""
+    CONDITION_MAP = {
+        "quest_roots_cleared": lambda s: s.get("quests", {}).get("verdant_bloom", {}).get("roots_cleared", False),
+    }
+    resolver = CONDITION_MAP.get(condition)
+    return resolver(game_state) if resolver else False
+```
+
+### Hidden Exit Mechanic
+
+When Lira reveals the Growth Controller, the quest handler adds the west exit to `vw_root_wall` at runtime:
+
+```python
+room = game_state["rooms"]["vw_root_wall"]  # or however rooms are accessed
+room["exits"]["west"] = "vw_control"
+# (Room objects are mutable and serialized on save, so this persists)
+```
+
+This matches the Imperian note: "coding-wise this would just 'reveal' the exits."
+
+The `vw_control` room already has `"east": "vw_root_wall"` in its data — the return path always exists.
+
+### cmd_go Changes (main.py:726)
+
+After validating `direction in room.exits` (line 740), before cross-zone check (line 752):
+
+```python
+# Check locked exits
+from engine.quest import check_lock_condition
+lock = room.locked_exits.get(direction)
+if lock:
+    if not check_lock_condition(lock["condition"], self.state):
+        display.narrate(lock["locked_desc"])
+        return
+```
+
+### display_room Changes (engine/display.py:155)
+
+Show locked exits with blocked indicator:
+
+```python
+for e in exits:
+    lock = room.locked_exits.get(e)
+    if lock and not check_lock_condition(lock["condition"], game_state):
+        exit_parts.append(f"{DIM}{e.upper()} (blocked){RESET}")
+    else:
+        exit_parts.append(f"{BOLD}{e.upper()}{RESET}")
+```
+
+## Contextual USE at Locations
+
+### New: `engine/quest.py` — `handle_quest_use()`
+
+Handles both paths — forceful (resin+torch at root wall) and careful (basic_tools at control room):
+
+```python
+def handle_quest_use(item_id, room_id, game_state, character):
+    """Handle location-specific item USE for quests.
+    Returns (handled: bool, consumed: bool) — caller handles inventory removal if consumed.
+    """
+    quest = game_state.get("quests", {}).get("verdant_bloom", {})
+    if quest.get("status") != "active":
+        return False, False
+
+    # PATH B (forceful) — resin + torch at root wall
+    if room_id == "vw_root_wall":
+        if item_id == "resin" and not quest.get("roots_weakened"):
+            display.narrate("You spread the resin across the thick roots. The organic")
+            display.narrate("solvent soaks in, and you hear faint cracking as the outer")
+            display.narrate("layer softens. The roots sag but hold.")
+            display.info("  Something hotter might finish the job.")
+            quest["roots_weakened"] = True
+            return True, True  # consume resin
+
+        if item_id == "torch" and quest.get("roots_weakened") and not quest.get("roots_cleared"):
+            display.narrate("You hold the torch to the weakened roots. They catch")
+            display.narrate("instantly, curling and blackening. In moments, a narrow")
+            display.narrate("passage opens to the north, revealing a green glow beyond.")
+            quest["roots_cleared"] = True
+            quest["path"] = "forceful"
+            # Update room aspect
+            _update_room_aspect(game_state, "vw_root_wall", ["Charred Passage"])
+            return True, False  # torch not consumed
+
+        if item_id == "torch" and not quest.get("roots_weakened"):
+            display.narrate("You hold the torch to the roots, but they're too thick")
+            display.narrate("and damp to catch. The surface barely singes.")
+            return True, False
+
+    # PATH A (careful) — basic_tools at control room
+    if room_id == "vw_control":
+        if item_id == "basic_tools" and not quest.get("roots_cleared"):
+            display.narrate("You pry open the console panel and get to work. Corroded")
+            display.narrate("connectors, frayed wiring — but the core logic board is intact.")
+            display.narrate("You clean the contacts and bridge the broken circuits.")
+            print()
+            display.success("The Growth Controller hums to life. On the flickering screen,")
+            display.success("you see the root network diagram shift — redirecting growth")
+            display.success("away from the northern corridor.")
+            print()
+            display.narrate("Through the wall, you hear the groan of roots retracting.")
+            quest["roots_cleared"] = True
+            quest["path"] = "careful"
+            _update_room_aspect(game_state, "vw_root_wall", ["Roots Retracted"])
+            return True, False  # tools not consumed
+
+    return False, False
+```
+
+### cmd_use Integration (main.py:1332)
+
+Before the existing artifact/item checks, try quest use:
+
+```python
+# Check quest-contextual use first
+from engine.quest import handle_quest_use
 room = self.current_room()
-inv_counts = self._inventory_counts(char)
-# Also count materials in the room
-for item_id in (room.items if room else []):
-    inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+item_id, item = self._find_entity(char.inventory, target, self.items_db)
+if item and room:
+    handled, consumed = handle_quest_use(item_id, room.id, self.state, char)
+    if handled:
+        if consumed:
+            char.remove_from_inventory(item_id)
+        return
 ```
 
-When consuming materials, prefer room items first (since that's where the junkyard stock is):
+## Quest-Aware TALK
+
+### cmd_talk Changes (main.py:1292)
+
+After finding an NPC, before showing standard dialogue, check for quest dialogue:
 
 ```python
-# Consume materials — take from room first, then inventory
-for mat, needed in recipe["materials"].items():
-    for _ in range(needed):
-        if room and mat in room.items:
-            room.remove_item(mat)
-        else:
-            char.remove_from_inventory(mat)
+from engine.quest import get_quest_talk, apply_quest_talk_effects
+
+npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
+if npc:
+    quest_result = get_quest_talk(npc_id, npc, self.state)
+    if quest_result:
+        for line in quest_result["lines"]:
+            display.npc_speak(npc["name"], self._sub_dialogue(line))
+        if quest_result.get("quest_started"):
+            display.info("  [Quest started: The Verdant Heart]")
+        # Apply side effects (reveal hidden exits, give items, etc.)
+        apply_quest_talk_effects(quest_result, self.state, self.rooms, self.current_character())
+        return
+    # ... existing dialogue logic ...
 ```
 
-### No auto-transfer
-
-Remove any auto-transfer of materials between characters. The junkyard IS the transfer mechanism.
-
-## Recipe Change (`engine/save.py`)
-
-Add `"basic_tools"` to starting `discovered_recipes`:
+### `get_quest_talk()` in engine/quest.py
 
 ```python
-"discovered_recipes": ["rope", "torch", "basic_tools"],
+def get_quest_talk(npc_id, npc, game_state):
+    """Get quest-specific dialogue for an NPC.
+    Returns dict with lines + effects, or None if no quest dialogue.
+    """
+    if npc_id != "lira":
+        return None
+
+    quest = game_state.get("quests", {}).get("verdant_bloom", {})
+    dialogue = npc.get("dialogue", {})
+
+    # Quest complete — react based on path taken
+    if quest.get("status") == "complete":
+        path = quest.get("path")
+        if path == "careful":
+            return {"lines": [dialogue.get("quest_careful_done", "...")]}
+        elif path == "forceful":
+            return {"lines": [dialogue.get("quest_forceful_done", "...")]}
+        return {"lines": [dialogue.get("quest_complete", "...")]}
+
+    # Quest not started — activate + show both options + reveal hidden exit
+    if quest.get("status") != "active":
+        return {
+            "lines": [
+                dialogue.get("greeting", "..."),
+                dialogue.get("quest_intro", "..."),
+                dialogue.get("quest_options", "..."),
+            ],
+            "quest_started": True,
+            "reveal_exit": ("vw_root_wall", "west", "vw_control"),
+        }
+
+    # Quest active, roots cleared — show completion dialogue
+    if quest.get("roots_cleared"):
+        return {"lines": [dialogue.get("quest_complete", "...")]}
+
+    # Quest active, in progress — repeat options
+    return {"lines": [dialogue.get("quest_options", "...")]}
+
+
+def apply_quest_talk_effects(result, game_state, rooms, character):
+    """Apply side effects from quest dialogue (reveal exits, give items, etc.)."""
+    if result.get("quest_started"):
+        game_state.setdefault("quests", {})["verdant_bloom"] = {
+            "status": "active",
+            "roots_weakened": False,
+            "roots_cleared": False,
+            "path": None,
+            "control_revealed": False,
+        }
+
+    if result.get("reveal_exit"):
+        room_id, direction, target_id = result["reveal_exit"]
+        room = rooms.get(room_id)
+        if room and direction not in room.exits:
+            room.exits[direction] = target_id
+            game_state["quests"]["verdant_bloom"]["control_revealed"] = True
+            display.info(f"  [Lira points west — a hidden corridor behind the roots.]")
 ```
 
-## ASSIGN Task Rename: "scavenging" → "salvage" (`main.py`)
+## Tutorial Integration
 
-### `cmd_assign` (~line 1839)
+### New Objective: `tutorial_quest_done`
 
-Replace "scavenging" with "salvage" in `valid_tasks`:
+Add as 7th objective in `explorer_free` (tutorial.py:214):
 
 ```python
-valid_tasks = ["salvage", "building", "gardening", "guarding", "crafting", "idle"]
+if (game.state.get("tutorial_combat_done") and
+        game.state.get("tutorial_exploit_done") and
+        game.state.get("tutorial_invoke_done") and
+        game.state.get("tutorial_scavenge_done") and
+        game.state.get("tutorial_artifact_found") and
+        game.state.get("tutorial_recruit_done") and
+        game.state.get("tutorial_quest_done")):
 ```
 
-Also update the error message:
-```python
-display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, building, gardening, guarding, crafting)")
-```
+### Quest Completion Trigger
 
-### NPC task yields — deposit in junkyard room (~line 2056)
+In `cmd_take` or artifact discovery: when bloom_catalyst is found, set `tutorial_quest_done = True`.
 
-Change "scavenging" yield to "salvage" yield. Instead of adding to steward inventory, deposit in junkyard room:
+The existing `tutorial_artifact_found` flag is set by any artifact find. `tutorial_quest_done` is separate — it tracks that the player completed a quest specifically.
 
-```python
-if task == "salvage":
-    if random.random() < 0.6:
-        loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
-        # Deposit in junkyard room, not steward inventory
-        junkyard = self._get_room("skerry_junkyard")
-        if junkyard:
-            junkyard.add_item(loot)
-        loot_name = self.items_db.get(loot, {}).get("name", loot)
-        display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
-```
+### Tutorial Hints for Quest Zone
 
-### `display_help` (~line 314)
-
-Update steward ASSIGN description:
-```python
-("ASSIGN <npc> <task>", "Assign an NPC to a task"),
-```
-Valid tasks shown in error message, not help text.
-
-### Save migration
-
-Add migration for old saves with "scavenging" assignments:
-```python
-# Rename old "scavenging" task to "salvage"
-for npc_id, npc in state.get("npcs_db", {}).items():
-    if npc.get("assignment") == "scavenging":
-        npc["assignment"] = "salvage"
-```
-
-## Tutorial Detection Hooks (`main.py`)
-
-### Combat — in `_apply_enemy_damage()`, when enemy defeated:
+In `_explorer_free_hints()` (tutorial.py:441), add hints after combat objectives are done:
 
 ```python
-if not self.state.get("tutorial_complete"):
-    self.state["tutorial_combat_done"] = True
+quest_done = game.state.get("tutorial_quest_done")
+
+# After combat+scavenge done, not yet quested — hint about verdant wreck
+if combat_done and scavenge_done and not quest_done:
+    quest_status = game.state.get("quests", {}).get("verdant_bloom", {}).get("status", "inactive")
+    if quest_status == "inactive" and room.zone == "skerry":
+        # On skerry, hint about another node
+        display.seed_speak("I sense life — real life — somewhere in the void.")
+        display.seed_speak("Not like the debris. Something growing.")
+        display.info("  SEEK LIFE from the landing pad to follow it.")
+    elif quest_status == "active" and not game.state.get("quests", {}).get("verdant_bloom", {}).get("roots_cleared"):
+        display.seed_speak("Lira's hint about the roots — resin to weaken, heat to burn.")
 ```
 
-### Invoke — in `cmd_invoke()`, after `spend_fate_point()` succeeds:
+## Save System Changes
+
+### `new_game_state()` (save.py:176)
+
+Add to initial state dict:
 
 ```python
-if not self.state.get("tutorial_complete"):
-    self.state["tutorial_invoke_done"] = True
+"tutorial_quest_done": False,
+"quests": {},
 ```
 
-### Scavenge — in `cmd_scavenge()`, when scavenge succeeds (shifts >= 0):
+### `_migrate_state()` (save.py:87)
+
+Add defaults for old saves:
 
 ```python
-if not self.state.get("tutorial_complete"):
-    self.state["tutorial_scavenge_done"] = True
+state.setdefault("tutorial_quest_done", False)
+state.setdefault("quests", {})
 ```
 
-### Artifact found — in `cmd_take()`, when a zone artifact is picked up:
+### Zone Data Loading
 
-```python
-if not self.state.get("tutorial_complete"):
-    self.state["tutorial_artifact_found"] = True
+The verdant_wreck zone goes in `data/zones.json` alongside debris_field, coral_thicket, frozen_wreck. The `new_game_state()` function already loads all zones and builds room/enemy lookups from them — no loader changes needed.
+
+### Skerry Connection
+
+In `data/skerry.json`, add a void crossing exit from `skerry_landing` to `vw_airlock`:
+
+```json
+"exits": {
+    "north": "skerry_central",
+    "void_verdant": "vw_airlock"   // new crossing
+}
 ```
 
-### Artifact resolved — in `cmd_keep()`, `cmd_offer()`, and `cmd_give()` (when artifact transferred):
+(The existing pattern uses `void_*` prefixed exit keys for cross-zone connections.)
 
-```python
-if not self.state.get("tutorial_complete"):
-    self.state["tutorial_artifact_resolved"] = True
+## New File: `engine/quest.py`
+
+```
+engine/quest.py
+├── check_lock_condition(condition, game_state)   — resolve locked exit conditions
+├── handle_quest_use(item_id, room_id, game_state, character)  — contextual USE
+├── get_quest_talk(npc_id, npc, game_state)  — quest-aware TALK dialogue
+├── activate_quest(quest_id, game_state)  — initialize quest state
+├── is_quest_active(quest_id, game_state)  — status check
+└── is_quest_complete(quest_id, game_state) — status check
 ```
 
-### Recruit — detected in `after_command()` via `len(game.state.get("recruited_npcs", [])) > 0`.
-
-## Game Loop Changes (`main.py`)
-
-```python
-# Before:
-if phase == "prologue" and not self.state.get("tutorial_complete"):
-    complete = tutorial.after_command(cmd, args, self)
-    if complete:
-        self._transition_to_day1()
-
-# After:
-if not self.state.get("tutorial_complete"):
-    tutorial.after_command(cmd, args, self)
-```
-
-Tutorial runs during ALL phases while `tutorial_complete` is False. Transitions handled inside tutorial.
-
-## Save Migration (`engine/save.py`)
-
-Add to `_migrate_state`:
-```python
-state.setdefault("tutorial_combat_done", False)
-state.setdefault("tutorial_invoke_done", False)
-state.setdefault("tutorial_scavenge_done", False)
-state.setdefault("tutorial_artifact_found", False)
-state.setdefault("tutorial_artifact_resolved", False)
-state.setdefault("tutorial_recruit_done", False)
-if "basic_tools" not in state.get("discovered_recipes", []):
-    state.setdefault("discovered_recipes", []).append("basic_tools")
-```
-
-## get_current_hint Updates
-
-| Step | Hint |
-|------|------|
-| `exploring` | "Keep looking. There's someone here you need to meet." |
-| `check_seed` | "CHECK {seed_name} to see the seed's status." |
-| `handoff` | "SWITCH FOCUS TO {explorer} when you're ready." |
-| `explorer_navigate` | "Head south to the landing pad." |
-| `explorer_void_cross` | "ENTER VOID to cross to the debris field." |
-| `explorer_free` | Contextual based on 5 objective flags (see hint matrix above) |
-| `explorer_return` | "Head back south and ENTER VOID to go home." |
-| `explorer_artifact` | "What will you do with the artifact? KEEP it, OFFER it TO {seed}, or GIVE it TO {steward}." |
-| `explorer_stash` | "Drop your salvage at the junkyard. GO WEST from the clearing." |
-| `explorer_handoff` | "SWITCH FOCUS TO {steward}." |
-| `steward_arrive` | (auto-advances) |
-| `steward_recipes` | "Type RECIPES to see what you can make." |
-| `steward_craft` | "Head to the junkyard and try CRAFT BASIC TOOLS." |
-| `steward_assign` | "ASSIGN {npc} SALVAGE." |
-
-## Files Summary
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `engine/tutorial.py` | Remove artifact steps from STEPS. Add Act 2+3 steps (including `check_seed`, `explorer_artifact`, `explorer_stash`). Remove starter artifact placement from `_show_the_split`. New handlers in `after_command()`. Updated `get_current_hint()`. |
-| `main.py` | Game loop: tutorial runs all phases. Implement `cmd_give` (non-materials). New `cmd_drop`. Fix `cmd_ih` and `cmd_take` for zone artifacts. Skerry-only restriction on `cmd_keep`/`cmd_offer`. Craft checks room items. Tutorial detection hooks in `_apply_enemy_damage`, `cmd_invoke`, `cmd_scavenge`, `cmd_keep`, `cmd_offer`, `cmd_give`, `cmd_take`. Rename "scavenging" → "salvage" in `cmd_assign` valid_tasks. NPC "salvage" yield deposits in junkyard room. Add `artifacts_status` to `game_context()`. |
-| `engine/display.py` | Fix `display_room` to show zone artifacts. |
-| `engine/parser.py` | Add `drop` command. |
-| `engine/save.py` | `basic_tools` in starting discovered_recipes. Migration for new tutorial state fields. Migration: rename NPC "scavenging" → "salvage". |
-| `data/skerry.json` | Add `skerry_junkyard` room. Add west exit from `skerry_central`. |
-| `data/zones.json` | Rename `void_vermin_pack` → `rat_swarm`, `void_vermin_scout` → `hound_of_annwn`. Update names, descriptions, aspects. |
-| `data/artifacts.json` | No changes — stabilization_engine already has `room: "df_engine_room"`. |
+| `engine/quest.py` | **NEW** — locked exit conditions, contextual USE, quest TALK, quest state helpers |
+| `data/zones.json` | Add `verdant_wreck` zone (4 rooms, locked_exits on vw_barrier, no enemies) |
+| `data/artifacts.json` | Add `bloom_catalyst` (uses_remaining: 5, mote_value: 5) |
+| `data/npcs.json` | Add `lira` (non-recruitable botanist with quest dialogue) |
+| `data/skerry.json` | Add void crossing from skerry_landing to vw_airlock |
+| `models/room.py` | Add `locked_exits` field, `is_exit_locked()` method, serialize in `to_dict()` |
+| `main.py` | `cmd_go`: check locked exits before movement. `cmd_use`: call `handle_quest_use()` before standard handling; add bloom_catalyst USE handler. `cmd_talk`: call `get_quest_talk()` for quest NPCs. Set `tutorial_quest_done` on bloom_catalyst discovery. |
+| `engine/tutorial.py` | Add `tutorial_quest_done` as 7th objective. Add verdant wreck hints to `_explorer_free_hints()`. |
+| `engine/save.py` | `new_game_state()`: add `quests`, `tutorial_quest_done`. `_migrate_state()`: defaults for old saves. |
+| `engine/display.py` | Show locked exits with `(blocked)` indicator. Pass `game_state` or quest check to exit display. |
 
 ## Verification
 
-1. New game → prologue: awakening → bond → name → look → move → meet Sevarik → CHECK TUFT (learn about motes) → Tuft asks permission → SWITCH FOCUS TO SEVARIK
-2. As Sevarik: GO SOUTH twice to landing pad → seed prompts ENTER VOID
-3. ENTER VOID → FWOOM → arrive at debris field → seed says explore
-4. GO NORTH to cargo bay → seed warns about enemies → ATTACK enemies
-5. **Enemy survives first hit → seed teaches INVOKE, shows enemy aspects**
-6. **INVOKE YOU CAN SEE → +2 bonus attack, seed celebrates**
-7. Enemy defeated → loot drops → seed says "TAKE it" → seed says "SCAVENGE this area"
-8. **SCAVENGE → find materials → seed says "Good haul"**
-9. Navigate to engine room → **IH shows Stabilization Engine** (bug fix verified)
-9. **PROBE STABILIZATION ENGINE → discovery text → seed says "TAKE it home"**
-10. **TAKE STABILIZATION ENGINE → picked up, seed says "decide its fate on the skerry"**
-11. RECRUIT EMMY or VARIS → seed says head home
-12. Navigate south, ENTER VOID back → Miria comes to landing pad
-13. **Seed prompts: KEEP, OFFER TO TUFT, or GIVE TO MIRIA**
-14. **Player resolves artifact (KEEP, OFFER, or GIVE TO MIRIA) → tutorial_artifact_resolved**
-15. **Seed prompts: drop salvage at junkyard**
-16. **GO WEST to junkyard → DROP MATERIALS → materials stored in room**
-17. **Seed prompts: SWITCH FOCUS TO MIRIA**
-18. SWITCH FOCUS TO MIRIA → seed prompts RECIPES
-19. RECIPES → see basic_tools → seed says head to junkyard
-20. **GO WEST to junkyard → CRAFT BASIC TOOLS (uses room materials)** → seed prompts ASSIGN
-21. ASSIGN {npc} SALVAGE → seed wraps up, tutorial_complete = True
-22. Free play begins
-23. Edge case: enemy one-shotted → seed mentions INVOKE for next fight
-24. Edge case: KEEP/OFFER attempted in the field → error message tells player to go home
-25. Old saves load without crash
-26. Save mid-tutorial → resume shows correct hint
+1. New game → skip tutorial prologue → explorer phase
+2. Do some debris_field objectives (combat, scavenge)
+3. Return to skerry → seed hints about life in the void
+4. `SEEK LIFE` from landing pad → void crossing to verdant wreck
+5. Explore airlock → `SCAVENGE` for seeds/moss
+6. `GO EAST` to greenhouse → see Lira
+7. `TALK LIRA` → quest activates, shows greeting + root barrier hint
+8. `TALK LIRA` again → repeats hint
+9. `GO WEST`, `GO NORTH` to barrier → see locked exit north (blocked)
+10. `GO NORTH` → blocked, shows "Massive roots block the passage..."
+11. `USE TORCH` → "too thick and damp to catch" (before resin)
+12. `USE RESIN` → roots weaken, resin consumed from inventory
+13. `USE TORCH` → roots burn, passage opens, aspect changes
+14. `GO NORTH` → Root Chamber, bloom_catalyst discovery text
+15. `tutorial_quest_done` flag set
+16. `LOOK` at bloom catalyst → shows description, aspects, mote value
+17. `USE BLOOM CATALYST` → generates preserved_food + seeds, 4 blooms remaining
+18. Use 4 more times → crystal crumbles, removed from inventory
+19. Alternatively: `FEED BLOOM CATALYST` → 5 motes to seed
+20. `TALK LIRA` after quest complete → shows quest_complete dialogue
+21. Save/reload → quest state persists, uses_remaining persists
+22. Old save file → migration adds quests={}, tutorial_quest_done=False gracefully
