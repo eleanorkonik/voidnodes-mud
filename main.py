@@ -8,7 +8,7 @@ import sys
 import json
 import random
 
-from engine import parser, display, save, dice, tutorial, map_renderer, recruit
+from engine import parser, display, save, dice, tutorial, map_renderer, recruit, aspects
 from models.character import Character, BODY_SLOTS
 from models.room import Room
 from models.world_seed import WorldSeed
@@ -49,6 +49,11 @@ class Game:
         self.free_invocations = {}  # {aspect_name: count}
         self.combat_boost = 0  # one-use +2 from ties
         self.combat_consequences_taken = 0  # for CONCEDE FP calculation
+        self.invoked_aspects = set()  # aspects invoked this combat (once each)
+        self.enemy_compel_boost = 0  # +2 from compel accept (enemy_boost effect)
+        self.in_compel = False
+        self.compel_data = None
+        self.compel_triggered = False  # at most one compel per combat
         self.in_recruit = False
         self.recruit_state = None
 
@@ -279,6 +284,11 @@ class Game:
                     print()
                     display.seed_speak("I like that.")
                     tutorial.get_current_hint("first_look", self.state)
+                    continue
+
+                # Compel prompt — intercept before recruit/parser
+                if self.in_compel:
+                    self._handle_compel_input(raw.strip())
                     continue
 
                 # Recruit minigame — intercept raw input before parser
@@ -1709,32 +1719,32 @@ class Game:
         self._enemy_turn()
 
     def cmd_invoke(self, args):
-        """INVOKE <aspect> — Spend a fate point to invoke an aspect for +2 on an attack."""
-        if not args:
-            display.error("Invoke which aspect? Type INVOKE followed by an aspect name.")
-            return
-
+        """INVOKE [aspect] [ATTACK|DEFEND|SETUP] — Spend a fate point to invoke an aspect."""
         if not self.in_combat:
             display.error("You can only invoke aspects during combat or recruitment.")
             return
 
-        aspect_name = " ".join(args)
         char = self.current_character()
+        all_aspects = aspects.collect_invokable_aspects(self, context="combat")
 
-        # Check if aspect exists on character, room, or enemy
-        all_aspects = char.get_all_aspects()
-        room = self.current_room()
-        if room:
-            all_aspects.extend(room.aspects)
-            zone_aspect = self._get_zone_aspect(room)
-            if zone_aspect:
-                all_aspects.append(zone_aspect)
-        if self.combat_target:
-            enemy = self.enemies_db.get(self.combat_target, {})
-            all_aspects.extend(enemy.get("aspects", []))
+        # No args — show the invoke menu
+        if not args:
+            self._display_invoke_menu(char, all_aspects, "combat")
+            return
 
+        # Parse args: last word might be an effect keyword
+        raw = " ".join(args)
+        effect = None
+        for keyword in aspects.COMBAT_EFFECTS:
+            if raw.upper().endswith(" " + keyword):
+                effect = keyword
+                raw = raw[:-(len(keyword) + 1)].strip()
+                break
+
+        # Fuzzy-match the aspect
+        aspect_name = raw
         found = None
-        for a in all_aspects:
+        for a, source in all_aspects:
             if aspect_name.lower() in a.lower():
                 found = a
                 break
@@ -1742,24 +1752,88 @@ class Game:
         if not found:
             display.error(f"No matching aspect found for '{aspect_name}'.")
             display.info("Available aspects:")
-            for a in all_aspects:
-                print(f"  {display.aspect_text(a)}")
+            for a, source in all_aspects:
+                if a not in self.invoked_aspects:
+                    print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
+        # Check if already invoked this fight
+        if found in self.invoked_aspects:
+            display.error(f"You've already invoked {display.aspect_text(found)} this fight.")
+            remaining = [(a, s) for a, s in all_aspects if a not in self.invoked_aspects]
+            if remaining:
+                display.info("  Still available:")
+                for a, source in remaining:
+                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            return
+
+        # Default effect
+        if effect is None:
+            effect = "ATTACK"
+
+        # Spend fate point
         if not char.spend_fate_point():
             display.error("No fate points to spend!")
             return
 
+        self.invoked_aspects.add(found)
         if not self.state.get("tutorial_complete"):
             self.state["tutorial_invoke_done"] = True
 
-        display.success(f"You invoke {display.aspect_text(found)} for +2!")
+        display.success(f"You invoke {display.aspect_text(found)} — {aspects.COMBAT_EFFECTS[effect]['desc']}!")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
-        # Auto-attack with the invoke bonus (+2) plus any free invocations/boost
+        # Branch on effect
+        if effect == "ATTACK":
+            self._invoke_attack(found)
+        elif effect == "DEFEND":
+            self._invoke_defend(found)
+        elif effect == "SETUP":
+            self._invoke_setup(found)
+
+    def _display_invoke_menu(self, char, all_aspects, context):
+        """Show available aspects and effects for invocation."""
+        effects = aspects.COMBAT_EFFECTS if context == "combat" else aspects.RECRUIT_EFFECTS
+
+        print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP each — you have {char.fate_points})")
+        print()
+
+        invoked = self.invoked_aspects if context == "combat" else self.recruit_state.get("invoked_aspects", set())
+
+        available = [(a, s) for a, s in all_aspects if a not in invoked]
+        spent = [(a, s) for a, s in all_aspects if a in invoked]
+
+        if available:
+            print("  Available:")
+            for a, source in available:
+                print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+        else:
+            print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
+
+        if spent:
+            print()
+            print("  Already invoked:")
+            for a, source in spent:
+                print(f"    {display.DIM}\u2717 {a} ({source}){display.RESET}")
+
+        print()
+        effect_parts = []
+        for keyword, info in effects.items():
+            effect_parts.append(f"{display.BOLD}{keyword}{display.RESET} ({info['desc']})")
+        print(f"  Effects:  {'  \u00b7  '.join(effect_parts)}")
+        print()
+        if context == "combat":
+            print(f"  {display.DIM}INVOKE <aspect> [ATTACK|DEFEND|SETUP]{display.RESET}")
+        else:
+            print(f"  {display.DIM}INVOKE <aspect> [PUSH|COUNTER|RESTORE]{display.RESET}")
+        print()
+
+    def _invoke_attack(self, invoked_aspect):
+        """INVOKE for +2 attack — roll attack with bonus."""
         enemy_data = self.enemies_db.get(self.combat_target, {})
         if not enemy_data:
             return
+        room = self.current_room()
 
         bonus = 2  # invoke bonus
         used_free = None
@@ -1799,6 +1873,29 @@ class Game:
             display.narrate(f"  Even with the invoke, {enemy_data['name']} deflects your strike.")
 
         # Enemy turn
+        self._enemy_turn()
+
+    def _invoke_defend(self, invoked_aspect):
+        """INVOKE for +2 defense — set defending and pass to enemy turn."""
+        self.defending = True
+        display.narrate(f"  You brace yourself, drawing on {display.aspect_text(invoked_aspect)}.")
+        display.info(f"  (+2 defense until your next action)")
+        self._enemy_turn()
+
+    def _invoke_setup(self, invoked_aspect):
+        """INVOKE for free invocation — gain a free invoke on a random enemy aspect."""
+        enemy_data = self.enemies_db.get(self.combat_target, {})
+        enemy_aspects = enemy_data.get("aspects", [])
+        if enemy_aspects:
+            target_aspect = random.choice(enemy_aspects)
+            self.free_invocations[target_aspect] = self.free_invocations.get(target_aspect, 0) + 1
+            display.narrate(f"  You spot an opening in {display.aspect_text(target_aspect)}.")
+            display.info(f"  (Free invocation gained — will auto-apply on your next attack)")
+        else:
+            # No enemy aspects — grant a generic boost instead
+            self.combat_boost += 2
+            display.narrate(f"  You study your opponent and find an opening.")
+            display.info(f"  (Boost: +2 on your next action)")
         self._enemy_turn()
 
     def cmd_concede(self, args):
@@ -2246,7 +2343,9 @@ class Game:
             self._recruit_invoke(cmd[7:].strip(), state, npc_name)
             return
         if cmd == "invoke":
-            display.error("Invoke which aspect? INVOKE <aspect name>")
+            char = self.current_character()
+            all_aspects = aspects.collect_invokable_aspects(self, context="recruit")
+            self._display_invoke_menu(char, all_aspects, "recruit")
             return
 
         # Parse direction
@@ -2296,52 +2395,77 @@ class Game:
         if flavor:
             display.narrate(f"  {flavor}")
 
-    def _recruit_invoke(self, aspect_query, state, npc_name):
-        """INVOKE an aspect during recruitment to lower the threshold."""
-        if state.get("invoked"):
-            display.error("You've already invoked an aspect this conversation.")
-            return
-
+    def _recruit_invoke(self, raw_query, state, npc_name):
+        """INVOKE an aspect during recruitment — choose effect (PUSH/COUNTER/RESTORE)."""
         char = self.current_character()
 
-        # Gather available aspects: character, NPC, room
-        all_aspects = char.get_all_aspects()
-        npc = state["npc_data"]
-        all_aspects.extend(npc.get("aspects", []))
-        room = self.current_room()
-        if room:
-            all_aspects.extend(room.aspects)
-            zone_aspect = self._get_zone_aspect(room)
-            if zone_aspect:
-                all_aspects.append(zone_aspect)
+        # Initialize per-aspect tracking if not present
+        if "invoked_aspects" not in state:
+            state["invoked_aspects"] = set()
 
-        # Match
+        all_aspects = aspects.collect_invokable_aspects(self, context="recruit")
+
+        # Parse effect keyword from end of args
+        effect = None
+        query = raw_query
+        for keyword in aspects.RECRUIT_EFFECTS:
+            if query.upper().endswith(" " + keyword):
+                effect = keyword
+                query = query[:-(len(keyword) + 1)].strip()
+                break
+
+        # Fuzzy-match the aspect
         found = None
-        for a in all_aspects:
-            if aspect_query.lower() in a.lower():
+        for a, source in all_aspects:
+            if query.lower() in a.lower():
                 found = a
                 break
 
         if not found:
-            display.error(f"No matching aspect for '{aspect_query}'.")
+            display.error(f"No matching aspect for '{query}'.")
             display.info("  Available aspects:")
-            for a in all_aspects:
-                print(f"    {display.aspect_text(a)}")
+            for a, source in all_aspects:
+                if a not in state["invoked_aspects"]:
+                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
+        # Check if already invoked this attempt
+        if found in state["invoked_aspects"]:
+            display.error(f"You've already invoked {display.aspect_text(found)} this conversation.")
+            remaining = [(a, s) for a, s in all_aspects if a not in state["invoked_aspects"]]
+            if remaining:
+                display.info("  Still available:")
+                for a, source in remaining:
+                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            return
+
+        # Default effect
+        if effect is None:
+            effect = "PUSH"
+
+        # Spend fate point
         if not char.spend_fate_point():
             display.error(f"No fate points to spend! (You have {char.fate_points} FP.)")
             return
 
-        # Lower threshold by 4 (equivalent to +2 shifts)
-        old_threshold = state["threshold"]
-        total_tiles = state["grid_size"] ** 2
-        floor = int(total_tiles * 0.4)
-        state["threshold"] = max(floor, old_threshold - 4)
-        state["invoked"] = True
+        state["invoked_aspects"].add(found)
+        if not self.state.get("tutorial_complete"):
+            self.state["tutorial_invoke_done"] = True
 
-        display.success(f"You invoke {display.aspect_text(found)} — your argument sharpens.")
-        display.info(f"  Threshold: {old_threshold} → {state['threshold']} (Fate Points remaining: {char.fate_points})")
+        display.success(f"You invoke {display.aspect_text(found)} — {aspects.RECRUIT_EFFECTS[effect]['desc']}!")
+        display.info(f"  (Fate Points remaining: {char.fate_points})")
+
+        # Branch on effect
+        if effect == "PUSH":
+            old_threshold = state["threshold"]
+            total_tiles = state["grid_size"] ** 2
+            floor = int(total_tiles * 0.4)
+            state["threshold"] = max(floor, old_threshold - 4)
+            display.info(f"  Threshold: {old_threshold} → {state['threshold']}")
+        elif effect == "COUNTER":
+            recruit.reset_lowest_counter(state)
+        elif effect == "RESTORE":
+            recruit.restore_tiles(state, count=3)
 
         # Check if threshold now crossed
         if state["score"] >= state["threshold"] and not state.get("threshold_reached"):
@@ -2859,6 +2983,11 @@ class Game:
         self.free_invocations = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
+        self.invoked_aspects = set()
+        self.enemy_compel_boost = 0
+        self.compel_triggered = False
+        self.in_compel = False
+        self.compel_data = None
 
     def _end_combat(self):
         """Clean up after combat ends (victory, concede, or extraction)."""
@@ -2868,6 +2997,11 @@ class Game:
         self.free_invocations = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
+        self.invoked_aspects = set()
+        self.enemy_compel_boost = 0
+        self.compel_triggered = False
+        self.in_compel = False
+        self.compel_data = None
         self.explorer.clear_stress()
 
     def _enemy_turn(self):
@@ -2881,6 +3015,10 @@ class Game:
 
         # Enemy attacks with Fight vs player Fight (+2 if defending)
         enemy_fight = enemy_data["skills"].get("Fight", 1)
+        # Apply compel boost if enemy earned one
+        if self.enemy_compel_boost > 0:
+            enemy_fight += self.enemy_compel_boost
+            self.enemy_compel_boost = 0
         player_fight = self.explorer.get_skill("Fight")
         defend_bonus = 2 if self.defending else 0
         player_defense = player_fight + defend_bonus
@@ -2914,6 +3052,82 @@ class Game:
             display.narrate(f"  {enemy_data['name']} lunges but you deflect it perfectly.")
         else:
             display.narrate(f"  {enemy_data['name']} swings wide. You sidestep easily.")
+
+        # Reset defending after enemy attack resolves
+        self.defending = False
+
+        # Check for compel after enemy turn
+        self._check_compel()
+
+    def _check_compel(self):
+        """Maybe trigger a compel after an enemy turn. At most once per combat."""
+        if self.compel_triggered or not self.in_combat:
+            return
+        if random.random() >= 0.25:
+            return
+        compel = aspects.check_compel(self)
+        if not compel:
+            return
+        self.compel_triggered = True
+        self.compel_data = compel
+        self.in_compel = True
+        self._present_compel(compel)
+
+    def _present_compel(self, compel):
+        """Display a compel prompt to the player."""
+        char = self.current_character()
+        print()
+        print(f"{display.BOLD}{display.BRIGHT_YELLOW}═══ Compel ═══{display.RESET}")
+        print(f"  Your {display.aspect_text(compel['aspect'])} —")
+        print(f"  {compel['text']}")
+        print()
+        print(f"  {display.BRIGHT_GREEN}ACCEPT{display.RESET}: Suffer the effect. Gain 1 FP.")
+        if char.fate_points > 0:
+            print(f"  {display.BRIGHT_RED}REFUSE{display.RESET}: Spend 1 FP to resist. (You have {char.fate_points} FP)")
+        else:
+            print(f"  {display.DIM}REFUSE: Not available — no fate points to resist.{display.RESET}")
+        print()
+
+    def _handle_compel_input(self, raw):
+        """Handle ACCEPT/REFUSE input during a compel."""
+        cmd = raw.lower().strip()
+        char = self.current_character()
+
+        if cmd in ("accept", "a", "yes"):
+            self.in_compel = False
+            compel = self.compel_data
+            self.compel_data = None
+
+            messages = aspects.resolve_compel_accept(self, compel)
+            for msg in messages:
+                if msg == "TAKEN_OUT":
+                    display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
+                    display.narrate(f"  {self.seed_name} reaches across the void...")
+                    self._seed_extraction()
+                    return
+                elif msg.startswith("  You lose"):
+                    display.warning(msg)
+                    # Enemy gets a free attack (lose turn effect)
+                    self._enemy_turn()
+                else:
+                    display.narrate(msg)
+
+        elif cmd in ("refuse", "r", "no"):
+            if char.fate_points <= 0:
+                display.error("You can't refuse — no fate points to resist.")
+                display.info("  Type ACCEPT.")
+                return
+
+            self.in_compel = False
+            compel = self.compel_data
+            self.compel_data = None
+
+            messages = aspects.resolve_compel_refuse(self, compel)
+            for msg in messages:
+                display.narrate(msg)
+
+        else:
+            display.error("Type ACCEPT or REFUSE.")
 
     def _on_room_enter(self, room):
         """Check for aggressive enemies when entering a room. Called after room display."""

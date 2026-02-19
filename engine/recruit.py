@@ -453,8 +453,11 @@ def display_help_text():
 
   {display.BOLD}Game Over:{display.RESET} When you have no valid moves remaining.
 
-  {display.BOLD}Invoke:{display.RESET} INVOKE <aspect> to spend a fate point and lower the threshold.
-  Works with your aspects, the NPC's aspects, or the room's. Once per attempt.
+  {display.BOLD}Invoke:{display.RESET} INVOKE <aspect> [PUSH|COUNTER|RESTORE] — spend 1 FP.
+    PUSH      Threshold -4 (default)
+    COUNTER   Reset lowest counter to max
+    RESTORE   Un-eliminate 3 tiles
+  Each aspect can only be invoked once per conversation.
 
   {display.BOLD}Other:{display.RESET}
     QUIT / ABANDON   Give up this attempt
@@ -509,6 +512,35 @@ def get_npc_flavor(recruit_state, progress_ratio):
         return None
     recruit_state["_last_atmosphere_idx"] = idx
     return atmosphere[idx]
+
+
+# ── Invoke effect helpers ─────────────────────────────────────────────
+
+
+def reset_lowest_counter(state):
+    """Reset the lowest counter to MAX_COUNTER. Used by INVOKE COUNTER."""
+    counters = state["counters"]
+    if not counters:
+        display.info("  No active counters to reset.")
+        return
+    lowest_color = min(counters, key=counters.get)
+    old_val = counters[lowest_color]
+    counters[lowest_color] = MAX_COUNTER
+    color_info = next((c for c in RECRUIT_COLORS if c[0] == lowest_color), None)
+    color_name = color_info[2] if color_info else lowest_color
+    display.info(f"  {color_name} counter: {old_val} → {MAX_COUNTER}")
+
+
+def restore_tiles(state, count=3):
+    """Un-eliminate up to `count` random tiles. Used by INVOKE RESTORE."""
+    eliminated = state["eliminated"]
+    if not eliminated:
+        display.info("  No eliminated tiles to restore.")
+        return
+    restore_list = random.sample(list(eliminated), min(count, len(eliminated)))
+    for tile in restore_list:
+        eliminated.discard(tile)
+    display.info(f"  Restored {len(restore_list)} tile{'s' if len(restore_list) != 1 else ''} to the board.")
 
 
 # ── State factory ─────────────────────────────────────────────────────
