@@ -80,44 +80,23 @@ def get_zone_for_room(room_id):
     return None
 
 
-def _is_visible(room_id, rooms):
-    """Check if a room should be visible on the map.
-
-    A room is visible if:
-    - It has been discovered, OR
-    - It is adjacent (connected by exit) to a discovered room
-    """
-    room = rooms.get(room_id)
-    if not room:
-        return False
-    if room.discovered:
-        return True
-    # Check if any room that has an exit leading here is discovered
-    for rid, r in rooms.items():
-        if r.discovered and room_id in r.exits.values():
-            return True
-    return False
-
 
 def _room_box(room_id, rooms, current_room_id, zone_id):
     """Render a single room box as an ANSI-colored string (fixed width)."""
     room = rooms.get(room_id)
 
-    if not _is_visible(room_id, rooms):
+    if not room or not room.discovered:
+        # Hidden or undiscovered — no box (connectors still hint at exits)
         return " " * BOX_WIDTH
-
-    if room and not room.discovered:
-        # Adjacent to discovered but not yet visited
-        return f"{display.DIM}[ ]{display.RESET}"
 
     if room_id == current_room_id:
         return f"{display.BRIGHT_YELLOW}[*]{display.RESET}"
-    elif room and room.has_enemies():
+    elif room.has_enemies():
         return f"{display.BRIGHT_RED}[!]{display.RESET}"
     elif zone_id == "skerry":
-        return f"{display.GREEN}[x]{display.RESET}"
+        return f"{display.GREEN}[ ]{display.RESET}"
     else:
-        return f"{display.CYAN}[x]{display.RESET}"
+        return f"{display.CYAN}[ ]{display.RESET}"
 
 
 def _are_connected(room_id_a, room_id_b, rooms):
@@ -131,9 +110,11 @@ def _are_connected(room_id_a, room_id_b, rooms):
     return False
 
 
-def _both_visible(room_a, room_b, rooms):
-    """Check if both rooms are visible (for drawing connectors)."""
-    return _is_visible(room_a, rooms) and _is_visible(room_b, rooms)
+def _either_discovered(room_a, room_b, rooms):
+    """Check if at least one room is discovered (for drawing connectors)."""
+    a = rooms.get(room_a)
+    b = rooms.get(room_b)
+    return (a and a.discovered) or (b and b.discovered)
 
 
 def render_zone_map(zone_id, rooms, current_room_id):
@@ -171,7 +152,7 @@ def render_zone_map(zone_id, rooms, current_room_id):
             # Horizontal connector between this col and col+1
             if col < max_col:
                 rid_right = pos_to_room.get((row, col + 1))
-                if rid and rid_right and _are_connected(rid, rid_right, rooms) and _both_visible(rid, rid_right, rooms):
+                if rid and rid_right and _are_connected(rid, rid_right, rooms) and _either_discovered(rid, rid_right, rooms):
                     box_parts.append(f"{display.DIM}{H_CONNECTOR}{display.RESET}")
                 else:
                     box_parts.append(H_EMPTY)
@@ -186,14 +167,14 @@ def render_zone_map(zone_id, rooms, current_room_id):
                 has_vert = False
                 rid_below = pos_to_room.get((row + 1, col))
                 if rid_below:
-                    if rid_here and _are_connected(rid_here, rid_below, rooms) and _both_visible(rid_here, rid_below, rooms):
+                    if rid_here and _are_connected(rid_here, rid_below, rooms) and _either_discovered(rid_here, rid_below, rooms):
                         has_vert = True
                     if not has_vert:
                         for c2 in range(max_col + 1):
                             if c2 == col:
                                 continue
                             rid_other = pos_to_room.get((row, c2))
-                            if rid_other and _are_connected(rid_other, rid_below, rooms) and _both_visible(rid_other, rid_below, rooms):
+                            if rid_other and _are_connected(rid_other, rid_below, rooms) and _either_discovered(rid_other, rid_below, rooms):
                                 has_vert = True
                                 break
 
@@ -212,8 +193,7 @@ def render_zone_map(zone_id, rooms, current_room_id):
 
     # Legend
     lines.append(f"  {display.BRIGHT_YELLOW}[*]{display.RESET} You  "
-                 f"{display.CYAN}[x]{display.RESET} Explored  "
-                 f"{display.DIM}[ ]{display.RESET} Unknown  "
+                 f"[ ] Explored  "
                  f"{display.BRIGHT_RED}[!]{display.RESET} Enemies")
 
     return lines

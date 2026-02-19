@@ -480,7 +480,7 @@
         "mood": "content",
         "house_level": 0,
         "dialogue": {
-            "greeting": "You have a world seed? I can feel it from here. The plants are leaning toward you.",
+            "greeting": "Another person. And — what is that tendril on your arm? The vines near you are reaching toward it. I've never seen the biodome react to anything like that.",
             "idle": "'Have you tried composting the coral fragments? The mineral content would be extraordinary.'",
             "happy": "'The soil on your skerry — it responds to {seed_name} like nothing I've ever studied. I could spend years here.'",
             "quest_intro": "I've been studying this biodome for weeks. There's something incredible at the heart of it — a crystallized bloom that pulses with raw growth energy. But massive roots block the way north.",
@@ -488,7 +488,7 @@
             "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit.",
             "quest_forceful_done": "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
             "quest_complete": "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
-            "recruit_success": "Lira brushes soil from her hands and stands. 'A living world seed. Do you know how rare that is? I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
+            "recruit_success": "Lira brushes soil from her hands and stands. 'That tendril — whatever it is — it's a living growth source. I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
             "recruit_fail": "'I can't leave yet. There's too much data in this biodome — growth patterns, root networks, the crystallization process. Come back when I've finished my survey.'"
         },
         "recruit_dc": 2,
@@ -496,7 +496,7 @@
         "recruit_flavor": {
             "step_early": [
                 "Lira glances up from a leaf she's examining, then back down. 'Go on.'",
-                "'A world seed.' She says it like someone who's read about them but never expected to see one.",
+                "'A living growth source.' She says it like she's testing the words. 'Symbiotic, from the look of it.'",
                 "She turns a seedpod over in her fingers while you talk. Only half-listening.",
                 "'The biodome's root network is unprecedented. You understand I can't just leave that.'",
                 "You describe the skerry. She makes a small note in the margin of her journal."
@@ -511,7 +511,7 @@
             "step_late": [
                 "'I could bring cuttings from the biodome. Cross-reference them with your seed's growth patterns.'",
                 "She's packing samples into glass vials with practiced speed. Thinking ahead.",
-                "'The biodome isn't going anywhere. But a living world seed — that's a limited window.'",
+                "'The biodome isn't going anywhere. But that growth organism on your arm — that's a limited window.'",
                 "'I need proper lab conditions. Your skerry has soil. It has water. It has a growth source.'",
                 "'Fine. Science follows the data, and the data just walked in here and asked me to come.'"
             ],
@@ -519,7 +519,7 @@
                 "R": "'Enclosed growing environment?' She nods approvingly. 'Wind kills seedlings.'",
                 "G": "Her eyes go wide. 'Active growth? You've observed active growth? Describe it. Everything.'",
                 "B": "'Other survivors with different skill sets? That's a research team, not just a settlement.'",
-                "Y": "'My purpose has always been understanding how things grow. A world seed is the ultimate subject.'",
+                "Y": "'My purpose has always been understanding how things grow. Whatever that organism is, it's the ultimate subject.'",
                 "O": "'Long-term study requires stability. If the skerry is permanent, the research can be too.'"
             },
             "atmosphere": [
