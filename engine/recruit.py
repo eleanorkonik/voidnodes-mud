@@ -193,8 +193,8 @@ def get_available_directions(state):
 
     checks = [
         (-1, 0, "WHEEDLE"),
-        (1, 0, "SUGGEST"),
         (0, -1, "APPEAL"),
+        (1, 0, "SUGGEST"),
         (0, 1, "DESCRIBE"),
     ]
     for dr, dc, name in checks:
@@ -416,7 +416,10 @@ def display_board(state, npc_name):
     # Available moves
     dirs = get_available_directions(state)
     if dirs:
-        dir_str = ", ".join(f"{display.BOLD}{d}{display.RESET}" for d in dirs)
+        dir_str = ", ".join(
+            f"{display.BRIGHT_WHITE}{d[0]}{display.RESET}{display.BOLD}{d[1:]}{display.RESET}"
+            for d in dirs
+        )
         print(f"  You could: {dir_str}")
     else:
         print(f"  {display.DIM}No valid moves remain.{display.RESET}")
