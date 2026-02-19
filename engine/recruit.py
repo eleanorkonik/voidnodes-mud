@@ -19,7 +19,7 @@ RECRUIT_COLORS = [
     ("G", "\033[92m", "Green",  "Growth"),
     ("B", "\033[94m", "Blue",   "Community"),
     ("Y", "\033[93m", "Yellow", "Purpose"),
-    ("W", "\033[37m", "Gray",   "Stability"),
+    ("O", "\033[38;5;208m", "Orange", "Stability"),
 ]
 
 MAX_COUNTER = 7
@@ -70,7 +70,7 @@ NPC_FLAVOR = {
             "G": "'A world seed? A real one?' Her voice cracks with something like hope.",
             "B": "'Other people,' she whispers, and you realize she's blinking back tears.",
             "Y": "'I'm good at finding things! Scavenging! I could help, I really could.'",
-            "W": "'Something permanent? Something that lasts?' She grabs your arm. 'Promise me.'",
+            "O": "'Something permanent? Something that lasts?' She grabs your arm. 'Promise me.'",
         },
         "atmosphere": [
             "Emmy fidgets, watching you with enormous eyes.",
@@ -116,7 +116,7 @@ NPC_FLAVOR = {
             "G": "You describe the world seed. Chris listens like it's a fairy tale.",
             "B": "'Other people...' He shrinks back, then straightens. 'Nice people?'",
             "Y": "'I can help,' he says quickly. 'I'm useful. I promise I'm useful.'",
-            "W": "'Something solid. Something that stays.' He sounds like he's praying.",
+            "O": "'Something solid. Something that stays.' He sounds like he's praying.",
         },
         "atmosphere": [
             "Chris watches from behind cover, ready to run.",
@@ -162,7 +162,7 @@ NPC_FLAVOR = {
             "G": "'World seeds need specific conditions. What's your soil composition?'",
             "B": "'Numbers matter. How many hands for watch rotation?'",
             "Y": "'Everyone needs a role. What's your chain of command?'",
-            "W": "'Built to last, or built to last the week?' He fixes you with a stare.",
+            "O": "'Built to last, or built to last the week?' He fixes you with a stare.",
         },
         "atmosphere": [
             "Varis watches you with the flat appraisal of someone who's survived a long time.",
@@ -208,7 +208,7 @@ NPC_FLAVOR = {
             "G": "She eyes you sidelong at the mention of growth. Seeds aren't her language, but survival is.",
             "B": "'More fighters?' Her interest sharpens. 'Or more mouths?'",
             "Y": "'Purpose.' She snorts. 'My purpose is keeping people alive. Works everywhere.'",
-            "W": "'Built solid?' She kicks a wall experimentally. 'Good enough.'",
+            "O": "'Built solid?' She kicks a wall experimentally. 'Good enough.'",
         },
         "atmosphere": [
             "Angya stands ready, hand on blade, judging every word.",
@@ -254,7 +254,7 @@ NPC_FLAVOR = {
             "G": "Her head snaps up. 'Describe the growth rate. Exactly.'",
             "B": "'More hands for harvest?' She approves. 'Growing food is labor.'",
             "Y": "'A garden needs a gardener. That's purpose enough for me.'",
-            "W": "'Things that last. That's what growing is — building something that outlives you.'",
+            "O": "'Things that last. That's what growing is — building something that outlives you.'",
         },
         "atmosphere": [
             "Tilly tends her garden, occasionally glancing your way.",
@@ -300,7 +300,7 @@ NPC_FLAVOR = {
             "G": "His spectacles nearly fall off. 'GROWTH data? You have growth data?'",
             "B": "'A research team? Peers to collaborate with?' He's practically salivating.",
             "Y": "'Purpose? My purpose is already clear. Understanding. Knowledge. The seed.'",
-            "W": "'Stable conditions for long-term observation. Yes. Yes, that's critical.'",
+            "O": "'Stable conditions for long-term observation. Yes. Yes, that's critical.'",
         },
         "atmosphere": [
             "Callum traces inscriptions absently, half-listening to you.",
@@ -346,7 +346,7 @@ NPC_FLAVOR = {
             "G": "'Organic power source.' She's intrigued despite herself. 'What's the output?'",
             "B": "'Great. More people who don't know which end of a wrench to hold.'",
             "Y": "'My purpose is keeping things running. That doesn't change with geography.'",
-            "W": "'Durable? Define durable.' She narrows her eyes. 'In engineering terms.'",
+            "O": "'Durable? Define durable.' She narrows her eyes. 'In engineering terms.'",
         },
         "atmosphere": [
             "Dax tinkers with the console, grunting occasionally in your direction.",
@@ -395,7 +395,7 @@ _GENERIC_FLAVOR = {
         "G": "You talk about the world seed, about growth. Real things, growing here.",
         "B": "You bring up community — other survivors, not being alone anymore.",
         "Y": "You appeal to purpose — meaningful work, building something that matters.",
-        "W": "You emphasize stability — pragmatism, durability, things that last.",
+        "O": "You emphasize stability — pragmatism, durability, things that last.",
     },
     "atmosphere": [
         "They watch you carefully, arms crossed.",
@@ -650,19 +650,19 @@ def calculate_threshold(base_threshold, shifts, grid_size):
 
 # ANSI color map for board tiles
 _COLOR_ANSI = {
-    "R": "\033[91m",   # bright red
-    "G": "\033[92m",   # bright green
-    "B": "\033[94m",   # bright blue
-    "Y": "\033[93m",   # bright yellow
-    "W": "\033[37m",   # white/gray
+    "R": "\033[91m",          # bright red
+    "G": "\033[92m",          # bright green
+    "B": "\033[94m",          # bright blue
+    "Y": "\033[93m",          # bright yellow
+    "O": "\033[38;5;208m",    # bright orange
 }
 
 _COLOR_DIM = {
-    "R": "\033[31m",   # dim red
-    "G": "\033[32m",   # dim green
-    "B": "\033[34m",   # dim blue
-    "Y": "\033[33m",   # dim yellow
-    "W": "\033[2m\033[37m",  # dim gray
+    "R": "\033[31m",          # dim red
+    "G": "\033[32m",          # dim green
+    "B": "\033[34m",          # dim blue
+    "Y": "\033[33m",          # dim yellow
+    "O": "\033[38;5;130m",    # dim orange
 }
 
 
