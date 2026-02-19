@@ -545,6 +545,12 @@ class Game:
                 print(f"  {display.npc_name(agent_data['name'])} is here.")
                 has_contents = True
 
+        # Room aspects (the notable features of this place)
+        if room.aspects:
+            for aspect in room.aspects:
+                print(f"  {display.aspect_text(aspect)}")
+            has_contents = True
+
         if not has_contents:
             display.narrate("Nothing of interest here.")
 
