@@ -2900,7 +2900,8 @@ class Game:
             if npc.get("recruited"):
                 has_npcs = True
                 mood_colors = {"content": display.GREEN, "happy": display.BRIGHT_GREEN,
-                              "restless": display.YELLOW, "unhappy": display.RED, "crisis": display.BRIGHT_RED}
+                              "restless": display.YELLOW, "unhappy": display.RED,
+                              "angry": display.BRIGHT_RED, "crisis": display.BRIGHT_RED}
                 mood = npc.get("mood", "content")
                 mc = mood_colors.get(mood, display.WHITE)
                 print(f"  {display.npc_name(npc['name'])}: {npc.get('assignment', 'idle')} — "
@@ -3203,6 +3204,7 @@ class Game:
         print()
         # Mood and mechanical impact
         lira["mood"] = "angry"
+        lira["loyalty"] = max(0, lira.get("loyalty", 0) - 3)
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
         quest["lira_witnessed_fire"] = True
 
