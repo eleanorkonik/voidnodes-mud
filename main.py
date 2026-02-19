@@ -2086,7 +2086,7 @@ class Game:
 
         # Show initial board
         recruit.display_board(state, npc["name"])
-        flavor = recruit.get_npc_flavor(npc, state["score"] / threshold)
+        flavor = recruit.get_npc_flavor(state["npc_id"], state["score"] / threshold)
         display.narrate(f"  {flavor}")
         print()
 
@@ -2099,7 +2099,7 @@ class Game:
         # Empty input — redisplay
         if not raw:
             recruit.display_board(state, npc_name)
-            flavor = recruit.get_npc_flavor(npc, state["score"] / state["threshold"])
+            flavor = recruit.get_npc_flavor(state["npc_id"], state["score"] / state["threshold"])
             display.narrate(f"  {flavor}")
             return
 
@@ -2158,7 +2158,7 @@ class Game:
 
         # Redisplay board
         recruit.display_board(state, npc_name)
-        flavor = recruit.get_npc_flavor(npc, state["score"] / state["threshold"])
+        flavor = recruit.get_npc_flavor(state["npc_id"], state["score"] / state["threshold"])
         display.narrate(f"  {flavor}")
 
     def _resolve_recruit(self, won):
