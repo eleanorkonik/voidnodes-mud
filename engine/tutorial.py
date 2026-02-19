@@ -24,8 +24,7 @@ STEPS = [
 
     # Act 3 — Miria Steward
     "steward_arrive",        # orientation narration
-    "steward_recipes",       # RECIPES
-    "steward_craft",         # CRAFT basic_tools
+    "steward_build",         # BUILD STOREHOUSE with Lira's help
     "steward_assign",        # ASSIGN recruited NPC
     "steward_complete",      # tutorial done
 
@@ -297,24 +296,16 @@ def after_command(cmd, args, game):
 
     # ── Act 3: Miria Steward ──
 
-    if step == "steward_recipes" and cmd == "recipes":
-        print()
-        display.seed_speak("See anything you can make? Head to the junkyard —")
-        display.seed_speak("GO WEST — and try CRAFT BASIC TOOLS.")
-        _tutorial_prompt("GO WEST to the junkyard, then CRAFT BASIC_TOOLS.")
-        game.state["tutorial_step"] = "steward_craft"
-        return False
-
-    if step == "steward_craft" and cmd == "craft":
-        # Check if crafting succeeded (character should have basic_tools)
-        char = game.current_character()
-        if "basic_tools" in char.inventory:
+    if step == "steward_build" and cmd == "build":
+        # Check if storehouse was built (look for it in skerry structures)
+        built = "storehouse" in game.skerry.structures
+        if built:
             print()
             recruited = game.state.get("recruited_npcs", [])
             if recruited:
                 npc_id = recruited[0]
                 npc_name = game.npcs_db.get(npc_id, {}).get("name", npc_id)
-                display.seed_speak(f"Well done. Now put your recruit to work.")
+                display.seed_speak(f"Now put your recruit to work.")
                 display.seed_speak(f"ASSIGN {npc_name.upper()} SALVAGE — she can sort what comes in.")
                 _tutorial_prompt(f"ASSIGN {npc_name.upper()} SALVAGE.")
             else:
@@ -323,8 +314,8 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "steward_assign"
         else:
             print()
-            display.seed_speak("That didn't work. Make sure you're in the junkyard")
-            display.seed_speak("with the materials.")
+            display.seed_speak("Hmm, that didn't work. Make sure you have the materials.")
+            display.seed_speak("CHECK SKERRY to see what you need.")
         return False
 
     if step == "steward_assign" and cmd == "assign":
@@ -442,12 +433,13 @@ def _advance_to_stash(game):
 
 
 def _steward_arrive(game):
-    """Steward orientation — immediately advance to steward_recipes."""
+    """Steward orientation — prompt to build storehouse."""
     print()
-    display.seed_speak("Good haul. Head to the junkyard and see what you can make.")
-    display.seed_speak("Type RECIPES to check what's available.")
-    _tutorial_prompt("RECIPES to see what you can craft.")
-    game.state["tutorial_step"] = "steward_recipes"
+    display.seed_speak("We need somewhere proper to store everything Sevarik drags home.")
+    display.seed_speak("Head to the junkyard and BUILD STOREHOUSE.")
+    display.seed_speak("CHECK SKERRY if you want to see what's possible.")
+    _tutorial_prompt("GO WEST to the junkyard, then BUILD STOREHOUSE.")
+    game.state["tutorial_step"] = "steward_build"
 
 
 def _explorer_free_hints(cmd, args, game):
@@ -678,13 +670,10 @@ def get_current_hint(step, game_state=None):
         display.seed_speak(f"Let {steward_name} take over.")
         _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
     elif step == "steward_arrive":
-        _tutorial_prompt("RECIPES to see what you can craft.")
-    elif step == "steward_recipes":
-        display.seed_speak("Type RECIPES to see what you can make.")
-        _tutorial_prompt("RECIPES.")
-    elif step == "steward_craft":
-        display.seed_speak("Head to the junkyard and try CRAFT BASIC TOOLS.")
-        _tutorial_prompt("GO WEST, then CRAFT BASIC_TOOLS.")
+        _tutorial_prompt("GO WEST to the junkyard, then BUILD STOREHOUSE.")
+    elif step == "steward_build":
+        display.seed_speak("Head to the junkyard and BUILD STOREHOUSE.")
+        _tutorial_prompt("GO WEST, then BUILD STOREHOUSE.")
     elif step == "steward_assign":
         recruited = gs.get("recruited_npcs", [])
         if recruited:

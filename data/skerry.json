@@ -79,6 +79,19 @@
     ],
     "expandable_rooms": [
         {
+            "id": "skerry_storehouse",
+            "name": "Storehouse",
+            "description": "A solid structure of salvaged metal and lashed beams. Shelves line the walls, organized by material type. Everything has a place. Lira's influence is obvious — even the crates are labeled in her precise handwriting.",
+            "zone": "skerry",
+            "exits": {"south": "skerry_junkyard"},
+            "connect_to": {"skerry_junkyard": "north"},
+            "aspects": ["A Place for Everything", "Smells Like Resin and Order"],
+            "requires": {"materials": {"metal_scraps": 2, "rope": 1}, "npcs": 1},
+            "structures": ["storehouse"],
+            "assigned_npcs": [],
+            "resources": {}
+        },
+        {
             "id": "skerry_workshop",
             "name": "Workshop",
             "description": "A proper workspace with a sturdy bench and basic tools mounted on the walls. Here, salvage becomes something useful.",
