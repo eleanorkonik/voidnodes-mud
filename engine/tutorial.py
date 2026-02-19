@@ -619,8 +619,9 @@ def _explorer_free_hints(cmd, args, game):
                 display.info("  SEEK LIFE from the landing pad to follow it.")
         elif quest_status == "active":
             quest = game.state.get("quests", {}).get("verdant_bloom", {})
-            if not quest.get("roots_cleared") and cmd in ("go", "look"):
+            if not quest.get("roots_cleared") and not game.state.get("_quest_hint_shown") and cmd in ("go", "look"):
                 if room.zone == "verdant_wreck":
+                    game.state["_quest_hint_shown"] = True
                     print()
                     display.seed_speak("Lira mentioned two ways through the roots.")
                     display.seed_speak("Repair the Growth Controller, or weaken and burn.")
