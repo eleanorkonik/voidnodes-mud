@@ -28,6 +28,7 @@ COMMAND_ALIASES = {
     "focus": "switch",
     "ca": "exploit", "setup": "exploit",
     "quest": "quests",
+    "repair": "fix", "fix": "fix",
 }
 
 # All recognized commands and which phase they're valid in
@@ -48,6 +49,7 @@ COMMANDS = {
     "remove":    {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "map":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "quests":    {"phases": ["explorer", "steward", "prologue"], "args": "none"},
+    "fix":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "skip":      {"phases": ["prologue"], "args": "none"},
     "bond":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "give":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},

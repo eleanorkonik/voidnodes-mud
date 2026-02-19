@@ -428,11 +428,11 @@
             {
                 "id": "vw_control",
                 "name": "Growth Control Room",
-                "description": "A cramped room behind a maintenance hatch. Dead consoles line the walls, but one panel still flickers — the Growth Controller. Its screen shows a schematic of the biodome's root network, most of it pulsing red. The console looks repairable.",
+                "description": "A cramped room behind a maintenance hatch. Dead consoles line the walls, but one panel still flickers — the Growth Controller. Its screen shows a schematic of the biodome's root network, most of it pulsing red.",
                 "zone": "verdant_wreck",
                 "exits": {"east": "vw_root_wall"},
                 "aspects": ["The Machine Still Remembers"],
-                "items": [],
+                "items": ["growth_console"],
                 "npcs": [],
                 "enemies": [],
                 "discovered": false

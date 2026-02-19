@@ -946,6 +946,10 @@ class Game:
             display.info("  You haven't learned of any quests yet.")
         print()
 
+    def cmd_fix(self, args):
+        display.info("  To interact with objects, USE an item from your inventory on them.")
+        display.info(f"  Example: {display.BOLD}USE BASIC_TOOLS{display.RESET}")
+
     def cmd_skip(self, args):
         if self.state["current_phase"] != "prologue":
             display.error("Nothing to skip.")
@@ -2070,7 +2074,7 @@ class Game:
                 return
             picked = []
             for item_id in list(room.items):
-                if item_id in self.items_db:
+                if item_id in self.items_db and self.items_db[item_id].get("type") != "fixture":
                     room.remove_item(item_id)
                     self.current_character().add_to_inventory(item_id)
                     picked.append(item_id)
@@ -2108,6 +2112,9 @@ class Game:
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
         if item:
+            if item.get("type") == "fixture":
+                display.narrate(f"The {item.get('name', item_id)} is built into the room. Try PROBE to examine it, or USE an item on it.")
+                return
             room.remove_item(item_id)
             self.current_character().add_to_inventory(item_id)
             display.success(f"You pick up {item.get('name', item_id)}.")

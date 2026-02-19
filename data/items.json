@@ -244,5 +244,16 @@
         "stat_bonuses": {},
         "stackable": false,
         "special": null
+    },
+    "growth_console": {
+        "id": "growth_console",
+        "name": "Growth Console",
+        "description": "A half-dead control panel, its screen flickering between root network schematics and static. Most of the circuitry is corroded, but the core logic board looks intact under the grime. The connector ports are clogged and the wiring is frayed — nothing a decent set of tools couldn't fix.",
+        "type": "fixture",
+        "aspects": ["Repairable"],
+        "mote_value": 0,
+        "stat_bonuses": {},
+        "stackable": false,
+        "special": null
     }
 }
