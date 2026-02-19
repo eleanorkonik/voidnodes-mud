@@ -121,10 +121,11 @@ def _migrate_state(state):
     # Ensure basic_tools recipe is known
     if "basic_tools" not in state.get("discovered_recipes", []):
         state.setdefault("discovered_recipes", []).append("basic_tools")
-    # Rename old "scavenging" task to "salvage"
+    # Rename old "scavenging" task to "salvage" + ensure recruit_attempts exists
     for npc_id, npc in state.get("npcs", {}).items():
         if npc.get("assignment") == "scavenging":
             npc["assignment"] = "salvage"
+        npc.setdefault("recruit_attempts", 0)
 
 
 def delete_save(slot_name):

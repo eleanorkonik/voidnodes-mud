@@ -8,7 +8,7 @@ import sys
 import json
 import random
 
-from engine import parser, display, save, dice, tutorial, map_renderer
+from engine import parser, display, save, dice, tutorial, map_renderer, recruit
 from models.character import Character, BODY_SLOTS
 from models.room import Room
 from models.world_seed import WorldSeed
@@ -49,6 +49,8 @@ class Game:
         self.free_invocations = {}  # {aspect_name: count}
         self.combat_boost = 0  # one-use +2 from ties
         self.combat_consequences_taken = 0  # for CONCEDE FP calculation
+        self.in_recruit = False
+        self.recruit_state = None
 
     @property
     def seed_name(self):
@@ -277,6 +279,11 @@ class Game:
                     print()
                     display.seed_speak("I like that.")
                     tutorial.get_current_hint("first_look", self.state)
+                    continue
+
+                # Recruit minigame — intercept raw input before parser
+                if self.in_recruit:
+                    self._handle_recruit_input(raw.strip())
                     continue
 
                 cmd, args = parser.parse(raw)
@@ -2036,25 +2043,164 @@ class Game:
                 return
             dc = 0
 
+        # Check fate point cost for retries
+        attempts = npc.get("recruit_attempts", 0)
+        if attempts > 0:
+            if not self.explorer.spend_fate_point():
+                display.error(f"You need 1 fate point to try recruiting {npc['name']} again. (You have {self.explorer.fate_points} FP.)")
+                return
+            display.info(f"  Spent 1 fate point to retry. (Fate Points remaining: {self.explorer.fate_points})")
+
+        # FATE roll — sets puzzle difficulty
         total, shifts, dice_result = dice.skill_check(self.explorer.get_skill("Rapport"), dc)
         print(f"  Rapport check: {dice.roll_description(dice_result, self.explorer.get_skill('Rapport'), 'Rapport')}")
         print(f"  DC: +{dc}")
+        print(f"  Shifts: {shifts:+d}")
+
+        # Look up puzzle parameters
+        grid_size, num_colors, base_threshold = recruit.RECRUIT_DIFFICULTIES.get(dc, (6, 3, 20))
+        threshold = recruit.calculate_threshold(base_threshold, shifts, grid_size)
 
         if shifts >= 0:
+            display.success(f"  Your pitch is strong. Threshold: {threshold} steps.")
+        elif shifts >= -2:
+            display.narrate(f"  A lukewarm start. Threshold: {threshold} steps.")
+        else:
+            display.warning(f"  Tough crowd. Threshold: {threshold} steps.")
+        print()
+
+        # Show NPC greeting for context
+        greeting = npc.get("dialogue", {}).get("greeting", "")
+        if greeting:
+            display.npc_speak(npc["name"], self._sub_dialogue(greeting))
+            print()
+
+        # Generate board and start minigame
+        state = recruit.create_recruit_state(npc_id, npc, grid_size, num_colors, threshold)
+        self.recruit_state = state
+        self.in_recruit = True
+
+        seed_hex = f"{state['seed']:06X}"
+        display.info(f"  Conversation variant: {seed_hex}")
+        print()
+
+        # Show initial board
+        recruit.display_board(state, npc["name"])
+        flavor = recruit.get_npc_flavor(npc, state["score"] / threshold)
+        display.narrate(f"  {flavor}")
+        print()
+
+    def _handle_recruit_input(self, raw):
+        """Handle player input during the recruit minigame."""
+        state = self.recruit_state
+        npc_name = state["npc_name"]
+        npc = state["npc_data"]
+
+        # Empty input — redisplay
+        if not raw:
+            recruit.display_board(state, npc_name)
+            flavor = recruit.get_npc_flavor(npc, state["score"] / state["threshold"])
+            display.narrate(f"  {flavor}")
+            return
+
+        cmd = raw.lower().strip()
+
+        # Help
+        if cmd in ("help", "?"):
+            recruit.display_help_text()
+            return
+
+        # Quit/abandon
+        if cmd in ("quit", "abandon"):
+            self._resolve_recruit(won=False)
+            return
+
+        # Parse direction
+        direction_map = {
+            "n": "NORTH", "north": "NORTH",
+            "s": "SOUTH", "south": "SOUTH",
+            "e": "EAST", "east": "EAST",
+            "w": "WEST", "west": "WEST",
+        }
+        direction = direction_map.get(cmd)
+        if not direction:
+            display.error("Type a direction (N/S/E/W), QUIT, or HELP.")
+            return
+
+        # Apply move
+        success, messages = recruit.apply_move(state, direction)
+        if not success:
+            for msg in messages:
+                display.error(msg)
+            return
+
+        # Show messages (flavor, warnings, eliminations)
+        for msg in messages:
+            display.narrate(f"  {msg}")
+
+        # Check win condition
+        if state["score"] >= state["threshold"]:
+            print()
+            display.success(f"  You did it! {state['score']} steps — enough to convince {npc_name}.")
+            self._resolve_recruit(won=True)
+            return
+
+        # Check game over (no valid moves)
+        if not recruit.has_valid_moves(state):
+            print()
+            if state["score"] >= state["threshold"]:
+                display.success(f"  You did it! {state['score']} steps — enough to convince {npc_name}.")
+                self._resolve_recruit(won=True)
+            else:
+                display.warning(f"  No more moves. You reached {state['score']}/{state['threshold']} steps.")
+                self._resolve_recruit(won=False)
+            return
+
+        # Redisplay board
+        recruit.display_board(state, npc_name)
+        flavor = recruit.get_npc_flavor(npc, state["score"] / state["threshold"])
+        display.narrate(f"  {flavor}")
+
+    def _resolve_recruit(self, won):
+        """Handle the end of a recruit minigame."""
+        state = self.recruit_state
+        npc_id = state["npc_id"]
+        npc = state["npc_data"]
+        npc_name = state["npc_name"]
+        seed_hex = f"{state['seed']:06X}"
+
+        print()
+        if won:
             npc["recruited"] = True
             npc["loyalty"] = 3
             npc["location"] = "skerry_central"
             self.state.setdefault("recruited_npcs", []).append(npc_id)
 
-            room.remove_npc(npc_id)
+            room = self.current_room()
+            if room:
+                room.remove_npc(npc_id)
             skerry_central = self.rooms.get("skerry_central")
             if skerry_central:
                 skerry_central.add_npc(npc_id)
 
-            display.success(self._sub_dialogue(npc["dialogue"].get("recruit_success", f"{npc['name']} joins you!")))
-            display.info(f"  {npc['name']} will head to the skerry.")
+            display.success(self._sub_dialogue(npc["dialogue"].get("recruit_success", f"{npc_name} joins you!")))
+            display.info(f"  {npc_name} will head to the skerry.")
+            display.info(f"  Score: {state['score']}/{state['threshold']} (variant: {seed_hex})")
+
+            self.state["event_log"].append(
+                f"Day {self.state['day']}: Recruited {npc_name} (variant: {seed_hex.lower()})"
+            )
+
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_recruit_done"] = True
         else:
-            display.narrate(self._sub_dialogue(npc["dialogue"].get("recruit_fail", f"{npc['name']} isn't convinced yet.")))
+            npc["recruit_attempts"] = npc.get("recruit_attempts", 0) + 1
+            display.narrate(self._sub_dialogue(npc["dialogue"].get("recruit_fail", f"{npc_name} isn't convinced yet.")))
+            display.info(f"  Score: {state['score']}/{state['threshold']} (variant: {seed_hex})")
+            display.info(f"  You can try again (costs 1 fate point).")
+
+        self.in_recruit = False
+        self.recruit_state = None
 
     def cmd_retreat(self, args):
         if self.in_combat:
