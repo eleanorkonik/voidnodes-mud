@@ -805,6 +805,9 @@ class Game:
 
         display.display_room(target_room, self.game_context())
 
+        # Contextual quest hints on room entry
+        self._quest_room_hints(target_room)
+
         # Check for aggressive enemies
         if self.state["current_phase"] == "explorer":
             self._on_room_enter(target_room)
@@ -3188,6 +3191,46 @@ class Game:
 
         else:
             display.error("Type ACCEPT or REFUSE.")
+
+    def _quest_room_hints(self, room):
+        """Lira gives contextual advice at quest locations if she's following."""
+        lira = self.npcs_db.get("lira")
+        if not lira or not lira.get("following"):
+            return
+        quest = self.state.get("quests", {}).get("verdant_bloom", {})
+        if quest.get("status") != "active":
+            return
+
+        inv = self.explorer.inventory
+
+        if room.id == "vw_root_wall" and not quest.get("roots_cleared"):
+            print()
+            if not quest.get("roots_weakened"):
+                if "resin" in inv:
+                    print(f"  {display.npc_name('Lira')}: \"Those roots won't budge by hand. But resin")
+                    print(f"  eats through organic matter — try using it on them.\"")
+                elif "basic_tools" in inv:
+                    print(f"  {display.npc_name('Lira')}: \"There's a Growth Controller west of here.")
+                    print(f"  If you can fix it with those tools, we can retract the roots safely.\"")
+                else:
+                    print(f"  {display.npc_name('Lira')}: \"We need to get past these roots. The Growth")
+                    print(f"  Controller is west of here — but it needs tools to repair. Or if you")
+                    print(f"  had some resin, that might weaken them enough to burn through.\"")
+            else:
+                # Roots weakened, need fire
+                if "torch" in inv:
+                    print(f"  {display.npc_name('Lira')}: \"The roots are sagging — the resin did its work.")
+                    print(f"  A torch should finish them off. But...\" She hesitates.")
+                    print(f"  {display.npc_name('Lira')}: \"Be ready to move fast.\"")
+                else:
+                    print(f"  {display.npc_name('Lira')}: \"The resin weakened them, but they're still holding.")
+                    print(f"  Something hot might finish the job — a torch, maybe.\"")
+
+        elif room.id == "vw_control" and not quest.get("roots_cleared"):
+            if "basic_tools" in inv:
+                print()
+                print(f"  {display.npc_name('Lira')}: \"This is the Growth Controller. The console's")
+                print(f"  dead, but the logic board might still work. Try your tools on it.\"")
 
     def _lira_blocks_torch(self, item_id, room):
         """Lira stops you from torching her biodome if she hasn't been recruited.
