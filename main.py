@@ -2094,7 +2094,9 @@ class Game:
             print()
 
         # Generate board and start minigame
+        origin_zone = room.zone if room else None
         state = recruit.create_recruit_state(npc_id, npc, grid_size, num_colors, threshold)
+        state["origin_zone"] = origin_zone
         self.recruit_state = state
         self.in_recruit = True
 
@@ -2156,22 +2158,22 @@ class Game:
         for msg in messages:
             display.narrate(f"  {msg}")
 
-        # Check win condition
-        if state["score"] >= state["threshold"]:
+        # Threshold crossed — notify once, but keep going
+        if state["score"] >= state["threshold"] and not state.get("threshold_reached"):
+            state["threshold_reached"] = True
             print()
-            display.success(f"  You did it! {state['score']} steps — enough to convince {npc_name}.")
-            self._resolve_recruit(won=True)
-            return
+            display.success(f"  {npc_name} is convinced! But the conversation is flowing — keep going for bonuses.")
 
         # Check game over (no valid moves)
         if not recruit.has_valid_moves(state):
             print()
-            if state["score"] >= state["threshold"]:
-                display.success(f"  You did it! {state['score']} steps — enough to convince {npc_name}.")
-                self._resolve_recruit(won=True)
+            won = state["score"] >= state["threshold"]
+            if won:
+                over = state["score"] - state["threshold"]
+                display.success(f"  Conversation complete. {state['score']}/{state['threshold']} steps (+{over} over par).")
             else:
                 display.warning(f"  No more moves. You reached {state['score']}/{state['threshold']} steps.")
-                self._resolve_recruit(won=False)
+            self._resolve_recruit(won=won)
             return
 
         # Redisplay board
@@ -2190,9 +2192,9 @@ class Game:
         print()
         if won:
             npc["recruited"] = True
-            npc["loyalty"] = 3
             npc["following"] = True
             npc["location"] = self.state.get("explorer_location", "skerry_central")
+            npc["origin_zone"] = state.get("origin_zone")
             self.state.setdefault("recruited_npcs", []).append(npc_id)
 
             room = self.current_room()
@@ -2201,10 +2203,39 @@ class Game:
 
             display.success(self._sub_dialogue(npc["dialogue"].get("recruit_success", f"{npc_name} joins you!")))
             display.info(f"  {npc_name} falls into step behind you.")
-            display.info(f"  Score: {state['score']}/{state['threshold']} (variant: {seed_hex})")
+
+            # Bonus tiers for going over par
+            over = max(0, state["score"] - state["threshold"])
+            bonus_tiers = over // 5
+            base_loyalty = 3
+
+            if bonus_tiers >= 1:
+                # Tier 1: extra loyalty
+                base_loyalty += 2
+                display.success(f"  Bonus: {npc_name} is impressed. (+2 loyalty)")
+
+            if bonus_tiers >= 2:
+                # Tier 2: artifact hint from their zone
+                hint = self._get_artifact_hint(state.get("origin_zone"))
+                if hint:
+                    print()
+                    display.npc_speak(npc_name, hint)
+                else:
+                    # Already found the artifact — extra loyalty instead
+                    base_loyalty += 2
+                    display.success(f"  Bonus: {npc_name} shares everything they know. (+2 loyalty)")
+
+            if bonus_tiers >= 3:
+                # Tier 3: exceptional rapport — happy mood + high loyalty
+                base_loyalty = max(base_loyalty, 7)
+                npc["mood"] = "happy"
+                display.success(f"  Bonus: A perfect conversation. {npc_name} is genuinely fired up.")
+
+            npc["loyalty"] = base_loyalty
+            display.info(f"  Score: {state['score']}/{state['threshold']} (+{over} over par, variant: {seed_hex})")
 
             self.state["event_log"].append(
-                f"Day {self.state['day']}: Recruited {npc_name} (variant: {seed_hex.lower()})"
+                f"Day {self.state['day']}: Recruited {npc_name} (+{over} over par, variant: {seed_hex.lower()})"
             )
 
             if not self.state.get("tutorial_complete"):
@@ -2217,6 +2248,22 @@ class Game:
 
         self.in_recruit = False
         self.recruit_state = None
+
+    def _get_artifact_hint(self, zone):
+        """Find the artifact in a zone and return a hint about its room. Returns None if no artifact or already found."""
+        if not zone:
+            return None
+        for art_id, art in self.artifacts_db.items():
+            if art.get("zone") != zone:
+                continue
+            status = self.state.get("artifacts_status", {}).get(art_id)
+            if status in ("kept", "fed"):
+                return None  # already found
+            art_room = self.rooms.get(art.get("room", ""))
+            if not art_room:
+                return None
+            return f"I've seen something deeper in — the {art_room.name}. Something that doesn't belong. It was pulsing, like it was alive."
+        return None
 
     def _move_followers(self, target_room_id):
         """Move all following NPCs to the explorer's new location."""
