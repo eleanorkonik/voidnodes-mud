@@ -474,24 +474,71 @@
             "Rapport": 1
         },
         "stress": [false, false],
-        "consequences": {"mild": null},
+        "consequences": {"mild": null, "moderate": null},
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
         "house_level": 0,
         "dialogue": {
             "greeting": "You have a world seed? I can feel it from here. The plants are leaning toward you.",
-            "idle": "Lira examines a vine, murmuring to herself about growth patterns.",
+            "idle": "'Have you tried composting the coral fragments? The mineral content would be extraordinary.'",
+            "happy": "'The soil on your skerry — it responds to {seed_name} like nothing I've ever studied. I could spend years here.'",
             "quest_intro": "I've been studying this biodome for weeks. There's something incredible at the heart of it — a crystallized bloom that pulses with raw growth energy. But massive roots block the way north.",
             "quest_options": "There are two ways through. There's a Growth Control room somewhere west of the root wall — the console might still work if you can repair it. The roots would retract cleanly. Or... you could weaken them with solvent and burn through. It would work, but these roots are the biodome's lifeline.",
             "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit.",
             "quest_forceful_done": "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
             "quest_complete": "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
-            "recruit_success": "'A botanist on a living skerry? That's the best offer I've had in... well, ever.'",
-            "recruit_fail": "'I appreciate the offer, but I need to stay and study this biodome. Maybe later.'"
+            "recruit_success": "Lira brushes soil from her hands and stands. 'A living world seed. Do you know how rare that is? I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
+            "recruit_fail": "'I can't leave yet. There's too much data in this biodome — growth patterns, root networks, the crystallization process. Come back when I've finished my survey.'"
         },
-        "recruit_dc": null,
-        "recruit_condition": null
+        "recruit_dc": 2,
+        "recruit_condition": null,
+        "recruit_flavor": {
+            "step_early": [
+                "Lira glances up from a leaf she's examining, then back down. 'Go on.'",
+                "'A world seed.' She says it like someone who's read about them but never expected to see one.",
+                "She turns a seedpod over in her fingers while you talk. Only half-listening.",
+                "'The biodome's root network is unprecedented. You understand I can't just leave that.'",
+                "You describe the skerry. She makes a small note in the margin of her journal."
+            ],
+            "step_mid": [
+                "'The seed produces ambient growth energy?' She sets down the seedpod. 'What radius?'",
+                "'Multiple biomes? On one skerry?' She's calculating something in her head.",
+                "She pulls off a work glove. 'How mature is the root system?'",
+                "'If I could study the interaction between void energy and organic growth in real time...'",
+                "'I've been working alone for weeks. Data collection is slow with one pair of hands.'"
+            ],
+            "step_late": [
+                "'I could bring cuttings from the biodome. Cross-reference them with your seed's growth patterns.'",
+                "She's packing samples into glass vials with practiced speed. Thinking ahead.",
+                "'The biodome isn't going anywhere. But a living world seed — that's a limited window.'",
+                "'I need proper lab conditions. Your skerry has soil. It has water. It has a growth source.'",
+                "'Fine. Science follows the data, and the data just walked in here and asked me to come.'"
+            ],
+            "color": {
+                "R": "'Enclosed growing environment?' She nods approvingly. 'Wind kills seedlings.'",
+                "G": "Her eyes go wide. 'Active growth? You've observed active growth? Describe it. Everything.'",
+                "B": "'Other survivors with different skill sets? That's a research team, not just a settlement.'",
+                "Y": "'My purpose has always been understanding how things grow. A world seed is the ultimate subject.'",
+                "O": "'Long-term study requires stability. If the skerry is permanent, the research can be too.'"
+            },
+            "atmosphere": [
+                "Lira examines a vine, occasionally glancing your way between notes.",
+                "Lira has stopped writing. She's holding her pen very still.",
+                "Lira is asking rapid-fire questions. Her journal is forgotten on the bench.",
+                "Lira is carefully labeling sample vials. She's already decided."
+            ],
+            "warn": [
+                "Lira returns to her notes. You're losing a thread...",
+                "She peers at a leaf through a makeshift lens. Something you said is going stale...",
+                "'Mm.' She's heard better arguments for that. A thread is fraying..."
+            ],
+            "eliminate": [
+                "'Insufficient sample size.' She waves a hand. That angle is dead.",
+                "She returns to her journal. Whatever you were building there didn't survive peer review.",
+                "A flat look over her spectacles. You let that hypothesis die untested."
+            ]
+        }
     },
     "angya": {
         "name": "Angya",
