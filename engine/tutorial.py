@@ -210,13 +210,14 @@ def after_command(cmd, args, game):
 
     if step == "explorer_free":
         _explorer_free_hints(cmd, args, game)
-        # Check if all six objectives are done
+        # Check if all seven objectives are done
         if (game.state.get("tutorial_combat_done") and
                 game.state.get("tutorial_exploit_done") and
                 game.state.get("tutorial_invoke_done") and
                 game.state.get("tutorial_scavenge_done") and
                 game.state.get("tutorial_artifact_found") and
-                game.state.get("tutorial_recruit_done")):
+                game.state.get("tutorial_recruit_done") and
+                game.state.get("tutorial_quest_done")):
             print()
             display.seed_speak("You've done well. Head back to the skerry.")
             display.seed_speak("Head south to the entry room, then SEEK home.")
@@ -592,6 +593,25 @@ def _explorer_free_hints(cmd, args, game):
             _tutorial_prompt("SCAVENGE to search for materials.")
         return
 
+    # After combat+scavenge done, not yet quested — hint about verdant wreck
+    quest_done = game.state.get("tutorial_quest_done")
+    if combat_done and scavenge_done and not quest_done:
+        quest_status = game.state.get("quests", {}).get("verdant_bloom", {}).get("status", "inactive")
+        if quest_status == "inactive" and room.zone == "skerry":
+            if cmd in ("go", "look", "ih"):
+                print()
+                display.seed_speak("I sense life — real life — somewhere in the void.")
+                display.seed_speak("Not like the debris. Something growing.")
+                display.info("  SEEK LIFE from the landing pad to follow it.")
+        elif quest_status == "active":
+            quest = game.state.get("quests", {}).get("verdant_bloom", {})
+            if not quest.get("roots_cleared") and cmd in ("go", "look"):
+                if room.zone == "verdant_wreck":
+                    print()
+                    display.seed_speak("Lira mentioned two ways through the roots.")
+                    display.seed_speak("Repair the Growth Controller, or weaken and burn.")
+        return
+
 
 def get_current_hint(step, game_state=None):
     """Show a world-seed-voiced hint for the current step (on resume)."""
@@ -668,6 +688,7 @@ def _explorer_free_resume_hint(gs):
     scavenge_done = gs.get("tutorial_scavenge_done")
     artifact_found = gs.get("tutorial_artifact_found")
     recruit_done = gs.get("tutorial_recruit_done")
+    quest_done = gs.get("tutorial_quest_done")
 
     if not combat_done:
         display.seed_speak("Find enemies and ATTACK them.")
@@ -682,6 +703,12 @@ def _explorer_free_resume_hint(gs):
         display.seed_speak("Look for artifacts. Try IH in each room.")
     elif not recruit_done:
         display.seed_speak("Find survivors and RECRUIT them.")
+    elif not quest_done:
+        quest_status = gs.get("quests", {}).get("verdant_bloom", {}).get("status", "inactive")
+        if quest_status == "inactive":
+            display.seed_speak("I sense life in the void. SEEK LIFE from the landing pad.")
+        else:
+            display.seed_speak("Find a way past the root wall in the verdant wreck.")
     else:
         display.seed_speak("Head south to the entry room, then SEEK HOME.")
 

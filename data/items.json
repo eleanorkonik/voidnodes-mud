@@ -233,5 +233,16 @@
         "stat_bonuses": {},
         "stackable": false,
         "special": null
+    },
+    "scattered_notes": {
+        "id": "scattered_notes",
+        "name": "Scattered Notes",
+        "description": "A botanist's journal, water-stained and fragile. The handwriting grows more frantic toward the end: 'Growth accelerating beyond parameters. The root system has breached containment. The heart chamber is sealed but I can hear it pulsing through the walls.'",
+        "type": "lore",
+        "aspects": ["Someone Saw This Coming"],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": false,
+        "special": null
     }
 }

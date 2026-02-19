@@ -458,6 +458,41 @@
             ]
         }
     },
+    "lira": {
+        "name": "Lira",
+        "location": "vw_greenhouse",
+        "recruited": false,
+        "aspects": {
+            "high_concept": "Botanist Without a Ship",
+            "trouble": "Patient Observer",
+            "other": ["Knows Every Root by Name"]
+        },
+        "skills": {
+            "Commune": 3,
+            "Craft": 2,
+            "Lore": 2,
+            "Rapport": 1
+        },
+        "stress": [false, false],
+        "consequences": {"mild": null},
+        "loyalty": 0,
+        "assignment": "idle",
+        "mood": "content",
+        "house_level": 0,
+        "dialogue": {
+            "greeting": "You have a world seed? I can feel it from here. The plants are leaning toward you.",
+            "idle": "Lira examines a vine, murmuring to herself about growth patterns.",
+            "quest_intro": "I've been studying this biodome for weeks. There's something incredible at the heart of it — a crystallized bloom that pulses with raw growth energy. But massive roots block the way north.",
+            "quest_options": "There are two ways through. There's a Growth Control room somewhere west of the root wall — the console might still work if you can repair it. The roots would retract cleanly. Or... you could weaken them with solvent and burn through. It would work, but these roots are the biodome's lifeline.",
+            "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit.",
+            "quest_forceful_done": "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
+            "quest_complete": "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
+            "recruit_success": "'A botanist on a living skerry? That's the best offer I've had in... well, ever.'",
+            "recruit_fail": "'I appreciate the offer, but I need to stay and study this biodome. Maybe later.'"
+        },
+        "recruit_dc": null,
+        "recruit_condition": null
+    },
     "angya": {
         "name": "Angya",
         "location": "fw_armory",

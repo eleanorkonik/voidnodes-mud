@@ -58,6 +58,21 @@
         "discovery_text": "Silver slippers, barely tarnished, sitting on the bare ground as if someone set them down and walked away. They catch the light in ways the light shouldn't bend.",
         "hint_sensory": "a faint shimmer — like starlight caught in something solid, humming with a road that isn't there"
     },
+    "bloom_catalyst": {
+        "id": "bloom_catalyst",
+        "name": "Bloom Catalyst",
+        "description": "A crystallized flower bud that pulses with deep green energy. When held near dormant plants, they erupt into instant growth — flowers, fruit, seeds, all at once. The crystal dims slightly each time it's used.",
+        "type": "artifact",
+        "aspects": ["Instant Harvest", "Five Blooms Remain"],
+        "mote_value": 5,
+        "stat_bonuses": {},
+        "stackable": false,
+        "special": "bloom_catalyst",
+        "uses_remaining": 5,
+        "location": {"type": "room", "id": "vw_heart"},
+        "discovery_text": "At the base of the crystallized plant, a single bud glows with concentrated life. The Bloom Catalyst. When you pick it up, every plant in the chamber shivers.",
+        "hint_sensory": "concentrated life — a green pulse, like a heartbeat, deep inside the overgrowth"
+    },
     "red_clown_nose": {
         "id": "red_clown_nose",
         "name": "Red Clown Nose",

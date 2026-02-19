@@ -153,9 +153,19 @@ def display_room(room, game_state):
                 print(f"  {enemy_name(enemy_id.replace('_', ' ').title())} lurks here!")
 
     exits = room.get_exit_directions()
-    if exits:
-        exit_str = ", ".join(f"{BOLD}{e.upper()}{RESET}" for e in exits)
-        print(f"  Exits: {exit_str}")
+    locked = getattr(room, 'locked_exits', {}) or {}
+    if exits or locked:
+        from engine.quest import check_lock_condition
+        exit_parts = []
+        for e in exits:
+            exit_parts.append(f"{BOLD}{e.upper()}{RESET}")
+        for e, lock in locked.items():
+            if e not in exits:
+                if not check_lock_condition(lock["condition"], game_state):
+                    exit_parts.append(f"{DIM}{e.upper()} (blocked){RESET}")
+                else:
+                    exit_parts.append(f"{BOLD}{e.upper()}{RESET}")
+        print(f"  Exits: {', '.join(exit_parts)}")
 
 
 def display_status(character, phase):

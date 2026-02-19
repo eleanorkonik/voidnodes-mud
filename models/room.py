@@ -8,6 +8,7 @@ class Room:
         self.description = data["description"]
         self.zone = data.get("zone", "skerry")
         self.exits = dict(data.get("exits", {}))
+        self.locked_exits = dict(data.get("locked_exits", {}))
         self.aspects = list(data.get("aspects", []))
         self.items = list(data.get("items", []))
         self.npcs = list(data.get("npcs", []))
@@ -74,6 +75,8 @@ class Room:
             "enemies": self.enemies,
             "discovered": self.discovered,
         }
+        if self.locked_exits:
+            d["locked_exits"] = self.locked_exits
         if self.structures:
             d["structures"] = self.structures
         if self.assigned_npcs:

@@ -364,6 +364,7 @@ class Game:
             "artifacts_status": self.state.get("artifacts_status", {}),
             "skerry": self.state.get("skerry", {}),
             "zones": self.state.get("zones", {}),
+            "quests": self.state.get("quests", {}),
         }
 
     # ── Universal Commands ────────────────────────────────────────
@@ -738,9 +739,25 @@ class Game:
             return
 
         if direction not in room.exits:
-            available = ", ".join(d.upper() for d in room.get_exit_directions())
-            display.error(f"You can't go {direction}. Exits: {available}")
-            return
+            # Check locked exits — visible but blocked
+            from engine.quest import check_lock_condition
+            lock = room.locked_exits.get(direction) if hasattr(room, 'locked_exits') else None
+            if lock:
+                if not check_lock_condition(lock["condition"], self.state):
+                    display.narrate(lock["locked_desc"])
+                    return
+                else:
+                    # Condition met — treat locked exit as a real exit
+                    target_id = lock.get("target")
+                    if target_id:
+                        room.exits[direction] = target_id
+                    else:
+                        display.error("That path leads nowhere.")
+                        return
+            else:
+                available = ", ".join(d.upper() for d in room.get_exit_directions())
+                display.error(f"You can't go {direction}. Exits: {available}")
+                return
 
         target_id = room.exits[direction]
         target_room = self.rooms.get(target_id)
@@ -1302,6 +1319,17 @@ class Game:
         if not npc:
             npc_id, npc = self._find_follower(target, room.id)
         if npc:
+            # Check for quest-specific dialogue first
+            from engine.quest import get_quest_talk, apply_quest_talk_effects
+            quest_result = get_quest_talk(npc_id, npc, self.state)
+            if quest_result:
+                for line in quest_result["lines"]:
+                    display.npc_speak(npc["name"], self._sub_dialogue(line))
+                if quest_result.get("quest_started"):
+                    display.info("  [Quest started: The Verdant Heart]")
+                apply_quest_talk_effects(quest_result, self.state, self.rooms, self.current_character())
+                return
+
             dialogue = npc.get("dialogue", {})
             if npc.get("recruited"):
                 mood = npc.get("mood", "content")
@@ -1336,11 +1364,45 @@ class Game:
 
         target = " ".join(args).lower()
         char = self.current_character()
+        room = self.current_room()
+
+        # Check quest-contextual use first (resin at root wall, tools at control room, etc.)
+        from engine.quest import handle_quest_use
+        # Try matching against items in inventory
+        item_id_q, item_q = self._find_entity(char.inventory, target, self.items_db)
+        if item_id_q and room:
+            handled, consumed = handle_quest_use(item_id_q, room.id, self.state, char, self.rooms)
+            if handled:
+                if consumed:
+                    char.remove_from_inventory(item_id_q)
+                return
 
         # Check artifacts in inventory
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
         if art:
-            if art_id == "silver_slippers":
+            if art_id == "bloom_catalyst":
+                uses = art.get("uses_remaining", 0)
+                if uses <= 0:
+                    display.narrate("The crystal is spent. It crumbles to dust in your hands.")
+                    char.remove_from_inventory(art_id)
+                    self.state.get("artifacts_status", {})[art_id] = "spent"
+                    return
+                art["uses_remaining"] = uses - 1
+                char.add_to_inventory("preserved_food")
+                char.add_to_inventory("seeds")
+                remaining = uses - 1
+                display.success("The Bloom Catalyst pulses. Nearby vegetation erupts into")
+                display.success("flower and fruit. You gather what you can.")
+                display.info(f"  Gained: preserved food, seeds. ({remaining} bloom{'s' if remaining != 1 else ''} remaining)")
+                if remaining > 0:
+                    words = ["Zero", "One", "Two", "Three", "Four", "Five"]
+                    art["aspects"] = ["Instant Harvest", f"{words[remaining]} Bloom{'s' if remaining != 1 else ''} Remain{'s' if remaining == 1 else ''}"]
+                else:
+                    display.narrate("The crystal dims and crumbles to dust. Its blooms are spent.")
+                    char.remove_from_inventory(art_id)
+                    self.state.get("artifacts_status", {})[art_id] = "spent"
+                return
+            elif art_id == "silver_slippers":
                 display.narrate("You slip them on and click the heels together.")
                 display.narrate("Once. Twice. Three times.")
                 print()
@@ -2006,6 +2068,12 @@ class Game:
                 display.success(f"You pick up the {art.get('name', art_id)}.")
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_found"] = True
+                # Mark quest complete when bloom_catalyst is found
+                if art_id == "bloom_catalyst":
+                    self.state["tutorial_quest_done"] = True
+                    quest = self.state.get("quests", {}).get("verdant_bloom", {})
+                    if quest.get("status") == "active":
+                        quest["status"] = "complete"
                 return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)

@@ -64,9 +64,9 @@
         {
             "id": "skerry_landing",
             "name": "Landing Pad",
-            "description": "The edge of the skerry where the void begins. From here, you can see the distant glimmer of the debris field to the south, the soft glow of the coral thicket to the east, and the cold glitter of the frozen wreck to the west. Three nodes, drifting in the dark. This is where explorers depart and return.",
+            "description": "The edge of the skerry where the void begins. From here, you can see the distant glimmer of the debris field to the south, the soft glow of the coral thicket to the east, the cold glitter of the frozen wreck to the west, and a warm green shimmer drifting above. Four nodes in the dark. This is where explorers depart and return.",
             "zone": "skerry",
-            "exits": {"north": "skerry_central", "east": "ct_entrance", "west": "fw_entrance", "south": "df_entrance"},
+            "exits": {"north": "skerry_central", "east": "ct_entrance", "west": "fw_entrance", "south": "df_entrance", "up": "vw_airlock"},
             "aspects": ["One Step Further and You're in the Nothing", "Every Journey Starts With Leaving Safety"],
             "items": [],
             "npcs": [],

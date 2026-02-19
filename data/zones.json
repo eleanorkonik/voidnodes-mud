@@ -315,5 +315,154 @@
                 "loot": ["ancient_alloys", "crystal_shards", "frozen_water"]
             }
         ]
+    },
+    "verdant_wreck": {
+        "name": "The Verdant Wreck",
+        "description": "A massive biodome ship fragment — the growing section of a colony ship. When it broke apart, the growth systems kept running, fueled by void energy. Now it's a small jungle floating in nothing.",
+        "aspect": "Life That Outlasted Its Makers",
+        "difficulty": "easy",
+        "rooms": [
+            {
+                "id": "vw_airlock",
+                "name": "Overgrown Airlock",
+                "description": "Roots crack through hull plates, splitting seams that were never meant to open. Warm, humid air rushes past you — the smell of soil and green things, impossibly alive in the void. The airlock frame is half-buried in moss.",
+                "zone": "verdant_wreck",
+                "exits": {"south": "skerry_landing", "north": "vw_promenade"},
+                "aspects": ["Roots Through Steel"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_promenade",
+                "name": "The Promenade",
+                "description": "A wide corridor lined with vine-covered benches and faded directional signs. One points north to GREENHOUSE, another west to AQUAPONICS. The floor tiles have buckled under root pressure, and bioluminescent fungus traces the cracks like veins.",
+                "zone": "verdant_wreck",
+                "exits": {"south": "vw_airlock", "north": "vw_greenhouse", "west": "vw_tanks", "east": "vw_nursery"},
+                "aspects": ["Echoes of a Crew Long Gone"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_tanks",
+                "name": "Aquaponics Tanks",
+                "description": "Rows of cracked tanks line the walls, murky water still circulating through some ancient pump system. Bioluminescent eels dart between the tanks, and mushroom clusters sprout where water drips onto the deck.",
+                "zone": "verdant_wreck",
+                "exits": {"east": "vw_promenade"},
+                "aspects": ["Still Water, Still Alive"],
+                "items": ["coral_fragments", "luminous_moss"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_nursery",
+                "name": "The Nursery",
+                "description": "Shattered seed trays cover every surface. Seedlings that were never meant to grow this large have pressed their canopies against the ceiling, cracking panels overhead. Thick pollen drifts in the air like snow. Someone left notes scattered across a workbench.",
+                "zone": "verdant_wreck",
+                "exits": {"west": "vw_promenade"},
+                "aspects": ["Seeds of a Dead World"],
+                "items": ["seeds", "resin", "scattered_notes"],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_greenhouse",
+                "name": "The Greenhouse",
+                "description": "The main growing dome — transparent panels overhead reveal raw void, stars scattered behind condensation. Below, a riot of green. Planter beds overflow with vegetation, but cleared paths between them suggest someone has been tending this place. A woman in a patched lab coat kneels among the plants.",
+                "zone": "verdant_wreck",
+                "exits": {"south": "vw_promenade", "north": "vw_root_wall", "east": "vw_canopy"},
+                "aspects": ["Wild Growth", "Someone Has Been Tending This"],
+                "items": [],
+                "npcs": ["lira"],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_canopy",
+                "name": "The Canopy",
+                "description": "Trees have grown so tall here they form a dense canopy, vines hanging like curtains between the trunks. The light is dim and green-filtered. Something rustles above — thick tendrils shifting between the branches.",
+                "zone": "verdant_wreck",
+                "exits": {"west": "vw_greenhouse"},
+                "aspects": ["Predators Adapt"],
+                "items": [],
+                "npcs": [],
+                "enemies": ["tangle_vine"],
+                "discovered": false
+            },
+            {
+                "id": "vw_root_wall",
+                "name": "Root Wall",
+                "description": "The corridor ends in a wall of interwoven roots, each as thick as a person's torso. They pulse with a slow green light, and something glows beyond them — deep and warm. The roots are too dense to push through.",
+                "zone": "verdant_wreck",
+                "exits": {"south": "vw_greenhouse", "up": "vw_observation"},
+                "aspects": ["Impenetrable Roots"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false,
+                "locked_exits": {
+                    "north": {
+                        "target": "vw_heart",
+                        "condition": "quest_roots_cleared",
+                        "locked_desc": "Massive roots block the passage north. They're alive and pulsing with green energy — too thick and damp to cut, too dense to squeeze through."
+                    }
+                }
+            },
+            {
+                "id": "vw_observation",
+                "name": "Observation Platform",
+                "description": "A metal platform jutting above the tree line. Through cracked dome panels, void stretches in every direction — the skerry a distant speck of light. From up here, you can see the entire root system threading through the biodome like a circulatory system, all converging on something to the north.",
+                "zone": "verdant_wreck",
+                "exits": {"down": "vw_root_wall"},
+                "aspects": ["The Whole Picture"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_control",
+                "name": "Growth Control Room",
+                "description": "A cramped room behind a maintenance hatch. Dead consoles line the walls, but one panel still flickers — the Growth Controller. Its screen shows a schematic of the biodome's root network, most of it pulsing red. The console looks repairable.",
+                "zone": "verdant_wreck",
+                "exits": {"east": "vw_root_wall"},
+                "aspects": ["The Machine Still Remembers"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            },
+            {
+                "id": "vw_heart",
+                "name": "The Verdant Heart",
+                "description": "The biodome's core. An enormous plant fills the chamber, crystallized mid-bloom — petals frozen in a spiral of green and gold light. Its roots thread through every wall, every floor, the entire ship. At its base, a single bud glows with concentrated life energy.",
+                "zone": "verdant_wreck",
+                "exits": {"south": "vw_root_wall"},
+                "aspects": ["Crystallized Mid-Bloom", "The Last Garden"],
+                "items": [],
+                "npcs": [],
+                "enemies": [],
+                "discovered": false
+            }
+        ],
+        "entry_room": "vw_airlock",
+        "enemies_data": [
+            {
+                "id": "tangle_vine",
+                "name": "Tangle-Vine",
+                "description": "Thick tendrils lash out from the canopy above — a plant that's learned to hunt.",
+                "aspects": ["Rooted But Reaching", "Slow to React"],
+                "skills": {"Fight": 1, "Athletics": 2},
+                "stress": [false, false, false],
+                "consequences": {"mild": null},
+                "loot": ["resin", "seeds"],
+                "aggressive": false
+            }
+        ]
     }
 }
