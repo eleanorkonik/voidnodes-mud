@@ -39,6 +39,17 @@ ROOM_LABELS = {
     "fw_quarters": "Quarters",
     "fw_armory": "Armory",
     "fw_vault": "Vault",
+    # Verdant Wreck
+    "vw_airlock": "Airlock",
+    "vw_promenade": "Promenade",
+    "vw_tanks": "Tanks",
+    "vw_nursery": "Nursery",
+    "vw_greenhouse": "Greenhouse",
+    "vw_canopy": "Canopy",
+    "vw_root_wall": "Root Wall",
+    "vw_observation": "Observ.",
+    "vw_control": "Control",
+    "vw_heart": "Heart",
 }
 
 
@@ -83,6 +94,21 @@ ZONE_LAYOUTS = {
             (1, 1, "fw_quarters"),
             (2, 0, "fw_entrance"),
             (2, 1, "fw_observation"),
+        ],
+    },
+    "verdant_wreck": {
+        "name": "The Verdant Wreck",
+        "grid": [
+            (0, 0, "vw_observation"),
+            (0, 1, "vw_heart"),
+            (1, 0, "vw_control"),
+            (1, 1, "vw_root_wall"),
+            (1, 2, "vw_canopy"),
+            (2, 1, "vw_greenhouse"),
+            (3, 0, "vw_tanks"),
+            (3, 1, "vw_promenade"),
+            (3, 2, "vw_nursery"),
+            (4, 1, "vw_airlock"),
         ],
     },
 }
@@ -285,7 +311,7 @@ def render_all_zones_overview(zones_data, rooms, current_room_id):
 
     lines.append("")
     lines.append(f"  Type {display.BOLD}MAP <zone>{display.RESET} for a detailed view.")
-    lines.append(f"  Zones: skerry, debris, coral, wreck")
+    lines.append(f"  Zones: skerry, debris, coral, wreck, verdant")
 
     return lines
 
@@ -308,5 +334,9 @@ def resolve_zone_name(name):
         "frozen": "frozen_wreck",
         "frozen_wreck": "frozen_wreck",
         "ice": "frozen_wreck",
+        "verdant": "verdant_wreck",
+        "verdant_wreck": "verdant_wreck",
+        "biodome": "verdant_wreck",
+        "jungle": "verdant_wreck",
     }
     return aliases.get(name)

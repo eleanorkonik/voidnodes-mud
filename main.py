@@ -889,7 +889,7 @@ class Game:
         if args:
             zone_id = map_renderer.resolve_zone_name(args[0])
             if not zone_id:
-                display.error(f"Unknown zone: '{args[0]}'. Try: skerry, debris, coral, wreck")
+                display.error(f"Unknown zone: '{args[0]}'. Try: skerry, debris, coral, wreck, verdant")
                 return
             # Check if at least one room discovered there
             layout = map_renderer.ZONE_LAYOUTS.get(zone_id, {})
