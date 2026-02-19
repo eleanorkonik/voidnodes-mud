@@ -1715,7 +1715,7 @@ class Game:
             return
 
         if not self.in_combat:
-            display.error("You can only invoke aspects during combat.")
+            display.error("You can only invoke aspects during combat or recruitment.")
             return
 
         aspect_name = " ".join(args)
@@ -2241,6 +2241,14 @@ class Game:
             self._resolve_recruit(won=False)
             return
 
+        # Invoke aspect
+        if cmd.startswith("invoke "):
+            self._recruit_invoke(cmd[7:].strip(), state, npc_name)
+            return
+        if cmd == "invoke":
+            display.error("Invoke which aspect? INVOKE <aspect name>")
+            return
+
         # Parse direction
         direction_map = {
             "w": "WHEEDLE", "wheedle": "WHEEDLE",
@@ -2250,7 +2258,7 @@ class Game:
         }
         direction = direction_map.get(cmd)
         if not direction:
-            display.error("Type a tactic (W/A/S/D), QUIT, or HELP.")
+            display.error("Type a tactic (W/A/S/D), INVOKE <aspect>, QUIT, or HELP.")
             return
 
         # Apply move
@@ -2287,6 +2295,61 @@ class Game:
         flavor = recruit.get_npc_flavor(state, state["score"] / state["threshold"])
         if flavor:
             display.narrate(f"  {flavor}")
+
+    def _recruit_invoke(self, aspect_query, state, npc_name):
+        """INVOKE an aspect during recruitment to lower the threshold."""
+        if state.get("invoked"):
+            display.error("You've already invoked an aspect this conversation.")
+            return
+
+        char = self.current_character()
+
+        # Gather available aspects: character, NPC, room
+        all_aspects = char.get_all_aspects()
+        npc = state["npc_data"]
+        all_aspects.extend(npc.get("aspects", []))
+        room = self.current_room()
+        if room:
+            all_aspects.extend(room.aspects)
+            zone_aspect = self._get_zone_aspect(room)
+            if zone_aspect:
+                all_aspects.append(zone_aspect)
+
+        # Match
+        found = None
+        for a in all_aspects:
+            if aspect_query.lower() in a.lower():
+                found = a
+                break
+
+        if not found:
+            display.error(f"No matching aspect for '{aspect_query}'.")
+            display.info("  Available aspects:")
+            for a in all_aspects:
+                print(f"    {display.aspect_text(a)}")
+            return
+
+        if not char.spend_fate_point():
+            display.error(f"No fate points to spend! (You have {char.fate_points} FP.)")
+            return
+
+        # Lower threshold by 4 (equivalent to +2 shifts)
+        old_threshold = state["threshold"]
+        total_tiles = state["grid_size"] ** 2
+        floor = int(total_tiles * 0.4)
+        state["threshold"] = max(floor, old_threshold - 4)
+        state["invoked"] = True
+
+        display.success(f"You invoke {display.aspect_text(found)} — your argument sharpens.")
+        display.info(f"  Threshold: {old_threshold} → {state['threshold']} (Fate Points remaining: {char.fate_points})")
+
+        # Check if threshold now crossed
+        if state["score"] >= state["threshold"] and not state.get("threshold_reached"):
+            state["threshold_reached"] = True
+            print()
+            display.success(f"  {npc_name} is convinced! But the conversation is flowing — keep going for bonuses.")
+
+        recruit.display_board(state, npc_name)
 
     def _resolve_recruit(self, won):
         """Handle the end of a recruit minigame."""

@@ -453,6 +453,9 @@ def display_help_text():
 
   {display.BOLD}Game Over:{display.RESET} When you have no valid moves remaining.
 
+  {display.BOLD}Invoke:{display.RESET} INVOKE <aspect> to spend a fate point and lower the threshold.
+  Works with your aspects, the NPC's aspects, or the room's. Once per attempt.
+
   {display.BOLD}Other:{display.RESET}
     QUIT / ABANDON   Give up this attempt
     HELP / ?         Show this help
