@@ -1,56 +1,13 @@
-"""ASCII map renderer with fog-of-war."""
+"""ASCII map renderer with fog-of-war — Imperian-style [x]-[x] notation."""
 
 from engine import display
 
 
 # Box rendering constants
-BOX_WIDTH = 12     # [xxxxxxxxxx]
-LABEL_WIDTH = 10   # inside brackets
-H_CONNECTOR = " \u2500 "  # ─
-H_EMPTY = "   "
-V_CHAR = "\u2502"  # │
-CELL_PITCH = BOX_WIDTH + len(H_CONNECTOR)  # 15
-
-
-# Short labels for each room
-ROOM_LABELS = {
-    # Skerry
-    "skerry_central": "Central",
-    "skerry_shelter": "Shelter",
-    "skerry_hollow": "Hollow",
-    "skerry_junkyard": "Junkyard",
-    "skerry_landing": "Landing",
-    # Debris Field
-    "df_entrance": "Entrance",
-    "df_cargo_bay": "Cargo Bay",
-    "df_hull_breach": "Breach",
-    "df_control_room": "Control",
-    "df_engine_room": "Engine",
-    # Coral Thicket
-    "ct_entrance": "Threshold",
-    "ct_grove": "Grove",
-    "ct_tunnel": "Tunnel",
-    "ct_spore_chamber": "Spore Ch.",
-    "ct_heart": "Heart",
-    # Frozen Wreck
-    "fw_entrance": "Bow",
-    "fw_corridor": "Corridor",
-    "fw_observation": "Observ.",
-    "fw_quarters": "Quarters",
-    "fw_armory": "Armory",
-    "fw_vault": "Vault",
-    # Verdant Wreck
-    "vw_airlock": "Airlock",
-    "vw_promenade": "Promenade",
-    "vw_tanks": "Tanks",
-    "vw_nursery": "Nursery",
-    "vw_greenhouse": "Greenhouse",
-    "vw_canopy": "Canopy",
-    "vw_root_wall": "Root Wall",
-    "vw_observation": "Observ.",
-    "vw_control": "Control",
-    "vw_heart": "Heart",
-}
+BOX_WIDTH = 3      # [x]
+H_CONNECTOR = "-"  # between rooms horizontally
+H_EMPTY = " "      # no connection
+V_CHAR = "|"       # vertical connector
 
 
 # Zone grid layouts: list of (row, col, room_id)
@@ -147,28 +104,20 @@ def _room_box(room_id, rooms, current_room_id, zone_id):
     room = rooms.get(room_id)
 
     if not _is_visible(room_id, rooms):
-        # Completely hidden
         return " " * BOX_WIDTH
 
     if room and not room.discovered:
         # Adjacent to discovered but not yet visited
-        padded = "???".center(LABEL_WIDTH)
-        return f"{display.DIM}[{padded}]{display.RESET}"
-
-    label = ROOM_LABELS.get(room_id, room_id[:LABEL_WIDTH])
+        return f"{display.DIM}[ ]{display.RESET}"
 
     if room_id == current_room_id:
-        padded = f"*{label}"[:LABEL_WIDTH].center(LABEL_WIDTH)
-        return f"{display.BRIGHT_YELLOW}[{padded}]{display.RESET}"
+        return f"{display.BRIGHT_YELLOW}[*]{display.RESET}"
     elif room and room.has_enemies():
-        padded = label[:LABEL_WIDTH].center(LABEL_WIDTH)
-        return f"{display.BRIGHT_RED}[{padded}]{display.RESET}"
+        return f"{display.BRIGHT_RED}[!]{display.RESET}"
     elif zone_id == "skerry":
-        padded = label[:LABEL_WIDTH].center(LABEL_WIDTH)
-        return f"{display.GREEN}[{padded}]{display.RESET}"
+        return f"{display.GREEN}[x]{display.RESET}"
     else:
-        padded = label[:LABEL_WIDTH].center(LABEL_WIDTH)
-        return f"{display.CYAN}[{padded}]{display.RESET}"
+        return f"{display.CYAN}[x]{display.RESET}"
 
 
 def _are_connected(room_id_a, room_id_b, rooms):
@@ -234,15 +183,11 @@ def render_zone_map(zone_id, rooms, current_room_id):
             vert_parts = []
             for col in range(max_col + 1):
                 rid_here = pos_to_room.get((row, col))
-                # Check for any connection going down from any room in this row
-                # to any room in the next row at this column
                 has_vert = False
                 rid_below = pos_to_room.get((row + 1, col))
                 if rid_below:
-                    # Check direct vertical: room at (row, col) connects to (row+1, col)
                     if rid_here and _are_connected(rid_here, rid_below, rooms) and _both_visible(rid_here, rid_below, rooms):
                         has_vert = True
-                    # Check diagonal: any room in this row connects to (row+1, col)
                     if not has_vert:
                         for c2 in range(max_col + 1):
                             if c2 == col:
@@ -253,10 +198,8 @@ def render_zone_map(zone_id, rooms, current_room_id):
                                 break
 
                 if has_vert:
-                    # Center the │ in the box width
-                    left_pad = BOX_WIDTH // 2
-                    right_pad = BOX_WIDTH - left_pad - 1
-                    vert_parts.append(" " * left_pad + f"{display.DIM}{V_CHAR}{display.RESET}" + " " * right_pad)
+                    # Center | under [x] — 1 space + | + 1 space
+                    vert_parts.append(f" {display.DIM}{V_CHAR}{display.RESET} ")
                 else:
                     vert_parts.append(" " * BOX_WIDTH)
 
@@ -268,9 +211,10 @@ def render_zone_map(zone_id, rooms, current_room_id):
     lines.append("")
 
     # Legend
-    lines.append(f"  {display.BRIGHT_YELLOW}*{display.RESET} = You are here  "
-                 f"{display.DIM}???{display.RESET} = Unexplored  "
-                 f"{display.BRIGHT_RED}Red{display.RESET} = Enemies")
+    lines.append(f"  {display.BRIGHT_YELLOW}[*]{display.RESET} You  "
+                 f"{display.CYAN}[x]{display.RESET} Explored  "
+                 f"{display.DIM}[ ]{display.RESET} Unknown  "
+                 f"{display.BRIGHT_RED}[!]{display.RESET} Enemies")
 
     return lines
 
