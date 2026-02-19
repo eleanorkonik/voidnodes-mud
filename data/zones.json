@@ -373,7 +373,7 @@
             {
                 "id": "vw_greenhouse",
                 "name": "The Greenhouse",
-                "description": "The main growing dome — transparent panels overhead reveal raw void, stars scattered behind condensation. Below, a riot of green. Planter beds overflow with vegetation, but cleared paths between them suggest someone has been tending this place. A woman in a patched lab coat kneels among the plants.",
+                "description": "The main growing dome — transparent panels overhead reveal raw void, stars scattered behind condensation. Below, a riot of green. Planter beds overflow with vegetation, and cleared paths between them suggest someone has been tending this place.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_promenade", "north": "vw_root_wall", "east": "vw_canopy"},
                 "aspects": ["Wild Growth", "Someone Has Been Tending This"],
