@@ -42,6 +42,42 @@ RECRUIT_EFFECTS = {
     },
 }
 
+# Flavor text for invoking aspects during recruitment, keyed by source label.
+# Falls back to "generic" if source not matched.
+RECRUIT_INVOKE_FLAVOR = {
+    "yours": [
+        "You draw on something personal — {aspect}. It cuts through the small talk.",
+        "You let {aspect} bleed into your voice. They hear the conviction.",
+        "Something about {aspect} resonates. You press the advantage.",
+    ],
+    "room": [
+        "You gesture at your surroundings — {aspect}. The point lands.",
+        "You use the environment to make your case. {aspect} speaks for itself.",
+    ],
+    "seed": [
+        "You tell them about {source} — {aspect}. Their eyes widen.",
+        "You describe {source}. {aspect}. They hadn't considered that.",
+    ],
+    "generic": [
+        "You weave {aspect} into your argument. {npc} pauses, reconsidering.",
+        "You bring up {aspect}. Something shifts in {npc}'s expression.",
+        "You mention {aspect}. The conversation turns a corner.",
+        "{npc} listens as you invoke {aspect}. Your argument sharpens.",
+    ],
+}
+
+
+def get_recruit_invoke_flavor(aspect, source, npc_name, source_type=None):
+    """Pick a flavor line for a recruitment invoke.
+
+    source_type overrides the pool lookup (e.g. "seed" for world seed aspects).
+    Falls back to generic if source not in known keys.
+    """
+    key = source_type or source
+    pool = RECRUIT_INVOKE_FLAVOR.get(key, RECRUIT_INVOKE_FLAVOR["generic"])
+    line = random.choice(pool)
+    return line.format(aspect=aspect, source=source, npc=npc_name)
+
 
 # ── Aspect gathering ─────────────────────────────────────────────────
 

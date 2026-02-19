@@ -2416,9 +2416,11 @@ class Game:
 
         # Fuzzy-match the aspect
         found = None
+        found_source = None
         for a, source in all_aspects:
             if query.lower() in a.lower():
                 found = a
+                found_source = source
                 break
 
         if not found:
@@ -2452,7 +2454,9 @@ class Game:
         if not self.state.get("tutorial_complete"):
             self.state["tutorial_invoke_done"] = True
 
-        display.success(f"You invoke {display.aspect_text(found)} — {aspects.RECRUIT_EFFECTS[effect]['desc']}!")
+        source_type = "seed" if found_source == self.seed_name else None
+        flavor = aspects.get_recruit_invoke_flavor(found, found_source, npc_name, source_type=source_type)
+        display.narrate(f"  {flavor}")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
         # Branch on effect

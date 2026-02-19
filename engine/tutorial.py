@@ -86,6 +86,10 @@ def after_command(cmd, args, game):
     The world seed guides the player through each step, advancing when
     appropriate. Returns True if the tutorial is complete.
     """
+    # Don't show tutorial hints while player is responding to a compel
+    if getattr(game, "in_compel", False):
+        return False
+
     step = game.state.get("tutorial_step", "awakening")
 
     if step == "complete" or game.state.get("tutorial_complete"):
