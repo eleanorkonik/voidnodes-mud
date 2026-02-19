@@ -85,8 +85,15 @@ def _room_box(room_id, rooms, current_room_id, zone_id):
     """Render a single room box as an ANSI-colored string (fixed width)."""
     room = rooms.get(room_id)
 
-    if not room or not room.discovered:
-        # Hidden or undiscovered — no box (connectors still hint at exits)
+    if not room:
+        return " " * BOX_WIDTH
+
+    if not room.discovered:
+        # Adjacent to a discovered room — imply its existence
+        # Only show if a discovered room has an exit leading here
+        for rid, r in rooms.items():
+            if r.discovered and room_id in r.exits.values():
+                return f"{display.DIM}[?]{display.RESET}"
         return " " * BOX_WIDTH
 
     if room_id == current_room_id:
@@ -194,6 +201,7 @@ def render_zone_map(zone_id, rooms, current_room_id):
     # Legend
     lines.append(f"  {display.BRIGHT_YELLOW}[*]{display.RESET} You  "
                  f"[ ] Explored  "
+                 f"{display.DIM}[?]{display.RESET} Unknown  "
                  f"{display.BRIGHT_RED}[!]{display.RESET} Enemies")
 
     return lines
