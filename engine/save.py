@@ -126,6 +126,7 @@ def _migrate_state(state):
         if npc.get("assignment") == "scavenging":
             npc["assignment"] = "salvage"
         npc.setdefault("recruit_attempts", 0)
+        npc.setdefault("following", False)
 
 
 def delete_save(slot_name):

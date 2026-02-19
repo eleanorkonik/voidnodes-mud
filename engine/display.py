@@ -142,6 +142,12 @@ def display_room(room, game_state):
             else:
                 print(f"  {npc_name(npc_id.replace('_', ' ').title())} is here.")
 
+    # Show followers at this location
+    npcs_db = game_state.get("npcs_db", {})
+    for fid, fdata in npcs_db.items():
+        if fdata.get("following") and fdata.get("location") == room.id and fid not in (room.npcs or []):
+            print(f"  {npc_name(fdata['name'])} is following you.")
+
     # Show inactive agents at this location
     agents = game_state.get("agents_db", {})
     for agent_id, agent_data in agents.items():

@@ -685,6 +685,9 @@ class Game:
         self.state[f"{phase}_location"] = target_id
         target_room.discover()
 
+        if phase == "explorer":
+            self._move_followers(target_id)
+
         self._narrate_void_crossing(room, target_room)
         display.display_room(target_room, self.game_context())
 
@@ -718,6 +721,8 @@ class Game:
             phase = self.state["current_phase"]
             self.state[f"{phase}_location"] = target_id
             target_room.discover()
+            if phase == "explorer":
+                self._move_followers(target_id)
             self._narrate_void_crossing(room, target_room)
             display.display_room(target_room, self.game_context())
             if self.state["current_phase"] == "explorer":
@@ -776,6 +781,10 @@ class Game:
         else:
             self.state[f"{phase}_location"] = target_id
         target_room.discover()
+
+        # Followers move with the explorer
+        if phase == "explorer":
+            self._move_followers(target_id)
 
         display.display_room(target_room, self.game_context())
 
@@ -1232,6 +1241,9 @@ class Game:
             self.in_combat = False
             self.combat_target = None
 
+            # Followers arrive at the skerry with the explorer
+            self._followers_to_skerry()
+
             # Deactivate explorer, activate steward
             self._deactivate_agent("explorer")
             self._activate_agent("steward")
@@ -1267,6 +1279,9 @@ class Game:
             self._deactivate_agent("steward")
             self._activate_agent("explorer")
 
+            # Followers rejoin the explorer
+            self._followers_rejoin_explorer()
+
             print()
             display.phase_banner("explorer", day, self.explorer_name, self.steward_name)
 
@@ -1293,6 +1308,9 @@ class Game:
         room = self.current_room()
 
         npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
+        # Also check followers at this location
+        if not npc:
+            npc_id, npc = self._find_follower(target, room.id)
         if npc:
             dialogue = npc.get("dialogue", {})
             if npc.get("recruited"):
@@ -2173,18 +2191,16 @@ class Game:
         if won:
             npc["recruited"] = True
             npc["loyalty"] = 3
-            npc["location"] = "skerry_central"
+            npc["following"] = True
+            npc["location"] = self.state.get("explorer_location", "skerry_central")
             self.state.setdefault("recruited_npcs", []).append(npc_id)
 
             room = self.current_room()
             if room:
                 room.remove_npc(npc_id)
-            skerry_central = self.rooms.get("skerry_central")
-            if skerry_central:
-                skerry_central.add_npc(npc_id)
 
             display.success(self._sub_dialogue(npc["dialogue"].get("recruit_success", f"{npc_name} joins you!")))
-            display.info(f"  {npc_name} will head to the skerry.")
+            display.info(f"  {npc_name} falls into step behind you.")
             display.info(f"  Score: {state['score']}/{state['threshold']} (variant: {seed_hex})")
 
             self.state["event_log"].append(
@@ -2202,6 +2218,34 @@ class Game:
         self.in_recruit = False
         self.recruit_state = None
 
+    def _move_followers(self, target_room_id):
+        """Move all following NPCs to the explorer's new location."""
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following"):
+                npc["location"] = target_room_id
+
+    def _followers_to_skerry(self):
+        """Move all followers to the skerry when the explorer comes home."""
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following"):
+                npc["following"] = False
+                npc["location"] = "skerry_central"
+                skerry_central = self.rooms.get("skerry_central")
+                if skerry_central and npc_id not in skerry_central.npcs:
+                    skerry_central.add_npc(npc_id)
+
+    def _followers_rejoin_explorer(self):
+        """Followers leave the skerry and rejoin the explorer."""
+        explorer_loc = self.state.get("explorer_location", "skerry_central")
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("recruited") and npc_id != "sevarik":
+                npc["following"] = True
+                npc["location"] = explorer_loc
+                # Remove from skerry room
+                skerry_central = self.rooms.get("skerry_central")
+                if skerry_central and npc_id in skerry_central.npcs:
+                    skerry_central.remove_npc(npc_id)
+
     def cmd_retreat(self, args):
         if self.in_combat:
             display.warning(f"Emergency retreat! {self.seed_name} pulls you back to safety.")
@@ -2211,6 +2255,7 @@ class Game:
             from_room = self.current_room()
             to_room = self.rooms.get("skerry_landing")
             self.state["explorer_location"] = "skerry_landing"
+            self._move_followers("skerry_landing")
             if from_room and to_room and from_room.zone != "skerry":
                 self._narrate_void_crossing(from_room, to_room)
             display.display_room(to_room, self.game_context())
@@ -2436,6 +2481,14 @@ class Game:
             edata = db.get(eid, {})
             if target in edata.get("name", "").lower() or target == eid:
                 return eid, edata
+        return None, None
+
+    def _find_follower(self, target, room_id):
+        """Find a following NPC at the given location by name. Returns (id, data) or (None, None)."""
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following") and npc.get("location") == room_id:
+                if target in npc.get("name", "").lower() or target == npc_id:
+                    return npc_id, npc
         return None, None
 
     def _find_in_db(self, target, db):
@@ -2673,6 +2726,7 @@ class Game:
                     self.explorer.consequences[sev] = None
 
             self.state["explorer_location"] = "skerry_landing"
+            self._move_followers("skerry_landing")
 
             display.warning(f"\n  {self.seed_name} spends {cost} motes to yank you back to the skerry!")
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
