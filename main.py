@@ -1964,10 +1964,7 @@ class Game:
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_scavenge_done"] = True
         else:
-            if times_searched >= 3:
-                display.narrate("  You've picked this place pretty clean. Nothing left to find.")
-            else:
-                display.narrate("  You search carefully but find nothing useful this time.")
+            display.narrate("  You search carefully but find nothing useful this time.")
 
     def cmd_probe(self, args):
         if not args:
