@@ -3204,7 +3204,7 @@ class Game:
         print()
         # Mood and mechanical impact
         lira["mood"] = "angry"
-        lira["loyalty"] = max(0, lira.get("loyalty", 0) - 3)
+        lira["loyalty"] = max(0, lira.get("loyalty", 0) - 1)
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
         quest["lira_witnessed_fire"] = True
 
