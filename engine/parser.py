@@ -27,6 +27,7 @@ COMMAND_ALIASES = {
     "hi": "talk", "greet": "talk",
     "focus": "switch",
     "ca": "exploit", "setup": "exploit",
+    "quest": "quests",
 }
 
 # All recognized commands and which phase they're valid in
@@ -46,6 +47,7 @@ COMMANDS = {
     "wear":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "remove":    {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "map":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
+    "quests":    {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "skip":      {"phases": ["prologue"], "args": "none"},
     "bond":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "give":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},

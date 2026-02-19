@@ -3,6 +3,47 @@
 from engine import display
 
 
+# ── Quest Registry ──────────────────────────────────────────
+
+QUEST_INFO = {
+    "verdant_bloom": {
+        "name": "The Verdant Heart",
+        "giver": "Lira",
+        "zone": "The Verdant Wreck",
+        "summary": "Massive roots block access to a crystallized bloom at the biodome's heart.",
+        "hints": {
+            "active": "Lira mentioned two ways through: repair the Growth Controller (west of the root wall), or weaken the roots with solvent and burn through.",
+            "roots_weakened": "The roots are weakened. Something hot might finish the job.",
+            "roots_cleared": "The way north is open. The bloom awaits.",
+        },
+    },
+}
+
+
+def get_quest_display(quest_id, quest_state):
+    """Return display info for a quest, or None if unknown."""
+    info = QUEST_INFO.get(quest_id)
+    if not info:
+        return None
+    status = quest_state.get("status", "inactive")
+    hint = None
+    if status == "active":
+        if quest_state.get("roots_cleared"):
+            hint = info["hints"].get("roots_cleared")
+        elif quest_state.get("roots_weakened"):
+            hint = info["hints"].get("roots_weakened")
+        else:
+            hint = info["hints"].get("active")
+    return {
+        "name": info["name"],
+        "giver": info["giver"],
+        "zone": info["zone"],
+        "summary": info["summary"],
+        "status": status,
+        "hint": hint,
+    }
+
+
 # ── Lock Conditions ──────────────────────────────────────────
 
 CONDITION_MAP = {

@@ -916,6 +916,36 @@ class Game:
 
         display.error("Can't determine your current zone. Try MAP ALL.")
 
+    def cmd_quests(self, args):
+        from engine.quest import get_quest_display
+        quests = self.state.get("quests", {})
+        if not quests:
+            display.info("  You haven't learned of any quests yet.")
+            return
+
+        shown = False
+        for quest_id, quest_state in quests.items():
+            info = get_quest_display(quest_id, quest_state)
+            if not info:
+                continue
+            shown = True
+            status = info["status"]
+            if status == "complete":
+                marker = f"{display.GREEN}complete{display.RESET}"
+            else:
+                marker = f"{display.BRIGHT_YELLOW}active{display.RESET}"
+            print()
+            print(f"  {display.BOLD}{info['name']}{display.RESET}  [{marker}]")
+            print(f"  {display.DIM}From {info['giver']} — {info['zone']}{display.RESET}")
+            print(f"  {info['summary']}")
+            if info.get("hint") and status == "active":
+                print()
+                print(f"  {display.CYAN}{info['hint']}{display.RESET}")
+
+        if not shown:
+            display.info("  You haven't learned of any quests yet.")
+        print()
+
     def cmd_skip(self, args):
         if self.state["current_phase"] != "prologue":
             display.error("Nothing to skip.")
