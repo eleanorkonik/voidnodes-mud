@@ -432,7 +432,7 @@
                 "zone": "verdant_wreck",
                 "exits": {"east": "vw_root_wall"},
                 "aspects": ["The Machine Still Remembers"],
-                "items": ["growth_console", "wire", "metal_scraps"],
+                "items": ["growth_console", "wire"],
                 "npcs": [],
                 "enemies": [],
                 "discovered": false
