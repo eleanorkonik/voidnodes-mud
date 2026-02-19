@@ -66,7 +66,6 @@
                 "discovered": false
             }
         ],
-        "artifacts": ["stabilization_engine"],
         "entry_room": "df_entrance",
         "enemies_data": [
             {
@@ -169,7 +168,6 @@
                 "discovered": false
             }
         ],
-        "artifacts": ["growth_lattice"],
         "entry_room": "ct_entrance",
         "enemies_data": [
             {
@@ -284,7 +282,6 @@
                 "discovered": false
             }
         ],
-        "artifacts": ["eliok_house"],
         "entry_room": "fw_entrance",
         "enemies_data": [
             {
