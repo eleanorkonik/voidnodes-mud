@@ -44,25 +44,30 @@ RECRUIT_EFFECTS = {
 
 # Flavor text for invoking aspects during recruitment, keyed by source label.
 # Falls back to "generic" if source not matched.
+# {aspect} = aspect text, {source} = source name, {npc} = NPC being recruited
 RECRUIT_INVOKE_FLAVOR = {
     "yours": [
-        "You draw on something personal — {aspect}. It cuts through the small talk.",
-        "You let {aspect} bleed into your voice. They hear the conviction.",
-        "Something about {aspect} resonates. You press the advantage.",
+        "You let it show — the part of you that's {aspect}. {npc} sees it and goes quiet.",
+        "Your voice changes when you talk about being {aspect}. {npc} notices.",
+        "You stop performing and let {aspect} speak for itself. {npc} listens differently after that.",
     ],
     "room": [
-        "You gesture at your surroundings — {aspect}. The point lands.",
-        "You use the environment to make your case. {aspect} speaks for itself.",
+        "You point at the world around you. {aspect} — and {npc} can see it with their own eyes.",
+        "You don't have to argue this one. {aspect} is right here. {npc} looks around and gets it.",
     ],
     "seed": [
-        "You tell them about {source} — {aspect}. Their eyes widen.",
-        "You describe {source}. {aspect}. They hadn't considered that.",
+        "You invoke {source}'s nature — {aspect} — and {source} obliges, showing off for {npc}.",
+        "{source} pulses with warmth on cue. {aspect}. {npc} stares.",
+        "You call on {source}, and the little seed rises to the occasion. {npc} watches, fascinated.",
+    ],
+    "npc": [
+        "You turn {npc}'s own words back on them — {aspect}. They can't argue with themselves.",
+        "You point out that {npc} is {aspect}. They pause, caught off guard by their own truth.",
     ],
     "generic": [
-        "You weave {aspect} into your argument. {npc} pauses, reconsidering.",
-        "You bring up {aspect}. Something shifts in {npc}'s expression.",
-        "You mention {aspect}. The conversation turns a corner.",
-        "{npc} listens as you invoke {aspect}. Your argument sharpens.",
+        "You invoke {source}'s {aspect}. {npc} hadn't considered that angle.",
+        "You bring up {aspect} — {source}. {npc} goes quiet, thinking it over.",
+        "{source}. {aspect}. You let it hang in the air and {npc} does the rest.",
     ],
 }
 
@@ -70,10 +75,12 @@ RECRUIT_INVOKE_FLAVOR = {
 def get_recruit_invoke_flavor(aspect, source, npc_name, source_type=None):
     """Pick a flavor line for a recruitment invoke.
 
-    source_type overrides the pool lookup (e.g. "seed" for world seed aspects).
-    Falls back to generic if source not in known keys.
+    source_type: overrides the pool lookup. Auto-detected for NPC sources.
     """
     key = source_type or source
+    # NPC target's own aspects
+    if key == npc_name:
+        key = "npc"
     pool = RECRUIT_INVOKE_FLAVOR.get(key, RECRUIT_INVOKE_FLAVOR["generic"])
     line = random.choice(pool)
     return line.format(aspect=aspect, source=source, npc=npc_name)
