@@ -523,14 +523,6 @@ class Game:
                     print(f"  {display.item_name(item_id.replace('_', ' ').title())}")
                 has_contents = True
 
-        # Zone artifacts (not in room.items but matched by room field)
-        for art_id, art in self.artifacts_db.items():
-            if art.get("room") == room.id and art_id not in room.items:
-                status = self.state.get("artifacts_status", {}).get(art_id)
-                if status not in ("kept", "fed"):
-                    print(f"  {display.item_name(art['name'])}")
-                    has_contents = True
-
         # NPCs
         for npc_id in room.npcs:
             npc = self.npcs_db.get(npc_id, {})
@@ -1781,8 +1773,8 @@ class Game:
         room = self.current_room()
 
         # Check artifacts in room
-        art_id, art = self._find_in_db(target, self.artifacts_db)
-        if art and art.get("room") == room.id:
+        art_id, art = self._find_entity(room.items, target, self.artifacts_db)
+        if art:
             if art_id not in self.state.get("artifacts_status", {}):
                 display.header(art["name"])
                 display.narrate(self.sub(art.get("discovery_text", art["description"])))
@@ -1871,8 +1863,11 @@ class Game:
             char = self.current_character()
             already_held = art_id in char.inventory
             status = self.state.get("artifacts_status", {}).get(art_id)
-            if already_held or status == "discovered" or art.get("room") == room.id:
+            in_room = art_id in room.items
+            if already_held or status == "discovered" or in_room:
                 if not already_held:
+                    if in_room:
+                        room.remove_item(art_id)
                     char.add_to_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "kept"
                 if not self.state.get("tutorial_complete"):
@@ -2007,19 +2002,9 @@ class Game:
             room.remove_item(art_id)
             self.current_character().add_to_inventory(art_id)
             display.success(f"You pick up the {art.get('name', art_id)}.")
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_artifact_found"] = True
             return
-
-        # Check zone artifacts (not in room.items but matched by room field)
-        art_id2, art2 = self._find_in_db(target, self.artifacts_db)
-        if art2 and art2.get("room") == room.id:
-            status = self.state.get("artifacts_status", {}).get(art_id2)
-            if status not in ("kept", "fed"):
-                art2["room"] = None  # Remove from room
-                self.current_character().add_to_inventory(art_id2)
-                display.success(f"You pick up the {art2.get('name', art_id2)}.")
-                if not self.state.get("tutorial_complete"):
-                    self.state["tutorial_artifact_found"] = True
-                return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
         if item:

@@ -127,6 +127,20 @@ def _migrate_state(state):
             npc["assignment"] = "salvage"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
+    # Place zone-bound artifacts into room items (old saves stored them separately)
+    artifacts = state.get("artifacts", {})
+    artifacts_status = state.get("artifacts_status", {})
+    all_rooms = state.get("rooms", {})
+    for art_id, art in artifacts.items():
+        room_id = art.get("room")
+        if not room_id:
+            continue
+        if artifacts_status.get(art_id) in ("kept", "fed"):
+            continue  # already picked up
+        if room_id in all_rooms:
+            room_items = all_rooms[room_id].setdefault("items", [])
+            if art_id not in room_items:
+                room_items.append(art_id)
 
 
 def delete_save(slot_name):
@@ -166,6 +180,14 @@ def new_game_state():
     # Add skerry rooms
     for room in skerry["rooms"]:
         all_rooms[room["id"]] = room
+
+    # Place zone-bound artifacts into their rooms
+    for art_id, art in artifacts.items():
+        room_id = art.get("room")
+        if room_id and room_id in all_rooms:
+            room = all_rooms[room_id]
+            if art_id not in room.get("items", []):
+                room.setdefault("items", []).append(art_id)
 
     # Build enemy lookup from zones
     enemies_db = {}

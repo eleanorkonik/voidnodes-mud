@@ -125,14 +125,6 @@ def display_room(room, game_state):
                 item_strs.append(item_name(item_id.replace("_", " ").title()))
         print(f"  You see: {', '.join(item_strs)}")
 
-    # Zone artifacts (not in room.items but matched by room field in artifacts_db)
-    artifacts_all = game_state.get("artifacts_db", {})
-    artifacts_status = game_state.get("artifacts_status", {})
-    for art_id, art in artifacts_all.items():
-        if art.get("room") == room.id and art_id not in room.items:
-            if artifacts_status.get(art_id) not in ("kept", "fed"):
-                print(f"  You see: {item_name(art['name'])}")
-
     if room.npcs:
         npcs = game_state.get("npcs_db", {})
         for npc_id in room.npcs:
