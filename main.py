@@ -2244,7 +2244,11 @@ class Game:
         if not zone:
             return None
         for art_id, art in self.artifacts_db.items():
-            if art.get("zone") != zone:
+            spawn = art.get("spawn_spot")
+            if not spawn:
+                continue
+            spawn_room = self.rooms.get(spawn)
+            if not spawn_room or spawn_room.zone != zone:
                 continue
             status = self.state.get("artifacts_status", {}).get(art_id)
             if status in ("kept", "fed"):
