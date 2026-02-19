@@ -178,64 +178,64 @@ COMPELS = {
         "condition": "follower_present",
         "text": "{follower} is in the crossfire. You feel compelled to shield them.",
         "accept_effect": "take_stress",
-        "accept_text": "You throw yourself between {follower} and danger.",
+        "accept_text": "You throw yourself between {follower} and danger. The blow catches your shoulder instead.",
         "stress": 1,
     },
     "Reluctant Leader": {
         "condition": "always",
         "text": "The weight of command hits you. Do you really have the right to risk this?",
         "accept_effect": "lose_turn",
-        "accept_text": "You hesitate, second-guessing yourself.",
+        "accept_text": "You hesitate, second-guessing yourself. The moment passes before you can act.",
     },
     "Secrets That Could Help or Harm": {
         "condition": "always",
         "text": "You know something that could help — but revealing it would expose your secrets.",
         "accept_effect": "enemy_boost",
-        "accept_text": "You hold back, and the enemy presses the advantage.",
+        "accept_text": "You hold back what you know. The enemy reads your indecision and presses hard.",
     },
     "Too Trusting for the Void": {
         "condition": "always",
         "text": "You lower your guard for just a moment — old habits.",
         "accept_effect": "take_stress",
-        "accept_text": "The opening costs you.",
+        "accept_text": "Your guard drops and something gets through. You stagger, clutching your side.",
         "stress": 1,
     },
     "Jumps at Every Shadow": {
         "condition": "always",
         "text": "A flicker of movement in the corner of your eye. Your nerve wavers.",
         "accept_effect": "lose_turn",
-        "accept_text": "You flinch, losing your composure.",
+        "accept_text": "You flinch hard, spinning toward nothing. By the time you recover, the moment's gone.",
     },
     "Trust Issues (Well-Founded)": {
         "condition": "follower_present",
         "text": "You glance at {follower}. Can you really count on them?",
         "accept_effect": "lose_turn",
-        "accept_text": "Doubt clouds your judgment.",
+        "accept_text": "You split your attention between the enemy and {follower}. Neither gets your best.",
     },
     "Won't Move Without Proof": {
         "condition": "always",
         "text": "You're not sure this fight is worth it. Where's the evidence you should be here?",
         "accept_effect": "enemy_boost",
-        "accept_text": "Your hesitation gives the enemy an opening.",
+        "accept_text": "You pull back, unconvinced. The enemy doesn't share your reservations.",
     },
     "Knowledge Above Self-Preservation": {
         "condition": "always",
         "text": "You notice something fascinating about the enemy's anatomy. Mid-fight.",
         "accept_effect": "take_stress",
-        "accept_text": "Your curiosity costs you a hit, but you learn something.",
+        "accept_text": "You lean in for a closer look. It costs you — claws rake across your arm. Worth it, probably.",
         "stress": 1,
     },
     "Respects Only Strength": {
         "condition": "always",
         "text": "This enemy is weak. Beneath you. You lower your guard in contempt.",
         "accept_effect": "enemy_boost",
-        "accept_text": "Your arrogance gives them an opening.",
+        "accept_text": "You practically yawn at them. They take the opening you handed them.",
     },
     "Patient Observer": {
         "condition": "always",
         "text": "You pause to study your opponent's pattern. Fascinating, but...",
         "accept_effect": "lose_turn",
-        "accept_text": "You watch instead of act.",
+        "accept_text": "You watch instead of act, cataloguing every movement. Thorough, but not timely.",
     },
 }
 
@@ -304,14 +304,14 @@ def resolve_compel_accept(game, compel):
     if effect == "take_stress":
         stress_amount = compel.get("stress", 1)
         taken_out = char.apply_damage(stress_amount)
-        messages.append(f"  You take {stress_amount} stress.")
+        stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
+        messages.append(f"  ({stress_amount} stress — {stress_str})")
         if taken_out:
             messages.append("TAKEN_OUT")
     elif effect == "lose_turn":
-        messages.append("  You lose your next action.")
+        pass  # accept_text covers the narrative; enemy free attack handled by caller
     elif effect == "enemy_boost":
         game.enemy_compel_boost = 2
-        messages.append("  The enemy gains +2 on their next attack.")
 
     messages.append(f"  (+1 Fate Point — you now have {char.fate_points})")
     return messages

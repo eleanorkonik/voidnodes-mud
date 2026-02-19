@@ -269,7 +269,7 @@ def test_compel_accept():
     messages = aspects.resolve_compel_accept(game, compel)
 
     assert game.explorer.fate_points == 3, f"FP should be 3, got {game.explorer.fate_points}"
-    assert any("stress" in m.lower() for m in messages), f"Should mention stress: {messages}"
+    assert any("stress" in m.lower() or "[X]" in m for m in messages), f"Should show stress: {messages}"
     assert any("3" in m for m in messages), f"Should show new FP count: {messages}"
 
     print(f"  FP: 2 → {game.explorer.fate_points}")

@@ -3101,6 +3101,7 @@ class Game:
             self.in_compel = False
             compel = self.compel_data
             self.compel_data = None
+            effect = compel["accept_effect"]
 
             messages = aspects.resolve_compel_accept(self, compel)
             for msg in messages:
@@ -3109,12 +3110,12 @@ class Game:
                     display.narrate(f"  {self.seed_name} reaches across the void...")
                     self._seed_extraction()
                     return
-                elif msg.startswith("  You lose"):
-                    display.warning(msg)
-                    # Enemy gets a free attack (lose turn effect)
-                    self._enemy_turn()
                 else:
                     display.narrate(msg)
+
+            # Lose turn — enemy gets a free attack
+            if effect == "lose_turn":
+                self._enemy_turn()
 
         elif cmd in ("refuse", "r", "no"):
             if char.fate_points <= 0:
