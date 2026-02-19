@@ -4,6 +4,7 @@
         "description": "A slowly tumbling mass of broken hull plating, cargo containers, and twisted metal. The remains of some great vessel, shattered and scattered across this pocket of void.",
         "aspect": "A Dead Ship Still Full of Secrets",
         "difficulty": "easy",
+        "scavenge_pool": ["metal_scraps", "wire", "torn_fabric"],
         "rooms": [
             {
                 "id": "df_entrance",
@@ -106,6 +107,7 @@
         "description": "A dense growth of crystallized organic matter, glowing with soft bioluminescence. The coral structures twist and branch in impossible patterns, creating a labyrinth of beauty and danger.",
         "aspect": "Everything Here Grows Toward Something Hungry",
         "difficulty": "medium",
+        "scavenge_pool": ["coral_fragments", "luminous_moss", "seeds", "resin"],
         "rooms": [
             {
                 "id": "ct_entrance",
@@ -208,6 +210,7 @@
         "description": "An ancient ship, petrified and encrusted with void-ice. It drifts in eerie silence, its surfaces glittering with frost. Whatever happened here happened long ago, and some things are best left undisturbed.",
         "aspect": "The Cold Preserves What Should Have Been Forgotten",
         "difficulty": "hard",
+        "scavenge_pool": ["crystal_shards", "frozen_water", "ancient_alloys", "preserved_food"],
         "rooms": [
             {
                 "id": "fw_entrance",
@@ -321,6 +324,7 @@
         "description": "A massive biodome ship fragment — the growing section of a colony ship. When it broke apart, the growth systems kept running, fueled by void energy. Now it's a small jungle floating in nothing.",
         "aspect": "Life That Outlasted Its Makers",
         "difficulty": "easy",
+        "scavenge_pool": ["resin", "seeds", "luminous_moss", "torn_fabric"],
         "rooms": [
             {
                 "id": "vw_airlock",

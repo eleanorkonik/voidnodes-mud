@@ -1945,14 +1945,10 @@ class Game:
         scavenge_counts[room.id] = times_searched + 1
 
         if shifts >= 0:
-            # Find something
+            # Find something from the zone's scavenge pool
             zone_id = room.zone
             zone = self.state["zones"].get(zone_id, {})
-            possible_loot = []
-            for enemy_data in zone.get("enemies_data", []):
-                possible_loot.extend(enemy_data.get("loot", []))
-            if not possible_loot:
-                possible_loot = ["metal_scraps", "torn_fabric", "wire"]
+            possible_loot = zone.get("scavenge_pool", ["metal_scraps", "torn_fabric", "wire"])
 
             found = random.choice(possible_loot)
             self.explorer.add_to_inventory(found)
