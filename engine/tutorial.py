@@ -552,11 +552,14 @@ def _explorer_free_hints(cmd, args, game):
                 _tutorial_prompt(f"PROBE {art.get('name', 'artifact').upper()} to examine it.")
             return
 
-    # Just probed an artifact
+    # Just probed an artifact — check if one was actually discovered here
     if cmd == "probe" and not artifact_found:
-        print()
-        display.seed_speak("Take it with you. TAKE it.")
-        display.seed_speak("We'll decide what to do with it back home.")
+        for art_id, art in game._artifacts_in_room(room.id):
+            if game.state.get("artifacts_status", {}).get(art_id) == "discovered":
+                print()
+                display.seed_speak("Take it with you. TAKE it.")
+                display.seed_speak("We'll decide what to do with it back home.")
+                return
         return
 
     # Just took an artifact

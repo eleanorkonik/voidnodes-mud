@@ -1891,6 +1891,19 @@ class Game:
             display.info(f"  Mote value: {item.get('mote_value', 1)}")
             return
 
+        # Check NPCs in room
+        npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
+        if npc:
+            display.header(npc["name"])
+            display.narrate(self.sub(npc.get("description", "You see nothing unusual.")))
+            if npc.get("aspects"):
+                for a in npc["aspects"]:
+                    print(f"    {display.aspect_text(a)}")
+            if npc.get("skills"):
+                skills_str = ", ".join(f"{k} {v}" for k, v in npc["skills"].items())
+                display.info(f"  Skills: {skills_str}")
+            return
+
         display.narrate(f"Nothing called '{target}' to probe here.")
 
     def cmd_feed(self, args):
