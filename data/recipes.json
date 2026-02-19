@@ -13,7 +13,7 @@
         "name": "Torch",
         "materials": {"luminous_moss": 1, "wire": 1},
         "result": "torch",
-        "difficulty": 0,
+        "difficulty": -2,
         "skill": "Craft",
         "description": "Wrap luminous moss around a wire frame for a steady, lasting light."
     },
