@@ -73,8 +73,8 @@ COMMANDS = {
     "offer":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "drop":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     # Steward commands
-    "craft":     {"phases": ["steward"], "args": "required"},
-    "recipes":   {"phases": ["steward"], "args": "none"},
+    "craft":     {"phases": ["explorer", "steward"], "args": "required"},
+    "recipes":   {"phases": ["explorer", "steward"], "args": "none"},
     "build":     {"phases": ["steward"], "args": "required"},
     "assign":    {"phases": ["steward"], "args": "required"},
     "organize":  {"phases": ["steward"], "args": "none"},
