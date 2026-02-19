@@ -536,17 +536,13 @@ def _explorer_free_hints(cmd, args, game):
 
     # Room has undiscovered artifact
     if not artifact_found:
-        for item_id in room.items:
-            if item_id in game.artifacts_db:
-                status = game.state.get("artifacts_status", {}).get(item_id)
-                if status not in ("kept", "fed", "given"):
-                    art = game.artifacts_db[item_id]
-                    if cmd == "ih" or cmd == "look":
-                        print()
-                        display.seed_speak("I sense something powerful here.")
-                        display.seed_speak("PROBE it to learn more.")
-                        _tutorial_prompt(f"PROBE {art.get('name', 'artifact').upper()} to examine it.")
-                    return
+        for art_id, art in game._artifacts_in_room(room.id):
+            if cmd == "ih" or cmd == "look":
+                print()
+                display.seed_speak("I sense something powerful here.")
+                display.seed_speak("PROBE it to learn more.")
+                _tutorial_prompt(f"PROBE {art.get('name', 'artifact').upper()} to examine it.")
+            return
 
     # Just probed an artifact
     if cmd == "probe" and not artifact_found:

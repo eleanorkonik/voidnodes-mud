@@ -127,25 +127,34 @@ def _migrate_state(state):
             npc["assignment"] = "salvage"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
-    # Migrate artifact field names: room/zone → spawn_spot
+    # Migrate artifact fields to location dict
     artifacts = state.get("artifacts", {})
-    for art_id, art in artifacts.items():
-        if "room" in art and "spawn_spot" not in art:
-            art["spawn_spot"] = art.pop("room")
-        art.pop("zone", None)
-    # Place zone-bound artifacts into room items (old saves stored them separately)
-    artifacts_status = state.get("artifacts_status", {})
     all_rooms = state.get("rooms", {})
+    artifacts_status = state.get("artifacts_status", {})
     for art_id, art in artifacts.items():
-        room_id = art.get("spawn_spot")
-        if not room_id:
-            continue
-        if artifacts_status.get(art_id) in ("kept", "fed"):
-            continue  # already picked up
-        if room_id in all_rooms:
-            room_items = all_rooms[room_id].setdefault("items", [])
-            if art_id not in room_items:
-                room_items.append(art_id)
+        # Convert old room/spawn_spot field → location dict
+        if "location" not in art:
+            room_id = art.get("spawn_spot") or art.get("room")
+            if room_id:
+                art["location"] = {"type": "room", "id": room_id}
+            else:
+                art["location"] = None
+        art.pop("room", None)
+        art.pop("zone", None)
+        art.pop("spawn_spot", None)
+        # If artifact was resolved, clear its location
+        if artifacts_status.get(art_id) in ("kept", "fed", "given"):
+            if art_id in (art.get("location") or {}).get("id", ""):
+                pass  # leave as-is if in inventory
+            # For kept artifacts, location is the character's inventory
+            # For fed artifacts, location is null (consumed)
+            if artifacts_status.get(art_id) == "fed":
+                art["location"] = None
+        # Remove artifact from room.items (artifacts are no longer displayed in rooms)
+        for room in all_rooms.values():
+            room_items = room.get("items", [])
+            if art_id in room_items:
+                room_items.remove(art_id)
 
 
 def delete_save(slot_name):
@@ -185,14 +194,6 @@ def new_game_state():
     # Add skerry rooms
     for room in skerry["rooms"]:
         all_rooms[room["id"]] = room
-
-    # Place zone-bound artifacts into their rooms
-    for art_id, art in artifacts.items():
-        room_id = art.get("spawn_spot")
-        if room_id and room_id in all_rooms:
-            room = all_rooms[room_id]
-            if art_id not in room.get("items", []):
-                room.setdefault("items", []).append(art_id)
 
     # Build enemy lookup from zones
     enemies_db = {}

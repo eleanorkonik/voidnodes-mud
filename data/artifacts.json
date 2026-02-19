@@ -9,9 +9,9 @@
         "stat_bonuses": {"Craft": 1},
         "stackable": false,
         "special": null,
-        "spawn_spot": "df_engine_room",
+        "location": {"type": "room", "id": "df_engine_room"},
         "discovery_text": "Among the wreckage of the turbines, you spot a device that's still intact — still humming. The Stabilization Engine. It pulses faintly, as if waiting to be useful again.",
-        "recruit_hint": "There's something still running in there — deeper in, past the wreckage. I could hear it humming through the walls. Mechanical, steady. Whatever it is, it survived the crash."
+        "hint_sensory": "something humming through the walls — mechanical, steady, like it never stopped running"
     },
     "growth_lattice": {
         "id": "growth_lattice",
@@ -23,9 +23,9 @@
         "stat_bonuses": {"Commune": 1},
         "stackable": false,
         "special": null,
-        "spawn_spot": "ct_heart",
+        "location": {"type": "room", "id": "ct_heart"},
         "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness — it can feel this thing, and it wants it.",
-        "recruit_hint": "Deep in the thicket, where the coral gets old — really old — there's a green glow. Not bioluminescence. Something crystalline, threaded through the roots. It felt... aware."
+        "hint_sensory": "a green glow — not bioluminescence, something crystalline, threaded through everything around it"
     },
     "eliok_house": {
         "id": "eliok_house",
@@ -37,9 +37,9 @@
         "stat_bonuses": {},
         "stackable": false,
         "special": "eliok_house",
-        "spawn_spot": "fw_vault",
+        "location": {"type": "room", "id": "fw_vault"},
         "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House — a home that remembers what home means.\n\nFeed it to {seed_name} for 25 motes — the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
-        "recruit_hint": "In the vault, sealed behind old crystal — I felt warmth. Real warmth, not friction or decay. Something in there is still alive, or remembers being alive. Small. Like a house built for hands smaller than mine.",
+        "hint_sensory": "warmth — real warmth, radiating from behind a seal. Something alive in there, or remembering being alive",
         "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges — a remnant of the Eliok civilization — and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
         "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees — a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers."
     },
@@ -54,8 +54,9 @@
         "stackable": false,
         "special": "emergency_return",
         "slot": "feet",
-        "spawn_spot": null,
-        "discovery_text": "Silver slippers, barely tarnished, sitting on the bare ground as if someone set them down and walked away. They catch the light in ways the light shouldn't bend."
+        "location": null,
+        "discovery_text": "Silver slippers, barely tarnished, sitting on the bare ground as if someone set them down and walked away. They catch the light in ways the light shouldn't bend.",
+        "hint_sensory": "a faint shimmer — like starlight caught in something solid, humming with a road that isn't there"
     },
     "red_clown_nose": {
         "id": "red_clown_nose",
@@ -68,7 +69,8 @@
         "stackable": false,
         "special": "reduce_resentment",
         "slot": "head",
-        "spawn_spot": null,
-        "discovery_text": "A red clown nose, sitting on the ground like a joke with no punchline. It's perfectly round, impossibly vivid against the dull soil."
+        "location": null,
+        "discovery_text": "A red clown nose, sitting on the ground like a joke with no punchline. It's perfectly round, impossibly vivid against the dull soil.",
+        "hint_sensory": "something impossibly vivid — bright red, round, completely out of place"
     }
 }

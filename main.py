@@ -423,15 +423,15 @@ class Game:
                 print(f"  Aspects: {aspects}")
             return
 
-        # Look at artifact in room
-        art_id, art = self._find_entity(room.items, target, self.artifacts_db)
-        if art:
-            display.header(art["name"])
-            display.narrate(f"  {art.get('description', '')}")
-            if art.get("aspects"):
-                aspects = ", ".join(display.aspect_text(a) for a in art["aspects"])
-                print(f"  Aspects: {aspects}")
-            return
+        # Look at artifact at this location
+        for art_id, art in self._artifacts_in_room(room.id):
+            if target in art.get("name", "").lower() or target == art_id:
+                display.header(art["name"])
+                display.narrate(f"  {art.get('description', '')}")
+                if art.get("aspects"):
+                    aspects = ", ".join(display.aspect_text(a) for a in art["aspects"])
+                    print(f"  Aspects: {aspects}")
+                return
 
         # Look at item in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
@@ -512,13 +512,11 @@ class Game:
         # No args — show focused list of interactable things (no room desc, no exits)
         has_contents = False
 
-        # Items (check both items_db and artifacts_db for names)
+        # Items
         if room.items:
             for item_id in room.items:
                 if item_id in self.items_db:
                     print(f"  {display.item_name(self.items_db[item_id]['name'])}")
-                elif item_id in self.artifacts_db:
-                    print(f"  {display.item_name(self.artifacts_db[item_id]['name'])}")
                 else:
                     print(f"  {display.item_name(item_id.replace('_', ' ').title())}")
                 has_contents = True
@@ -1772,23 +1770,23 @@ class Game:
         target = " ".join(args).lower()
         room = self.current_room()
 
-        # Check artifacts in room
-        art_id, art = self._find_entity(room.items, target, self.artifacts_db)
-        if art:
-            if art_id not in self.state.get("artifacts_status", {}):
-                display.header(art["name"])
-                display.narrate(self.sub(art.get("discovery_text", art["description"])))
-                self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
-                display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
-                if art.get("stat_bonuses"):
-                    bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
-                    display.info(f"  Keep for: {bonuses}")
-                if art.get("keep_effect"):
-                    display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
-            else:
-                display.header(art["name"])
-                display.narrate(self.sub(art["description"]))
-            return
+        # Check artifacts at this location
+        for art_id, art in self._artifacts_in_room(room.id):
+            if target in art.get("name", "").lower() or target == art_id:
+                if art_id not in self.state.get("artifacts_status", {}):
+                    display.header(art["name"])
+                    display.narrate(self.sub(art.get("discovery_text", art["description"])))
+                    self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
+                    display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
+                    if art.get("stat_bonuses"):
+                        bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
+                        display.info(f"  Keep for: {bonuses}")
+                    if art.get("keep_effect"):
+                        display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
+                else:
+                    display.header(art["name"])
+                    display.narrate(self.sub(art["description"]))
+                return
 
         # Check items in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
@@ -1815,6 +1813,7 @@ class Game:
             new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+            self._move_artifact(art_id, None, None)
 
             if art.get("feed_effect"):
                 display.narrate(self.sub(art["feed_effect"]))
@@ -1863,12 +1862,12 @@ class Game:
             char = self.current_character()
             already_held = art_id in char.inventory
             status = self.state.get("artifacts_status", {}).get(art_id)
-            in_room = art_id in room.items
-            if already_held or status == "discovered" or in_room:
+            if already_held or status == "discovered":
                 if not already_held:
-                    if in_room:
-                        room.remove_item(art_id)
+                    phase = self.state.get("current_phase", "explorer")
+                    char_role = "explorer" if phase == "explorer" else "steward"
                     char.add_to_inventory(art_id)
+                    self._move_artifact(art_id, "inventory", char_role)
                 self.state.setdefault("artifacts_status", {})[art_id] = "kept"
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_resolved"] = True
@@ -1921,6 +1920,7 @@ class Game:
                 new_total, stage_changed = self.seed.feed(motes)
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+                self._move_artifact(art_id, None, None)
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_resolved"] = True
 
@@ -1996,15 +1996,17 @@ class Game:
                     display.success(f"  {display.item_name(name)}")
             return
 
-        # Check artifacts in room
-        art_id, art = self._find_entity(list(room.items), target, self.artifacts_db)
-        if art:
-            room.remove_item(art_id)
-            self.current_character().add_to_inventory(art_id)
-            display.success(f"You pick up the {art.get('name', art_id)}.")
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_artifact_found"] = True
-            return
+        # Check artifacts at this location
+        for art_id, art in self._artifacts_in_room(room.id):
+            if target in art.get("name", "").lower() or target == art_id:
+                phase = self.state.get("current_phase", "explorer")
+                char_role = "explorer" if phase == "explorer" else "steward"
+                self.current_character().add_to_inventory(art_id)
+                self._move_artifact(art_id, "inventory", char_role)
+                display.success(f"You pick up the {art.get('name', art_id)}.")
+                if not self.state.get("tutorial_complete"):
+                    self.state["tutorial_artifact_found"] = True
+                return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
         if item:
@@ -2239,21 +2241,96 @@ class Game:
         self.in_recruit = False
         self.recruit_state = None
 
+    def _locate_artifact(self, art_id):
+        """Resolve an artifact's location to (loc_type, zone, room_or_holder).
+
+        Returns (None, None, None) if the artifact has no location (consumed).
+        """
+        art = self.artifacts_db.get(art_id)
+        if not art:
+            return None, None, None
+        loc = art.get("location")
+        if not loc:
+            return None, None, None
+
+        loc_type = loc.get("type")
+        loc_id = loc.get("id")
+
+        if loc_type == "room":
+            room = self.rooms.get(loc_id)
+            if room:
+                return "room", room.zone, room
+            return "room", None, None
+        elif loc_type == "inventory":
+            # loc_id is "explorer" or "steward"
+            char_loc = self.state.get(f"{loc_id}_location")
+            room = self.rooms.get(char_loc) if char_loc else None
+            zone = room.zone if room else "skerry"
+            return "inventory", zone, loc_id
+        elif loc_type == "npc":
+            npc = self.npcs_db.get(loc_id)
+            npc_loc = npc.get("location") if npc else None
+            room = self.rooms.get(npc_loc) if npc_loc else None
+            zone = room.zone if room else None
+            return "npc", zone, loc_id
+        return None, None, None
+
+    def _move_artifact(self, art_id, loc_type, loc_id):
+        """Move an artifact to a new location. Single point of control for all artifact movement.
+
+        loc_type: "room", "inventory", "npc", or None (consumed/removed)
+        loc_id: room id, "explorer"/"steward", npc id, or None
+        """
+        art = self.artifacts_db.get(art_id)
+        if not art:
+            return
+        if loc_type is None:
+            art["location"] = None
+        else:
+            art["location"] = {"type": loc_type, "id": loc_id}
+
+    def _artifacts_in_room(self, room_id):
+        """Find all unresolved artifacts whose location is a specific room."""
+        results = []
+        for art_id, art in self.artifacts_db.items():
+            loc = art.get("location")
+            if not loc:
+                continue
+            if loc.get("type") == "room" and loc.get("id") == room_id:
+                status = self.state.get("artifacts_status", {}).get(art_id)
+                if status not in ("kept", "fed", "given"):
+                    results.append((art_id, art))
+        return results
+
     def _get_artifact_hint(self, zone):
-        """Return a recruit_hint for an unresolved artifact associated with this zone."""
+        """Compose a dynamic hint about an unresolved artifact in this zone.
+
+        Resolves artifact location at runtime and combines room/holder context
+        with the artifact's hint_sensory field.
+        """
         if not zone:
             return None
         for art_id, art in self.artifacts_db.items():
-            spawn = art.get("spawn_spot")
-            if not spawn:
-                continue
-            spawn_room = self.rooms.get(spawn)
-            if not spawn_room or spawn_room.zone != zone:
-                continue
             status = self.state.get("artifacts_status", {}).get(art_id)
-            if status in ("kept", "fed"):
-                return None
-            return art.get("recruit_hint")
+            if status in ("kept", "fed", "given"):
+                continue
+            loc_type, art_zone, context = self._locate_artifact(art_id)
+            if art_zone != zone:
+                continue
+            sensory = art.get("hint_sensory")
+            if not sensory:
+                continue
+            # Compose hint based on where the artifact actually is
+            if loc_type == "room" and context:
+                room_name = context.name if hasattr(context, 'name') else str(context)
+                prefix = "" if room_name.lower().startswith("the ") else "the "
+                return f"In {prefix}{room_name} — I noticed {sensory}."
+            elif loc_type == "npc":
+                npc = self.npcs_db.get(context, {})
+                npc_name = npc.get("name", context)
+                return f"Someone called {npc_name} has {sensory}."
+            elif loc_type == "inventory":
+                return f"I saw {sensory} — but someone already took it."
         return None
 
     def _move_followers(self, target_room_id):

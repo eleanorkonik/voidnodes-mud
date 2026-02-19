@@ -114,13 +114,10 @@ def display_room(room, game_state):
 
     if room.items:
         items = game_state.get("items_db", {})
-        artifacts = game_state.get("artifacts_db", {})
         item_strs = []
         for item_id in room.items:
             if item_id in items:
                 item_strs.append(item_name(items[item_id]["name"]))
-            elif item_id in artifacts:
-                item_strs.append(item_name(artifacts[item_id]["name"]))
             else:
                 item_strs.append(item_name(item_id.replace("_", " ").title()))
         print(f"  You see: {', '.join(item_strs)}")
