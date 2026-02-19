@@ -1925,8 +1925,20 @@ class Game:
             display.error("You can't scavenge while enemies are present!")
             return
 
-        total, shifts, dice_result = dice.skill_check(self.explorer.get_skill("Scavenge"), 1)
-        print(f"  Scavenge: {dice.roll_description(dice_result, self.explorer.get_skill('Scavenge'), 'Scavenge')}")
+        # Scaling difficulty: each scavenge in a room raises the DC by 1
+        scavenge_counts = self.state.setdefault("scavenge_counts", {})
+        times_searched = scavenge_counts.get(room.id, 0)
+        difficulty = 1 + times_searched
+
+        skill_val = self.explorer.get_skill("Scavenge")
+        total, shifts, dice_result = dice.skill_check(skill_val, difficulty)
+
+        label = "Scavenge"
+        if times_searched > 0:
+            display.info(f"  You've searched here {times_searched} time{'s' if times_searched != 1 else ''} before. (DC {difficulty})")
+        print(f"  Scavenge: {dice.roll_description(dice_result, skill_val, label)} vs DC {difficulty}")
+
+        scavenge_counts[room.id] = times_searched + 1
 
         if shifts >= 0:
             # Find something
@@ -1952,7 +1964,10 @@ class Game:
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_scavenge_done"] = True
         else:
-            display.narrate("  You search carefully but find nothing useful this time.")
+            if times_searched >= 3:
+                display.narrate("  You've picked this place pretty clean. Nothing left to find.")
+            else:
+                display.narrate("  You search carefully but find nothing useful this time.")
 
     def cmd_probe(self, args):
         if not args:
