@@ -695,34 +695,12 @@ class Game:
             if depleted:
                 print(f"    {display.DIM}{aspect} (depleted){display.RESET}")
             else:
-                hint = _aspect_hint_words(aspect)
-                print(f"    {display.aspect_text(aspect)}  {display.DIM}— SEEK {hint}{display.RESET}")
+                print(f"    {display.aspect_text(aspect)}")
+        print()
+        display.seed_speak("SEEK an aspect to follow it.")
         mote_cost = 1
         print(f"  {display.DIM}(Travel costs {mote_cost} mote. {self.seed_name} has {self.seed.motes}.){display.RESET}")
 
-    def _show_sensed_nodes(self, room):
-        """Have the seed announce what void nodes it senses from this room."""
-        crossings = self._get_void_crossings(room)
-        if not crossings:
-            return
-        # Deduplicate — multiple exits can lead to the same zone
-        seen_zones = set()
-        aspects = []
-        for direction, target in crossings.items():
-            if target.zone in seen_zones:
-                continue
-            seen_zones.add(target.zone)
-            aspect = self._get_zone_aspect_for_zone(target.zone)
-            if aspect:
-                aspects.append(aspect)
-            else:
-                aspects.append(target.zone.replace("_", " ").title())
-        print()
-        display.seed_speak("I sense nodes in the void...")
-        for aspect in aspects:
-            print(f"    {display.aspect_text(aspect)}")
-        print()
-        display.seed_speak("SEEK an aspect to follow it.")
 
     def _match_zone_by_aspect(self, keywords, room):
         """Match player keywords against zone aspects of reachable crossings.
@@ -907,7 +885,7 @@ class Game:
             return
 
         # Multiple crossings — show what the seed senses and prompt SEEK
-        self._show_sensed_nodes(room)
+        self._show_landing_pad_destinations(room)
 
 
     def cmd_go(self, args):
