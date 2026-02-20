@@ -1033,12 +1033,17 @@ class Game:
                 if room.structures:
                     parts.append(f"structures={', '.join(room.structures)}")
                 if room.role:
-                    # Count NPCs whose task matches this room's role
+                    # Who lives here
+                    settled_names = [n["name"] for n in self.npcs_db.values()
+                                     if n.get("recruited") and n.get("settled_room") == room.id]
+                    settled_str = ", ".join(settled_names) if settled_names else "none"
+                    # Who's working on this room's task (including ad-hoc helpers)
                     task_for_role = self._role_to_task(room.role)
                     worker_names = [n["name"] for n in self.npcs_db.values()
                                     if n.get("recruited") and n.get("assignment") == task_for_role]
                     worker_str = ", ".join(worker_names) if worker_names else "none"
-                    parts.append(f"role={room.role}, workers={worker_str} ({len(worker_names)})")
+                    beds = f"{len(settled_names)}/{room.max_workers}"
+                    parts.append(f"settled={settled_str} ({beds}), workers={worker_str}")
                 if not parts:
                     parts.append("—")
                 print(f"  {display.npc_name(room.name)}: {', '.join(parts)}")
@@ -1076,6 +1081,12 @@ class Game:
                 display.info(f"  Loyalty: {npc.get('loyalty', 0)}/10")
                 display.info(f"  Mood: {npc.get('mood', 'unknown')}")
                 display.info(f"  Assignment: {npc.get('assignment', 'idle')}")
+                settled_room_id = npc.get("settled_room")
+                if settled_room_id:
+                    sr = self.skerry.get_room(settled_room_id)
+                    display.info(f"  Settled in: {sr.name if sr else settled_room_id}")
+                else:
+                    display.info(f"  Settled in: nowhere (unsettled)")
                 house_level = npc.get("house_level", 0)
                 house_names = {0: "none", 1: "tent", 2: "proper house"}
                 display.info(f"  Housing: {house_names.get(house_level, 'unknown')}")
@@ -3277,10 +3288,13 @@ class Game:
 
     def _followers_rejoin_explorer(self):
         """Followers leave the skerry and rejoin the explorer.
-        NPCs with a work assignment stay on the skerry."""
+        Settled NPCs and NPCs with a work assignment stay on the skerry."""
         explorer_loc = self.state.get("explorer_location", "skerry_central")
         for npc_id, npc in self.npcs_db.items():
             if npc.get("recruited") and npc_id != "sevarik":
+                # Settled NPCs have a home — they stay
+                if npc.get("settled_room"):
+                    continue
                 # NPCs with a job stay working on the skerry
                 if npc.get("assignment", "idle") != "idle":
                     continue
@@ -3305,21 +3319,81 @@ class Game:
                 self._narrate_void_crossing(from_room, to_room)
             display.display_room(to_room, self.game_context())
 
+    def _count_settled_in_room(self, room_id):
+        """Count how many NPCs are settled (housed) in a room."""
+        return sum(1 for n in self.npcs_db.values()
+                   if n.get("recruited") and n.get("settled_room") == room_id)
+
     def cmd_settle(self, args):
-        """SETTLE <npc> — settle a following NPC on the skerry."""
+        """SETTLE <npc> — settle on skerry.  SETTLE <npc> IN <room> — house in a specific room."""
         if not args:
-            display.error("Settle who? SETTLE <name>.")
+            display.error("Settle who? SETTLE <name> or SETTLE <name> IN <room>.")
             return
-        target = " ".join(args).lower()
+
         room = self.current_room()
         if not room or room.zone != "skerry":
             display.error("You can only settle people on the skerry.")
             return
 
-        npc_id, npc = self._find_in_db(target, self.npcs_db)
+        # Parse: SETTLE <npc> IN <room>
+        words = [w.lower() for w in args]
+        if "in" in words:
+            in_idx = words.index("in")
+            npc_target = " ".join(words[:in_idx])
+            room_target = " ".join(words[in_idx + 1:])
+        else:
+            npc_target = " ".join(words)
+            room_target = None
+
+        npc_id, npc = self._find_in_db(npc_target, self.npcs_db)
         if not npc or not npc.get("recruited"):
-            display.error(f"No recruited companion named '{target}'.")
+            display.error(f"No recruited companion named '{npc_target}'.")
             return
+
+        # SETTLE <npc> IN <room> — housing assignment
+        if room_target:
+            # Fuzzy-match room name
+            target_room = None
+            for r in self.skerry.get_all_rooms():
+                if room_target in r.name.lower() or room_target == r.id:
+                    target_room = r
+                    break
+            if not target_room:
+                display.error(f"No skerry room matching '{room_target}'.")
+                return
+            if target_room.role is None:
+                display.error(f"{target_room.name} isn't a place anyone can live.")
+                return
+
+            # Check bed capacity
+            settled_count = self._count_settled_in_room(target_room.id)
+            if settled_count >= target_room.max_workers:
+                display.error(f"{target_room.name} is full — {settled_count}/{target_room.max_workers} beds taken.")
+                return
+
+            # Clear old housing if any
+            old_room_id = npc.get("settled_room")
+
+            # House them
+            npc["settled_room"] = target_room.id
+            npc["following"] = False
+            npc["location"] = target_room.id
+
+            # Auto-assign master task from room role
+            master_task = self._role_to_task(target_room.role)
+            npc["assignment"] = master_task
+
+            if old_room_id and old_room_id != target_room.id:
+                old_name = self.skerry.get_room(old_room_id)
+                old_label = old_name.name if old_name else old_room_id
+                display.success(f"{npc['name']} moves from {old_label} to {target_room.name}.")
+            else:
+                display.success(f"{npc['name']} settles into {target_room.name}.")
+            display.info(f"  Master task: {master_task}")
+            self.state["tutorial_settle_done"] = True
+            return
+
+        # SETTLE <npc> — original behavior, settle on skerry without room housing
         if not npc.get("following"):
             display.narrate(f"{npc['name']} is already settled here.")
             return
@@ -4835,6 +4909,7 @@ class Game:
                     display.warning(f"  {npc['name']} has left the colony — too hungry to stay.")
                     npc["recruited"] = False
                     npc["assignment"] = "idle"
+                    npc["settled_room"] = None
                     if nid in self.state.get("recruited_npcs", []):
                         self.state["recruited_npcs"].remove(nid)
                 self.steward.apply_damage(1)

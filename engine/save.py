@@ -142,6 +142,7 @@ def _migrate_state(state):
             npc["assignment"] = "idle"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
+        npc.setdefault("settled_room", None)
     # Ensure skerry rooms have role/barracks_spaces/tool_level fields
     _room_defaults = {
         "skerry_central": {"role": None},
