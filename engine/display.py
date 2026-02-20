@@ -254,16 +254,22 @@ def display_inventory(character, items_db, artifacts_db=None):
         counts[item_id] = counts.get(item_id, 0) + 1
 
     for item_id, count in counts.items():
-        if item_id in items_db:
+        if item_id in artifacts_db:
+            art = artifacts_db[item_id]
+            motes = art.get("mote_value", 0)
+            print(f"  {BRIGHT_WHITE}{BOLD}{art['name']}{RESET} {DIM}({motes} motes){RESET}")
+        elif item_id in items_db:
             name = items_db[item_id]["name"]
-        elif item_id in artifacts_db:
-            name = artifacts_db[item_id]["name"]
+            if count > 1:
+                print(f"  {item_name(name)} x{count}")
+            else:
+                print(f"  {item_name(name)}")
         else:
             name = item_id.replace("_", " ").title()
-        if count > 1:
-            print(f"  {item_name(name)} x{count}")
-        else:
-            print(f"  {item_name(name)}")
+            if count > 1:
+                print(f"  {item_name(name)} x{count}")
+            else:
+                print(f"  {item_name(name)}")
 
     worn = {s: i for s, i in character.worn.items() if i} if hasattr(character, 'worn') else {}
     if worn:

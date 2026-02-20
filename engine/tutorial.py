@@ -419,11 +419,11 @@ def _advance_to_artifact_or_stash(game):
     """After settling followers, prompt artifact resolution or skip to stash."""
     if _player_has_unresolved_artifact(game):
         seed_name = game.state.get("world_seed_name", "Tuft")
-        steward_name = game.state.get("steward_name", "Miria")
         print()
         display.seed_speak("You brought something back. Something with power.")
-        display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
-        display.seed_speak(f"or GIVE it TO {steward_name.upper()}.")
+        display.seed_speak(f"KEEP it for the stat bonus,")
+        display.seed_speak(f"OFFER it TO {seed_name.upper()} for motes,")
+        display.seed_speak(f"or DROP it here for storage.")
         game.state["tutorial_step"] = "explorer_artifact"
     else:
         _advance_to_stash(game)
@@ -688,7 +688,7 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_artifact":
         display.seed_speak(f"What will you do with the artifact?")
         display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
-        display.seed_speak(f"or GIVE it TO {steward_name.upper()}.")
+        display.seed_speak(f"or DROP it here for storage.")
     elif step == "explorer_stash":
         display.seed_speak("Drop your salvage at the junkyard.")
         _tutorial_prompt("GO WEST from the clearing, then DROP MATERIALS.")

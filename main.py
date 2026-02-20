@@ -1163,7 +1163,12 @@ class Game:
         if art:
             char.remove_from_inventory(art_id)
             room.add_item(art_id)
+            self.state.setdefault("artifacts_status", {})[art_id] = "stored"
             display.success(f"You set down the {art['name']}.")
+            if room.zone == "skerry":
+                display.narrate("It'll be safe here until you decide what to do with it.")
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_artifact_resolved"] = True
             return
 
         display.error(f"You don't have anything called '{target}'.")
