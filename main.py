@@ -2039,6 +2039,39 @@ class Game:
             display.info(f"  Mote value: {item.get('mote_value', 1)}")
             return
 
+        # Check inventory items
+        char = self.current_character()
+        inv_item_id, inv_item = self._find_entity(list(char.inventory), target, self.items_db)
+        if inv_item:
+            display.header(inv_item["name"])
+            display.narrate(self.sub(inv_item["description"]))
+            if inv_item.get("aspects"):
+                for a in inv_item["aspects"]:
+                    print(f"    {display.aspect_text(a)}")
+            if inv_item.get("type"):
+                display.info(f"  Type: {inv_item['type']}")
+            if inv_item.get("mote_value"):
+                display.info(f"  Mote value: {inv_item['mote_value']}")
+            if inv_item.get("stat_bonuses"):
+                bonuses = ", ".join(f"+{v} {k}" for k, v in inv_item["stat_bonuses"].items())
+                display.info(f"  Bonuses: {bonuses}")
+            return
+
+        # Check inventory artifacts
+        for art_id in char.inventory:
+            art = self.artifacts_db.get(art_id)
+            if art and (target in art.get("name", "").lower() or target == art_id):
+                display.header(art["name"])
+                display.narrate(self.sub(art["description"]))
+                if art.get("aspects"):
+                    for a in art["aspects"]:
+                        print(f"    {display.aspect_text(a)}")
+                if art.get("stat_bonuses"):
+                    bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
+                    display.info(f"  Keep bonuses: {bonuses}")
+                display.info(f"  Mote value: {art['mote_value']}")
+                return
+
         # Check NPCs in room
         npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
         if npc:
