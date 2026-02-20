@@ -2915,12 +2915,25 @@ class Game:
             print("  No recipes known yet.")
             return
 
+        # Count available materials (inventory + room)
+        char = self.current_character()
+        room = self.current_room()
+        available = self._inventory_counts(char)
+        if room:
+            for item_id in room.items:
+                available[item_id] = available.get(item_id, 0) + 1
+
         for rid in discovered:
             recipe = self.recipes_db.get(rid, {})
             mats = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
                            for k, v in recipe.get("materials", {}).items())
             result_name = self.items_db.get(recipe.get("result", ""), {}).get("name", recipe.get("result", "?"))
-            print(f"  {display.BOLD}{recipe.get('name', rid)}{display.RESET}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)})")
+            can_craft = all(available.get(mat, 0) >= needed
+                          for mat, needed in recipe.get("materials", {}).items())
+            if can_craft:
+                print(f"  {display.BRIGHT_WHITE}{display.BOLD}{recipe.get('name', rid)}{display.RESET}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)})")
+            else:
+                print(f"  {display.DIM}{recipe.get('name', rid)}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)}){display.RESET}")
 
     def cmd_build(self, args):
         if not args:
