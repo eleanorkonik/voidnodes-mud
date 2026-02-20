@@ -69,7 +69,7 @@ COMMANDS = {
     "exploit":   {"phases": ["explorer"], "args": "required"},
     "concede":   {"phases": ["explorer"], "args": "none"},
     "scavenge":  {"phases": ["explorer"], "args": "none"},
-    "probe":     {"phases": ["explorer", "prologue"], "args": "required"},
+    "probe":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "feed":      {"phases": ["explorer", "steward"], "args": "required"},
     "keep":      {"phases": ["explorer", "prologue"], "args": "required"},
     "recruit":   {"phases": ["explorer"], "args": "required"},

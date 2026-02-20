@@ -2343,7 +2343,7 @@ class Game:
             item_info = self.items_db.get(found, {})
             specimen_info = self.specimens_db.get(found)
             if specimen_info:
-                display.success(f"  Found: {specimen_info['name']}! (specimen — PROBE to examine)")
+                display.success(f"  Found: {specimen_info['name']}! (specimen)")
             else:
                 display.success(f"  Found: {item_info.get('name', found)}!")
 
@@ -2404,10 +2404,16 @@ class Game:
                 pass
 
         # Check specimens in room
+        phase = self.state["current_phase"]
         for item_id in room.items:
             spec = self.specimens_db.get(item_id)
             if spec and (target in spec["name"].lower() or target == item_id):
-                display.display_probe_specimen(spec)
+                if phase == "steward":
+                    display.display_probe_specimen(spec)
+                else:
+                    display.header(spec["name"])
+                    display.narrate(f"  {spec.get('description', '')}")
+                    display.info(f"  Type: {spec['specimen_type']} | Family: {spec['family']}")
                 return
 
         # Check specimens in inventory
@@ -2415,7 +2421,12 @@ class Game:
         for item_id in char.inventory:
             spec = self.specimens_db.get(item_id)
             if spec and (target in spec["name"].lower() or target == item_id):
-                display.display_probe_specimen(spec)
+                if phase == "steward":
+                    display.display_probe_specimen(spec)
+                else:
+                    display.header(spec["name"])
+                    display.narrate(f"  {spec.get('description', '')}")
+                    display.info(f"  Type: {spec['specimen_type']} | Family: {spec['family']}")
                 return
 
         # Check items in room
@@ -2870,7 +2881,7 @@ class Game:
             if spec and (target in spec["name"].lower() or target == rid):
                 room.remove_item(rid)
                 self.current_character().add_to_inventory(rid)
-                display.success(f"You pick up {spec['name']}. (specimen — PROBE to examine)")
+                display.success(f"You pick up {spec['name']}. (specimen)")
                 return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
