@@ -3305,6 +3305,10 @@ class Game:
                 label = "proper house"
 
             inv_counts = self._inventory_counts(self.steward)
+            room = self.current_room()
+            if room:
+                for item_id in room.items:
+                    inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
 
             missing = []
             for mat, count in needed.items():
@@ -3317,7 +3321,10 @@ class Game:
 
             for mat, count in needed.items():
                 for _ in range(count):
-                    self.steward.remove_from_inventory(mat)
+                    if room and mat in room.items:
+                        room.remove_item(mat)
+                    else:
+                        self.steward.remove_from_inventory(mat)
 
             self.skerry.build_npc_house(npc_id)
             npc["house_level"] = self.skerry.get_house_level(npc_id)
@@ -3331,6 +3338,10 @@ class Game:
         for tmpl in list(self.skerry.expandable):
             if target in tmpl["name"].lower():
                 inv_counts = self._inventory_counts(self.steward)
+                room = self.current_room()
+                if room:
+                    for item_id in room.items:
+                        inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
 
                 npc_count = len(self.state.get("recruited_npcs", []))
                 can, reason = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
@@ -3339,10 +3350,13 @@ class Game:
                     display.error(f"Can't build {tmpl['name']}: {reason}")
                     return
 
-                # Consume materials
+                # Consume materials — take from room first, then inventory
                 for mat, count in tmpl.get("requires", {}).get("materials", {}).items():
                     for _ in range(count):
-                        self.steward.remove_from_inventory(mat)
+                        if room and mat in room.items:
+                            room.remove_item(mat)
+                        else:
+                            self.steward.remove_from_inventory(mat)
 
                 room = self.skerry.build_room(tmpl)
                 self.rooms[room.id] = room
