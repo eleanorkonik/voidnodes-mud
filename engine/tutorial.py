@@ -617,7 +617,7 @@ def _explorer_free_hints(cmd, args, game):
     if combat_done and exploit_done and not scavenge_done:
         if cmd == "go":
             print()
-            display.seed_speak("SCAVENGE to search for materials.")
+            display.seed_speak("Don't move on yet — there are materials here.")
             _tutorial_prompt("SCAVENGE to search for materials.")
         return
 
