@@ -596,8 +596,8 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("on the skerry.")
         return
 
-    # Room has NPCs, recruit not done — prompt on any command
-    if not recruit_done and combat_done:
+    # Room has NPCs, recruit not done — prompt once
+    if not recruit_done and combat_done and not game.state.get("_recruit_prompted"):
         npc_ids = room.npcs if hasattr(room, 'npcs') else []
         if npc_ids:
             npc_name = None
@@ -607,6 +607,7 @@ def _explorer_free_hints(cmd, args, game):
                     npc_name = npc.get("name", npc_id)
                     break
             if npc_name:
+                game.state["_recruit_prompted"] = True
                 print()
                 display.seed_speak("Survivors! They could use a safe place.")
                 _tutorial_prompt(f"RECRUIT {npc_name.upper()} to bring them to the skerry.")
