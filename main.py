@@ -2081,6 +2081,19 @@ class Game:
                 display.info(f"  Mote value: {art['mote_value']}")
                 return
 
+        # Check enemies in room
+        enemy_id, enemy = self._find_entity(room.enemies, target, self.enemies_db)
+        if enemy:
+            display.header(enemy["name"])
+            display.narrate(self.sub(enemy.get("description", "A hostile creature.")))
+            if enemy.get("aspects"):
+                for a in enemy["aspects"]:
+                    print(f"    {display.aspect_text(a)}")
+            if enemy.get("skills"):
+                skills_str = ", ".join(f"{k} {v}" for k, v in enemy["skills"].items())
+                display.info(f"  Skills: {skills_str}")
+            return
+
         # Check NPCs in room
         npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
         if npc:
