@@ -134,50 +134,26 @@ def _migrate_state(state):
     skerry_state.setdefault("garden", {"plots": [], "max_plots": 4})
     skerry_state.setdefault("seed_vault", [])
     skerry_state.setdefault("dynamic_aspects", [])
-    # Rename old "scavenging" task to "salvage" + ensure recruit_attempts exists
-    # Migrate task-based assignments to room-based
-    _task_to_room = {
-        "salvage": "skerry_junkyard",
-        "gardening": "skerry_garden",
-        "guarding": "skerry_lookout",
-        "crafting": "skerry_workshop",
-        "building": None,  # no room equivalent, becomes idle
-        "scavenging": "skerry_junkyard",
-    }
-    _room_to_role = {
-        "skerry_junkyard": "salvage",
-        "skerry_garden": "garden",
-        "skerry_lookout": "guard",
-        "skerry_workshop": "craft",
-    }
+    # Rename old task names + ensure NPC fields exist
     for npc_id, npc in state.get("npcs", {}).items():
         if npc.get("assignment") == "scavenging":
             npc["assignment"] = "salvage"
+        if npc.get("assignment") == "building":
+            npc["assignment"] = "idle"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
-        # Migrate to room-based if no assigned_room yet
-        if "assigned_room" not in npc:
-            task = npc.get("assignment", "idle")
-            room_id = _task_to_room.get(task)
-            if room_id:
-                npc["assigned_room"] = room_id
-                npc["assignment"] = _room_to_role.get(room_id, "idle")
-            else:
-                npc["assigned_room"] = None
-                if task in ("building",):
-                    npc["assignment"] = "idle"
-    # Ensure skerry rooms have role/max_workers/barracks_spaces/tool_level fields
+    # Ensure skerry rooms have role/barracks_spaces/tool_level fields
     _room_defaults = {
-        "skerry_central": {"role": None, "max_workers": 0},
-        "skerry_shelter": {"role": "rest", "max_workers": 2, "barracks_spaces": 2},
-        "skerry_hollow": {"role": None, "max_workers": 0},
-        "skerry_junkyard": {"role": "salvage", "max_workers": 2},
-        "skerry_landing": {"role": None, "max_workers": 0},
-        "skerry_storehouse": {"role": "organize", "max_workers": 2},
-        "skerry_workshop": {"role": "craft", "max_workers": 2, "tool_level": 0},
-        "skerry_garden": {"role": "garden", "max_workers": 2},
-        "skerry_water": {"role": "gather", "max_workers": 2},
-        "skerry_lookout": {"role": "guard", "max_workers": 2},
+        "skerry_central": {"role": None},
+        "skerry_shelter": {"role": "rest", "barracks_spaces": 2},
+        "skerry_hollow": {"role": None},
+        "skerry_junkyard": {"role": "salvage"},
+        "skerry_landing": {"role": None},
+        "skerry_storehouse": {"role": "organize"},
+        "skerry_workshop": {"role": "craft", "tool_level": 0},
+        "skerry_garden": {"role": "garden"},
+        "skerry_water": {"role": "gather"},
+        "skerry_lookout": {"role": "guard"},
     }
     skerry_data = state.get("skerry", {})
     for room_data in skerry_data.get("rooms", []):
@@ -186,18 +162,8 @@ def _migrate_state(state):
         for key, val in defaults.items():
             room_data.setdefault(key, val)
         room_data.setdefault("role", None)
-        room_data.setdefault("max_workers", 0)
         room_data.setdefault("barracks_spaces", 0)
         room_data.setdefault("tool_level", 0)
-        # Rebuild assigned_npcs from NPC data
-        room_data.setdefault("assigned_npcs", [])
-    # Populate room assigned_npcs from NPC assigned_room fields
-    for npc_id, npc in state.get("npcs", {}).items():
-        ar = npc.get("assigned_room")
-        if ar:
-            for room_data in skerry_data.get("rooms", []):
-                if room_data["id"] == ar and npc_id not in room_data.get("assigned_npcs", []):
-                    room_data["assigned_npcs"].append(npc_id)
     for tmpl in skerry_data.get("expandable_rooms", []):
         rid = tmpl.get("id", "")
         defaults = _room_defaults.get(rid, {})
