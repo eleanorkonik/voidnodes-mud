@@ -56,6 +56,8 @@ class Game:
         self.compel_triggered = False  # at most one compel per combat
         self.in_recruit = False
         self.recruit_state = None
+        self.pending_invoke_bonus = 0  # floating +2 from invoke, consumed by next roll
+        self.pending_invoke_aspect = None
 
     @property
     def seed_name(self):
@@ -634,6 +636,15 @@ class Game:
             "taken_at": self.state.get("zones_cleared", 0),
             "cure": aspects.get_cure_for_consequence(consequence_text),
         }
+
+    def _consume_invoke_bonus(self):
+        """Consume any pending invoke bonus. Returns the bonus value (0 if none)."""
+        bonus = self.pending_invoke_bonus
+        if bonus > 0:
+            display.info(f"  (Invoking {display.aspect_text(self.pending_invoke_aspect)} — +{bonus})")
+            self.pending_invoke_bonus = 0
+            self.pending_invoke_aspect = None
+        return bonus
 
     def _show_landing_pad_destinations(self, room):
         """Show available void destinations from the landing pad."""
@@ -1747,8 +1758,8 @@ class Game:
         if not enemy_data:
             return
 
-        # Calculate bonus from free invocations and boost
-        bonus = 0
+        # Calculate bonus from pending invoke, free invocations, and boost
+        bonus = self._consume_invoke_bonus()
         used_aspect = None
         if self.free_invocations:
             # Auto-consume one free invocation
@@ -1888,10 +1899,60 @@ class Game:
 
     def cmd_invoke(self, args):
         """INVOKE [aspect] [ATTACK|DEFEND|SETUP] — Spend a fate point to invoke an aspect."""
-        if not self.in_combat:
-            display.error("You can only invoke aspects during combat or recruitment.")
+        # In combat — full combat invoke with effects
+        if self.in_combat:
+            self._combat_invoke(args)
             return
 
+        # Outside combat/recruitment — floating invoke for next skill check
+        self._general_invoke(args)
+
+    def _general_invoke(self, args):
+        """Invoke an aspect outside combat/recruitment. Stores a floating +2 for the next roll."""
+        char = self.current_character()
+        all_aspects = aspects.collect_invokable_aspects(self, context="combat")
+
+        if not args:
+            # Show available aspects
+            print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP — you have {char.fate_points})")
+            print()
+            print("  Available:")
+            for a, source in all_aspects:
+                print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            print()
+            display.info("  INVOKE <aspect> to gain +2 on your next skill check.")
+            if self.pending_invoke_bonus > 0:
+                display.info(f"  (Already invoking: {display.aspect_text(self.pending_invoke_aspect)})")
+            return
+
+        raw = " ".join(args)
+        found = None
+        for a, source in all_aspects:
+            if raw.lower() in a.lower():
+                found = a
+                break
+
+        if not found:
+            display.error(f"No matching aspect for '{raw}'.")
+            display.info("Available aspects:")
+            for a, source in all_aspects:
+                print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            return
+
+        if not char.spend_fate_point():
+            display.error("No fate points to spend!")
+            return
+
+        self.pending_invoke_bonus = 2
+        self.pending_invoke_aspect = found
+        if not self.state.get("tutorial_complete"):
+            self.state["tutorial_invoke_done"] = True
+
+        display.success(f"You invoke {display.aspect_text(found)} — +2 on your next action.")
+        display.info(f"  (Fate Points remaining: {char.fate_points})")
+
+    def _combat_invoke(self, args):
+        """Handle INVOKE during combat — choose-your-effect system."""
         char = self.current_character()
         all_aspects = aspects.collect_invokable_aspects(self, context="combat")
 
@@ -2104,10 +2165,11 @@ class Game:
         times_searched = scavenge_counts.get(room.id, 0)
         difficulty = 1 + times_searched
 
-        skill_val = self.explorer.get_skill("Scavenge")
+        invoke_bonus = self._consume_invoke_bonus()
+        skill_val = self.explorer.get_skill("Scavenge") + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, difficulty)
 
-        label = "Scavenge"
+        label = f"Scavenge+{invoke_bonus}" if invoke_bonus else "Scavenge"
         if times_searched > 0:
             display.info(f"  You've searched here {times_searched} time{'s' if times_searched != 1 else ''} before. (DC {difficulty})")
         print(f"  Scavenge: {dice.roll_description(dice_result, skill_val, label)} vs DC {difficulty}")
@@ -2512,11 +2574,14 @@ class Game:
 
         # Roll Lore check
         print()
+        invoke_bonus = self._consume_invoke_bonus()
+        effective_lore = treater_lore + invoke_bonus
+        label = f"Lore+{invoke_bonus}" if invoke_bonus else "Lore"
         display.narrate(f"{treater_name} prepares the {cure_name} and gets to work...")
         atk_dice = dice.roll_4df()
-        total = sum(atk_dice) + treater_lore
+        total = sum(atk_dice) + effective_lore
 
-        print(f"  {treater_name}: {dice.roll_description(atk_dice, treater_lore, 'Lore')}")
+        print(f"  {treater_name}: {dice.roll_description(atk_dice, effective_lore, label)}")
         print(f"  Difficulty: {difficulty} ({['Mediocre', 'Average', 'Fair', 'Good', 'Great'][difficulty]})")
 
         shifts = total - difficulty
@@ -2654,8 +2719,11 @@ class Game:
             display.info(f"  Spent 1 fate point to retry. (Fate Points remaining: {self.explorer.fate_points})")
 
         # FATE roll — sets puzzle difficulty
-        total, shifts, dice_result = dice.skill_check(self.explorer.get_skill("Rapport"), dc)
-        print(f"  Rapport check: {dice.roll_description(dice_result, self.explorer.get_skill('Rapport'), 'Rapport')}")
+        invoke_bonus = self._consume_invoke_bonus()
+        rapport_val = self.explorer.get_skill("Rapport") + invoke_bonus
+        rapport_label = f"Rapport+{invoke_bonus}" if invoke_bonus else "Rapport"
+        total, shifts, dice_result = dice.skill_check(rapport_val, dc)
+        print(f"  Rapport check: {dice.roll_description(dice_result, rapport_val, rapport_label)}")
         print(f"  DC: +{dc}")
         print(f"  Shifts: {shifts:+d}")
 
@@ -3147,8 +3215,11 @@ class Game:
         # Skill check
         skill_name = recipe.get("skill", "Craft")
         dc = recipe["difficulty"]
-        total, shifts, dice_result = dice.skill_check(char.get_skill(skill_name), dc)
-        print(f"  {skill_name}: {dice.roll_description(dice_result, char.get_skill(skill_name), skill_name)}")
+        invoke_bonus = self._consume_invoke_bonus()
+        skill_val = char.get_skill(skill_name) + invoke_bonus
+        label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
+        total, shifts, dice_result = dice.skill_check(skill_val, dc)
+        print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)}")
         print(f"  DC: {dc:+d}")
 
         if shifts >= 0:
@@ -3772,7 +3843,8 @@ class Game:
 
             # Aggressive enemy — initiative roll: enemy Notice vs player Notice
             enemy_notice = enemy_data["skills"].get("Notice", 0)
-            player_notice = self.explorer.get_skill("Notice")
+            invoke_bonus = self._consume_invoke_bonus()
+            player_notice = self.explorer.get_skill("Notice") + invoke_bonus
             atk_total, def_total, shifts, _, _ = dice.opposed_roll(enemy_notice, player_notice)
 
             if shifts >= 0:

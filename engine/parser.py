@@ -57,7 +57,7 @@ COMMANDS = {
     # Explorer commands
     "attack":    {"phases": ["explorer"], "args": "required"},
     "defend":    {"phases": ["explorer"], "args": "none"},
-    "invoke":    {"phases": ["explorer"], "args": "required"},
+    "invoke":    {"phases": ["explorer", "steward"], "args": "optional"},
     "exploit":   {"phases": ["explorer"], "args": "required"},
     "concede":   {"phases": ["explorer"], "args": "none"},
     "scavenge":  {"phases": ["explorer"], "args": "none"},
