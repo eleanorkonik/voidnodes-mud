@@ -615,21 +615,30 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("on the skerry.")
         return
 
-    # Room has NPCs, recruit not done — prompt once
-    if not recruit_done and combat_done and not game.state.get("_recruit_prompted"):
+    # Room has NPCs, recruit not done — prompt per NPC
+    if not recruit_done:
         npc_ids = room.npcs if hasattr(room, 'npcs') else []
-        if npc_ids:
-            npc_name = None
-            for npc_id in npc_ids:
-                npc = game.npcs_db.get(npc_id)
-                if npc and not npc.get("recruited"):
-                    npc_name = npc.get("name", npc_id)
-                    break
-            if npc_name:
+        prompted_npcs = game.state.get("_recruit_prompted_npcs", [])
+        for npc_id in npc_ids:
+            if npc_id in prompted_npcs:
+                continue
+            npc = game.npcs_db.get(npc_id)
+            if npc and not npc.get("recruited"):
+                npc_name = npc.get("name", npc_id)
+                if "_recruit_prompted_npcs" not in game.state:
+                    game.state["_recruit_prompted_npcs"] = []
+                game.state["_recruit_prompted_npcs"].append(npc_id)
+                # Also set legacy flag for backwards compat
                 game.state["_recruit_prompted"] = True
                 print()
                 display.seed_speak("Survivors! They could use a safe place.")
                 _tutorial_prompt(f"RECRUIT {npc_name.upper()} to bring them to the skerry.")
+                # Teach INVOKE alongside recruit if not yet learned
+                if not invoke_done:
+                    print()
+                    display.seed_speak("Recruiting is a skill check. If you need an edge,")
+                    display.seed_speak("INVOKE spends a fate point for +2 on any roll.")
+                    game.state["tutorial_invoke_done"] = True  # explained = learned
                 return
 
     # Just recruited
