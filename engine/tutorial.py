@@ -517,6 +517,7 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("EXPLOIT is free but takes a turn to set up.")
             display.seed_speak("There's another option: INVOKE spends a fate point")
             display.seed_speak("to get +2 right now, no setup required.")
+            display.seed_speak("Type INVOKE with no arguments to see all the ways you can use it.")
         elif not game.state.get("_free_invoke_celebrated") and game.in_combat:
             # Enemy survived — show the payoff, mention INVOKE
             game.state["_free_invoke_celebrated"] = True
@@ -525,6 +526,7 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("See? That free invocation hit hard.")
             display.seed_speak("There's a faster option too — INVOKE spends a fate")
             display.seed_speak("point to get +2 immediately, no setup turn needed.")
+            display.seed_speak("Type INVOKE with no arguments to see all the ways you can use it.")
         return
 
     # Just invoked successfully

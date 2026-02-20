@@ -2423,6 +2423,17 @@ class Game:
         flavor = recruit.get_npc_flavor(state, state["score"] / threshold)
         if flavor:
             display.narrate(f"  {flavor}")
+
+        # Tutorial hint: INVOKE works in recruitment too
+        if not self.state.get("tutorial_complete") and not self.state.get("_recruit_invoke_hint"):
+            self.state["_recruit_invoke_hint"] = True
+            print()
+            display.seed_speak("Your aspects have power here too.")
+            display.seed_speak("INVOKE <aspect> to tip the conversation — PUSH lowers")
+            display.seed_speak("the threshold, COUNTER resets a fading topic, RESTORE")
+            display.seed_speak("reopens closed lines of argument.")
+            display.seed_speak("Type INVOKE with no arguments to see your options.")
+
         print()
 
     def _handle_recruit_input(self, raw):
