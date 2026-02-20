@@ -107,15 +107,24 @@
         {
             "id": "skerry_garden",
             "name": "Garden",
-            "description": "A patch of cultivated ground where seeds from the coral thicket have taken hold. Small green shoots push up through the soil, nourished by the world seed's ambient energy.",
+            "description": "A patch of cultivated ground tilled from the skerry's thin soil, enriched by the world seed's ambient energy. Four plots of worked earth await planting, each marked with a simple stone border.",
             "zone": "skerry",
             "exits": {"south": "skerry_central"},
             "connect_to": {"skerry_central": "north"},
             "aspects": ["Life Finds a Way (With Help)", "The Soil Wants What the Seed Wants"],
-            "requires": {"materials": {"seeds": 2, "resin": 1}, "npcs": 1, "seed_stage": 1},
+            "requires": {"materials": {"basic_tools": 1}, "npcs": 1, "seed_stage": 1, "any_specimen": 1},
             "structures": ["garden"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "garden": {
+                "plots": [
+                    {"id": 1, "plant": null, "soil": {"n": 10, "p": 10, "k": 10}},
+                    {"id": 2, "plant": null, "soil": {"n": 10, "p": 10, "k": 10}},
+                    {"id": 3, "plant": null, "soil": {"n": 10, "p": 10, "k": 10}},
+                    {"id": 4, "plant": null, "soil": {"n": 10, "p": 10, "k": 10}}
+                ],
+                "max_plots": 4
+            }
         },
         {
             "id": "skerry_water",

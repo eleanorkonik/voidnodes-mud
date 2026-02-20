@@ -8,7 +8,7 @@ import sys
 import json
 import random
 
-from engine import parser, display, save, dice, tutorial, map_renderer, recruit, aspects
+from engine import parser, display, save, dice, tutorial, map_renderer, recruit, aspects, farming
 from models.character import Character, BODY_SLOTS
 from models.room import Room
 from models.world_seed import WorldSeed
@@ -145,6 +145,7 @@ class Game:
         self.events_db = self.state.get("events", {})
         self.npcs_db = self.state.get("npcs", {})
         self.agents_db = self.state.get("agents", {})
+        self.specimens_db = farming.load_specimens()
 
         # Build rooms dict
         self.rooms = {}
@@ -339,6 +340,10 @@ class Game:
 
     def handle_command(self, cmd, args):
         """Route a parsed command to its handler."""
+        # Handle hyphenated commands that can't be method names
+        if cmd == "cross-pollinate":
+            self._handle_cross_pollinate(args)
+            return
         handler = getattr(self, f"cmd_{cmd}", None)
         if handler:
             handler(args)
@@ -450,6 +455,15 @@ class Game:
                     print(f"  Aspects: {aspects}")
                 return
 
+        # Look at specimen in room
+        for item_id in room.items:
+            spec = self.specimens_db.get(item_id)
+            if spec and (target in spec["name"].lower() or target == item_id):
+                display.header(spec["name"])
+                display.narrate(f"  {spec.get('description', '')}")
+                display.info(f"  Type: {spec['specimen_type']} | Family: {spec['family']}")
+                return
+
         # Look at item in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
         if item:
@@ -464,8 +478,17 @@ class Game:
                 display.narrate(f"  {feature['description']}")
                 return
 
-        # Look at artifact in inventory
+        # Look at specimen in inventory
         char = self.current_character()
+        for item_id in char.inventory:
+            spec = self.specimens_db.get(item_id)
+            if spec and (target in spec["name"].lower() or target == item_id):
+                display.header(spec["name"])
+                display.narrate(f"  {spec.get('description', '')}")
+                display.info(f"  Type: {spec['specimen_type']} | Family: {spec['family']}")
+                return
+
+        # Look at artifact in inventory
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
         if art:
             display.header(art["name"])
@@ -536,11 +559,14 @@ class Game:
         # No args — show focused list of interactable things (no room desc, no exits)
         has_contents = False
 
-        # Items
+        # Items (including specimens)
         if room.items:
             for item_id in room.items:
                 if item_id in self.items_db:
                     print(f"  {display.item_name(self.items_db[item_id]['name'])}")
+                elif item_id in self.specimens_db:
+                    spec = self.specimens_db[item_id]
+                    print(f"  {display.BRIGHT_GREEN}{spec['name']}{display.RESET} {display.DIM}(specimen){display.RESET}")
                 else:
                     print(f"  {display.item_name(item_id.replace('_', ' ').title())}")
                 has_contents = True
@@ -955,7 +981,7 @@ class Game:
             display.seed_speak(self.seed.communicate(self.seed_name))
 
     def cmd_inventory(self, args):
-        display.display_inventory(self.current_character(), self.items_db, self.artifacts_db)
+        display.display_inventory(self.current_character(), self.items_db, self.artifacts_db, self.specimens_db)
 
     def cmd_status(self, args):
         char = self.current_character()
@@ -965,10 +991,25 @@ class Game:
 
     def cmd_check(self, args):
         if not args:
-            display.error(f"Check what? Try CHECK SEED, CHECK <npc name>, or CHECK SKERRY.")
+            display.error(f"Check what? Try CHECK SEED, CHECK <npc name>, CHECK SKERRY, or CHECK STORES.")
             return
 
         target = " ".join(args).lower()
+
+        if target == "stores":
+            if not self.skerry.has_structure("storehouse"):
+                display.error("No storehouse built yet. Build one to track food stores.")
+                return
+            population = 2 + len(self.state.get("recruited_npcs", []))
+            display.display_food_stores(self.skerry.food_stores, population, self.state["day"])
+            return
+
+        if target == "vault":
+            if not self.skerry.has_structure("storehouse"):
+                display.error("No storehouse built yet. Build one to access the seed vault.")
+                return
+            display.display_seed_vault(self.skerry.seed_vault)
+            return
 
         if target in ("seed", "tuft", self.seed_name.lower()):
             display.header(f"{self.seed_name} — The World Seed")
@@ -2222,14 +2263,23 @@ class Game:
 
             found = random.choice(possible_loot)
             self.explorer.add_to_inventory(found)
+            # Look up name from items_db OR specimens_db
             item_info = self.items_db.get(found, {})
-            display.success(f"  Found: {item_info.get('name', found)}!")
+            specimen_info = self.specimens_db.get(found)
+            if specimen_info:
+                display.success(f"  Found: {specimen_info['name']}! (specimen — PROBE to examine)")
+            else:
+                display.success(f"  Found: {item_info.get('name', found)}!")
 
             if shifts >= 3:  # Succeed with style
                 bonus = random.choice(possible_loot)
                 self.explorer.add_to_inventory(bonus)
                 bonus_info = self.items_db.get(bonus, {})
-                display.success(f"  Excellent work! Also found: {bonus_info.get('name', bonus)}!")
+                bonus_spec = self.specimens_db.get(bonus)
+                if bonus_spec:
+                    display.success(f"  Excellent work! Also found: {bonus_spec['name']}! (specimen)")
+                else:
+                    display.success(f"  Excellent work! Also found: {bonus_info.get('name', bonus)}!")
 
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_scavenge_done"] = True
@@ -2262,6 +2312,36 @@ class Game:
                     display.narrate(self.sub(art["description"]))
                 return
 
+        # Check garden plots (PROBE PLOT 1, PROBE PLOT 2, etc.)
+        if target.startswith("plot"):
+            plot_num = target.replace("plot", "").strip()
+            try:
+                plot_id = int(plot_num)
+                plot = self.skerry.get_plot(plot_id)
+                if plot and plot.get("plant"):
+                    display.display_probe_plant(plot["plant"], plot_id)
+                    return
+                elif plot:
+                    display.info(f"  Plot {plot_id} is empty.")
+                    return
+            except (ValueError, TypeError):
+                pass
+
+        # Check specimens in room
+        for item_id in room.items:
+            spec = self.specimens_db.get(item_id)
+            if spec and (target in spec["name"].lower() or target == item_id):
+                display.display_probe_specimen(spec)
+                return
+
+        # Check specimens in inventory
+        char = self.current_character()
+        for item_id in char.inventory:
+            spec = self.specimens_db.get(item_id)
+            if spec and (target in spec["name"].lower() or target == item_id):
+                display.display_probe_specimen(spec)
+                return
+
         # Check items in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
         if item:
@@ -2271,7 +2351,6 @@ class Game:
             return
 
         # Check inventory items
-        char = self.current_character()
         inv_item_id, inv_item = self._find_entity(list(char.inventory), target, self.items_db)
         if inv_item:
             display.header(inv_item["name"])
@@ -2663,14 +2742,16 @@ class Game:
         target = " ".join(args).lower()
         room = self.current_room()
 
-        # GET ALL / TAKE ALL — grab all loose items (not artifacts)
+        # GET ALL / TAKE ALL — grab all loose items and specimens (not artifacts/fixtures)
         if target == "all":
             if not room.items:
                 display.narrate("There's nothing here to pick up.")
                 return
             picked = []
             for item_id in list(room.items):
-                if item_id in self.items_db and self.items_db[item_id].get("type") != "fixture":
+                is_fixture = self.items_db.get(item_id, {}).get("type") == "fixture"
+                is_takeable = item_id in self.items_db or item_id in self.specimens_db
+                if is_takeable and not is_fixture:
                     room.remove_item(item_id)
                     self.current_character().add_to_inventory(item_id)
                     picked.append(item_id)
@@ -2679,7 +2760,8 @@ class Game:
                 return
             counts = {}
             for mid in picked:
-                name = self.items_db.get(mid, {}).get("name", mid)
+                spec = self.specimens_db.get(mid)
+                name = spec["name"] if spec else self.items_db.get(mid, {}).get("name", mid)
                 counts[name] = counts.get(name, 0) + 1
             for name, count in counts.items():
                 if count > 1:
@@ -2704,6 +2786,15 @@ class Game:
                     quest = self.state.get("quests", {}).get("verdant_bloom", {})
                     if quest.get("status") == "active":
                         quest["status"] = "complete"
+                return
+
+        # Check for specimen items in room
+        for rid in list(room.items):
+            spec = self.specimens_db.get(rid)
+            if spec and (target in spec["name"].lower() or target == rid):
+                room.remove_item(rid)
+                self.current_character().add_to_inventory(rid)
+                display.success(f"You pick up {spec['name']}. (specimen — PROBE to examine)")
                 return
 
         item_id, item = self._find_entity(list(room.items), target, self.items_db)
@@ -3232,7 +3323,7 @@ class Game:
             display.error(f"You haven't learned the {recipe['name']} recipe yet.")
             return
 
-        # Check materials — inventory + room items
+        # Check materials — inventory + room items + food stores (for food recipes)
         char = self.current_character()
         room = self.current_room()
         inv_counts = self._inventory_counts(char)
@@ -3240,11 +3331,16 @@ class Game:
         if room:
             for item_id in room.items:
                 inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+        # Food recipes can source from food stores
+        is_food_recipe = recipe.get("from_stores") or recipe.get("recipe_type") == "food"
+        if is_food_recipe:
+            for entry in self.skerry.food_stores:
+                inv_counts[entry["item_id"]] = inv_counts.get(entry["item_id"], 0) + entry["quantity"]
 
         missing = []
         for mat, needed in recipe["materials"].items():
             if inv_counts.get(mat, 0) < needed:
-                mat_name = self.items_db.get(mat, {}).get("name", mat)
+                mat_name = self.items_db.get(mat, {}).get("name", mat.replace("_", " ").title())
                 missing.append(f"{needed}x {mat_name} (have {inv_counts.get(mat, 0)})")
 
         if missing:
@@ -3262,13 +3358,23 @@ class Game:
         print(f"  DC: {dc:+d}")
 
         if shifts >= 0:
-            # Consume materials — take from room first, then inventory
+            # Consume materials — take from food stores first (food recipes), then room, then inventory
             for mat, needed in recipe["materials"].items():
                 for _ in range(needed):
-                    if room and mat in room.items:
-                        room.remove_item(mat)
-                    else:
-                        char.remove_from_inventory(mat)
+                    consumed_from_stores = False
+                    if is_food_recipe:
+                        for entry in self.skerry.food_stores:
+                            if entry["item_id"] == mat and entry["quantity"] > 0:
+                                entry["quantity"] -= 1
+                                consumed_from_stores = True
+                                break
+                        # Clean up empty store entries
+                        self.skerry.food_stores[:] = [e for e in self.skerry.food_stores if e["quantity"] > 0]
+                    if not consumed_from_stores:
+                        if room and mat in room.items:
+                            room.remove_item(mat)
+                        else:
+                            char.remove_from_inventory(mat)
 
             # Create result
             result_id = recipe["result"]
@@ -3397,6 +3503,14 @@ class Game:
                         else:
                             self.steward.remove_from_inventory(mat)
 
+                # Consume specimen if required (garden)
+                spec_needed = tmpl.get("requires", {}).get("any_specimen", 0)
+                for _ in range(spec_needed):
+                    for item_id in list(self.steward.inventory):
+                        if farming.is_specimen(item_id):
+                            self.steward.remove_from_inventory(item_id)
+                            break
+
                 room = self.skerry.build_room(tmpl)
                 self.rooms[room.id] = room
 
@@ -3455,6 +3569,385 @@ class Game:
 
     def cmd_trade(self, args):
         display.narrate("Trading isn't fully set up yet — NPCs share resources with the community for now.")
+
+    # ── Farming Commands ──────────────────────────────────────────
+
+    def cmd_store(self, args):
+        """Move food from inventory to food stores."""
+        if not self.skerry.has_structure("storehouse"):
+            display.error("No storehouse built. Build one to store food.")
+            return
+        if not args:
+            display.error("Store what? STORE <food item>")
+            return
+
+        target = " ".join(args).lower()
+        char = self.current_character()
+
+        # Check for preserved_food in inventory
+        for item_id in char.inventory:
+            item = self.items_db.get(item_id, {})
+            spec = self.specimens_db.get(item_id)
+            if item.get("calories") and (target in item.get("name", "").lower() or target == item_id):
+                char.remove_from_inventory(item_id)
+                food_data = {
+                    "id": item_id,
+                    "name": item.get("name", item_id),
+                    "calories": item.get("calories", 40),
+                    "shelf_life": item.get("shelf_life", -1),
+                    "pleasure": item.get("pleasure", 3),
+                    "variety_category": item.get("variety_category", "preserved"),
+                }
+                farming.add_to_stores(self.skerry.food_stores, food_data, self.state["day"])
+                display.success(f"Stored {item['name']} in food stores.")
+                return
+
+        display.error(f"No storable food item '{target}' in your inventory.")
+
+    def cmd_plant(self, args):
+        """Manually plant a specimen in a garden plot."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built. Build one first.")
+            return
+        if not args:
+            display.error("Plant what? PLANT <specimen> [plot number]")
+            return
+
+        # Parse: PLANT <specimen> [plot_number]
+        plot_id = None
+        specimen_target = " ".join(args).lower()
+
+        # Check if last arg is a number (plot ID)
+        if len(args) > 1 and args[-1].isdigit():
+            plot_id = int(args[-1])
+            specimen_target = " ".join(args[:-1]).lower()
+
+        # Find specimen in inventory
+        char = self.current_character()
+        found_id = None
+        for item_id in char.inventory:
+            spec = self.specimens_db.get(item_id)
+            if spec and (specimen_target in spec["name"].lower() or specimen_target == item_id):
+                found_id = item_id
+                break
+
+        if not found_id:
+            display.error(f"No specimen '{specimen_target}' in your inventory.")
+            return
+
+        plots = self.skerry.get_garden_plots()
+        if not plots:
+            display.error("No garden plots available.")
+            return
+
+        # Find target plot (specified or first empty)
+        target_plot = None
+        if plot_id:
+            target_plot = self.skerry.get_plot(plot_id)
+            if not target_plot:
+                display.error(f"No plot {plot_id}.")
+                return
+            if target_plot.get("plant"):
+                display.error(f"Plot {plot_id} is already occupied. UPROOT it first.")
+                return
+        else:
+            for p in plots:
+                if p.get("plant") is None:
+                    target_plot = p
+                    break
+            if not target_plot:
+                display.error("All plots are occupied. UPROOT one first.")
+                return
+
+        if farming.plant_specimen(target_plot, found_id, self.state["day"]):
+            char.remove_from_inventory(found_id)
+            spec = self.specimens_db.get(found_id, {})
+            display.success(f"Planted {spec.get('name', found_id)} in plot {target_plot['id']}.")
+        else:
+            display.error("Couldn't plant that specimen.")
+
+    def cmd_harvest(self, args):
+        """Manually harvest a ready garden plot."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built.")
+            return
+
+        plots = self.skerry.get_garden_plots()
+
+        # If no args, harvest all ready plots
+        if not args:
+            harvested_any = False
+            for plot in plots:
+                if farming.is_harvestable(plot):
+                    result = farming.harvest_plot(plot, self.state["day"])
+                    if result:
+                        food, utility = result
+                        farming.add_to_stores(self.skerry.food_stores, food, self.state["day"])
+                        display.success(f"  Plot {plot['id']}: Harvested {food['name']} x{food.get('quantity', 1)}")
+                        if utility:
+                            for _ in range(utility.get("quantity", 1)):
+                                self.steward.add_to_inventory(utility["id"])
+                            display.success(f"  Byproduct: {utility['name']} x{utility.get('quantity', 1)}")
+                        harvested_any = True
+            if not harvested_any:
+                display.narrate("Nothing ready to harvest.")
+            return
+
+        # Harvest specific plot
+        plot_num = " ".join(args).strip()
+        try:
+            plot_id = int(plot_num)
+        except ValueError:
+            display.error("HARVEST [plot number] — specify which plot, or just HARVEST for all.")
+            return
+
+        plot = self.skerry.get_plot(plot_id)
+        if not plot:
+            display.error(f"No plot {plot_id}.")
+            return
+        if not farming.is_harvestable(plot):
+            if plot.get("plant"):
+                plant = plot["plant"]
+                display.narrate(f"Plot {plot_id}: {plant['name']} — {plant['growth']}/{plant['growth_needed']} growth. Not ready.")
+            else:
+                display.narrate(f"Plot {plot_id} is empty.")
+            return
+
+        result = farming.harvest_plot(plot, self.state["day"])
+        if result:
+            food, utility = result
+            farming.add_to_stores(self.skerry.food_stores, food, self.state["day"])
+            display.success(f"Harvested {food['name']} x{food.get('quantity', 1)} → food stores")
+            if utility:
+                for _ in range(utility.get("quantity", 1)):
+                    self.steward.add_to_inventory(utility["id"])
+                display.success(f"Byproduct: {utility['name']} x{utility.get('quantity', 1)}")
+
+    def cmd_survey(self, args):
+        """Survey all garden plots."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built. Build one first.")
+            return
+        plots = self.skerry.get_garden_plots()
+        display.display_plot_survey(plots, self.state["day"])
+
+    def cmd_uproot(self, args):
+        """Remove a plant from a garden plot."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built.")
+            return
+        if not args:
+            display.error("Uproot what? UPROOT <plot number>")
+            return
+        try:
+            plot_id = int(args[0])
+        except ValueError:
+            display.error("UPROOT <plot number>")
+            return
+
+        plot = self.skerry.get_plot(plot_id)
+        if not plot:
+            display.error(f"No plot {plot_id}.")
+            return
+        if not plot.get("plant"):
+            display.narrate(f"Plot {plot_id} is already empty.")
+            return
+
+        plant_name = plot["plant"].get("name", "the plant")
+        plot["plant"] = None
+        display.narrate(f"Uprooted {plant_name} from plot {plot_id}.")
+
+    def cmd_select(self, args):
+        """Selective breeding: shift a trait on a planted specimen."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built.")
+            return
+        if len(args) < 3:
+            display.error("SELECT <plot> FOR <trait>  (e.g., SELECT 1 FOR yield)")
+            return
+
+        # Parse: SELECT <plot_num> FOR <trait>
+        try:
+            plot_id = int(args[0])
+        except ValueError:
+            display.error("SELECT <plot number> FOR <trait>")
+            return
+
+        # Skip "for" keyword if present
+        trait_args = args[1:]
+        if trait_args and trait_args[0] == "for":
+            trait_args = trait_args[1:]
+        if not trait_args:
+            display.error("SELECT <plot> FOR <trait>")
+            return
+        trait_name = trait_args[0].lower()
+
+        plot = self.skerry.get_plot(plot_id)
+        if not plot or not plot.get("plant"):
+            display.error(f"Nothing planted in plot {plot_id}.")
+            return
+
+        plant = plot["plant"]
+        allowed = farming.get_allowed_breeding(plant["specimen_type"])
+        if "select" not in allowed:
+            display.error(f"{plant['name']} ({plant['specimen_type']}) doesn't support SELECT.")
+            return
+
+        if farming.select_for_trait(plant, trait_name):
+            pair = farming.get_trait_pair(trait_name)
+            new_val = plant["traits"][pair[0]]
+            opp_val = plant["traits"][pair[1]]
+            display.success(f"Selected {plant['name']} for {trait_name}.")
+            display.info(f"  {pair[0]}: {new_val}  |  {pair[1]}: {opp_val}")
+            display.info("  Effect applies at next harvest.")
+        else:
+            display.error(f"Unknown trait '{trait_name}' or already maxed. Valid: yield, defense, speed, nutrition, specialist, generalist, uniformity, diversity, edible, utility")
+
+    def cmd_clone(self, args):
+        """Clone a cutting or transplant specimen."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built.")
+            return
+        if not args:
+            display.error("CLONE <plot number>")
+            return
+        try:
+            plot_id = int(args[0])
+        except ValueError:
+            display.error("CLONE <plot number>")
+            return
+
+        plot = self.skerry.get_plot(plot_id)
+        if not plot or not plot.get("plant"):
+            display.error(f"Nothing planted in plot {plot_id}.")
+            return
+
+        plant = plot["plant"]
+        allowed = farming.get_allowed_breeding(plant["specimen_type"])
+        if "clone" not in allowed:
+            display.error(f"{plant['name']} ({plant['specimen_type']}) doesn't support CLONE.")
+            return
+
+        clone = farming.clone_plant(plant)
+        # Store the clone as a specimen in inventory (plantable later)
+        self.steward.add_to_inventory(plant["specimen_id"])
+        display.success(f"Cloned {plant['name']}. Specimen added to inventory.")
+        if plant["traits"].get("uniformity", 5) >= 7:
+            display.warning("  Warning: High uniformity — clones share all vulnerabilities.")
+
+    def _handle_cross_pollinate(self, args):
+        """Handle CROSS-POLLINATE command."""
+        if not self.skerry.has_structure("garden"):
+            display.error("No garden built.")
+            return
+        if len(args) < 3:
+            display.error("CROSS-POLLINATE <plot> WITH <plot>  (e.g., CROSS 1 WITH 3)")
+            return
+
+        try:
+            plot_a_id = int(args[0])
+        except ValueError:
+            display.error("CROSS-POLLINATE <plot number> WITH <plot number>")
+            return
+
+        # Skip "with" keyword
+        remaining = args[1:]
+        if remaining and remaining[0] == "with":
+            remaining = remaining[1:]
+        if not remaining:
+            display.error("CROSS-POLLINATE <plot> WITH <plot>")
+            return
+
+        try:
+            plot_b_id = int(remaining[0])
+        except ValueError:
+            display.error("CROSS-POLLINATE <plot number> WITH <plot number>")
+            return
+
+        plot_a = self.skerry.get_plot(plot_a_id)
+        plot_b = self.skerry.get_plot(plot_b_id)
+
+        if not plot_a or not plot_a.get("plant"):
+            display.error(f"Nothing planted in plot {plot_a_id}.")
+            return
+        if not plot_b or not plot_b.get("plant"):
+            display.error(f"Nothing planted in plot {plot_b_id}.")
+            return
+
+        plant_a = plot_a["plant"]
+        plant_b = plot_b["plant"]
+
+        can, reason = farming.can_cross_pollinate(plant_a, plant_b)
+        if not can:
+            display.error(reason)
+            return
+
+        # Cross-pollinate: sacrifice both harvests, produce offspring seeds
+        offspring = farming.cross_pollinate(plant_a, plant_b)
+
+        # Clear both plots
+        plot_a["plant"] = None
+        plot_b["plant"] = None
+
+        display.success(f"Cross-pollinated {plant_a['name']} with {plant_b['name']}.")
+        display.narrate(f"  Both plants sacrificed. Produced {len(offspring)} new seed{'s' if len(offspring) != 1 else ''}.")
+
+        # Add offspring to seed vault or inventory
+        for child in offspring:
+            # Store as their parent specimen_id (plantable)
+            self.steward.add_to_inventory(child["specimen_id"])
+            display.info(f"  New seed: {child['name']} (Gen {child['generation']})")
+
+        if reason and "reduced fertility" in reason.lower():
+            display.warning(f"  {reason}")
+
+    def cmd_bank(self, args):
+        """Store a specimen in the seed vault for safekeeping."""
+        if not self.skerry.has_structure("storehouse"):
+            display.error("No storehouse built — need a seed vault to bank specimens.")
+            return
+        if not args:
+            display.error("BANK <plot number> — store that plant's genetics in the vault.")
+            return
+
+        try:
+            plot_id = int(args[0])
+        except ValueError:
+            display.error("BANK <plot number>")
+            return
+
+        plot = self.skerry.get_plot(plot_id)
+        if not plot or not plot.get("plant"):
+            display.error(f"Nothing planted in plot {plot_id}.")
+            return
+
+        plant = plot["plant"]
+        entry = farming.bank_specimen(self.skerry.seed_vault, plant)
+        display.success(f"Banked {entry['name']} (Gen {entry['generation']}) in the seed vault.")
+        display.info("  The plant remains in the plot. Use WITHDRAW to retrieve banked specimens.")
+
+    def cmd_withdraw(self, args):
+        """Retrieve a specimen from the seed vault."""
+        if not self.skerry.has_structure("storehouse"):
+            display.error("No storehouse built.")
+            return
+        if not args:
+            display.display_seed_vault(self.skerry.seed_vault)
+            display.info("  WITHDRAW <number> to retrieve a specimen.")
+            return
+
+        try:
+            index = int(args[0]) - 1  # 1-indexed display
+        except ValueError:
+            display.error("WITHDRAW <number> from the vault list.")
+            return
+
+        entry = farming.withdraw_specimen(self.skerry.seed_vault, index)
+        if entry:
+            self.steward.add_to_inventory(entry["specimen_id"])
+            display.success(f"Withdrew {entry['name']} from the seed vault. Added to inventory.")
+        else:
+            display.error("Invalid vault entry number. CHECK VAULT to see available specimens.")
 
     # ── Helper Methods ────────────────────────────────────────────
 
@@ -4057,9 +4550,7 @@ class Game:
                     loot_name = self.items_db.get(loot, {}).get("name", loot)
                     display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
             elif task == "gardening":
-                if random.random() < 0.4:
-                    self.steward.add_to_inventory("seeds")
-                    display.success(f"  {npc['name']} (gardening) harvested: Seeds")
+                pass  # Gardening handled below in auto-farming section
             elif task == "guarding":
                 display.info(f"  {npc['name']} keeps watch over the skerry.")
 
@@ -4117,6 +4608,107 @@ class Game:
                             for nid, n in self.npcs_db.items():
                                 if n.get("recruited"):
                                     n["mood"] = "content"
+
+        # ── Auto-farming: plant growth, NPC harvest, NPC planting ──
+        if self.skerry.has_structure("garden"):
+            plots = self.skerry.get_garden_plots()
+            gardening_count = sum(1 for n in self.npcs_db.values()
+                                  if n.get("recruited") and n.get("assignment") == "gardening")
+
+            # Advance growth on all plots
+            newly_ready = farming.advance_growth(plots, gardening_count)
+            for plot_id in newly_ready:
+                plot = self.skerry.get_plot(plot_id)
+                if plot and plot.get("plant"):
+                    plant_name = plot["plant"].get("name", "a plant")
+                    display.success(f"  Plot {plot_id}: {plant_name} is ready to harvest!")
+
+            # NPC auto-harvest
+            if gardening_count > 0:
+                harvested = farming.npc_auto_harvest(plots, day)
+                for food, utility in harvested:
+                    farming.add_to_stores(self.skerry.food_stores, food, day)
+                    food_name = food.get("name", food["id"])
+                    qty = food.get("quantity", 1)
+                    display.success(f"  Harvested: {food_name} x{qty} → food stores")
+                    if utility:
+                        util_name = utility.get("name", utility["id"])
+                        util_qty = utility.get("quantity", 1)
+                        for _ in range(util_qty):
+                            self.steward.add_to_inventory(utility["id"])
+                        display.success(f"  Byproduct: {util_name} x{util_qty}")
+
+                # NPC auto-plant: find specimens in steward inventory for empty plots
+                specimen_ids = [item_id for item_id in self.steward.inventory
+                                if farming.is_specimen(item_id)]
+                planted = farming.npc_auto_plant(plots, specimen_ids, day)
+                for plot_id, spec_id in planted:
+                    self.steward.remove_from_inventory(spec_id)
+                    spec = self.specimens_db.get(spec_id, {})
+                    spec_name = spec.get("name", spec_id)
+                    display.info(f"  NPC planted {spec_name} in plot {plot_id}.")
+
+        # ── Food consumption + spoilage ──
+        if self.skerry.has_structure("storehouse") and self.skerry.food_stores:
+            # Remove spoiled food
+            spoiled = farming.remove_spoiled(self.skerry.food_stores, day)
+            for name in spoiled:
+                display.warning(f"  Spoiled: {name} has gone bad.")
+
+            # Consume food
+            population = 2 + len(self.state.get("recruited_npcs", []))
+            daily_need = population * 50
+            consumed = farming.consume_food(self.skerry.food_stores, daily_need, day)
+            if consumed > 0:
+                display.info(f"  Colony consumed {consumed} cal ({population} people).")
+
+            # Check starvation tier
+            food_days = farming.days_of_food(self.skerry.food_stores, population)
+            tier = farming.get_starvation_tier(food_days)
+            # Remove old starvation/food aspects and apply new ones
+            food_aspects = {"Rations Are Getting Thin", "Hunger Gnaws at Everyone",
+                            "People Are Starving", "Monotonous Diet", "Well-Fed Colony"}
+            dyn = self.skerry.dynamic_aspects
+            dyn[:] = [a for a in dyn if a not in food_aspects]
+
+            if tier["aspect"]:
+                dyn.append(tier["aspect"])
+                display.warning(f"  Aspect: {tier['aspect']}")
+
+            # Variety check
+            var = farming.variety_score(self.skerry.food_stores)
+            if 0 < var < 3:
+                dyn.append("Monotonous Diet")
+                display.warning(f"  Aspect: Monotonous Diet")
+
+            # Pleasure check
+            pleasure = farming.avg_pleasure(self.skerry.food_stores)
+            if pleasure > 6:
+                dyn.append("Well-Fed Colony")
+                display.success(f"  Aspect: Well-Fed Colony (free invoke)")
+
+            # Starvation effects on NPCs
+            if tier["aspect"] == "Hunger Gnaws at Everyone":
+                for nid, n in self.npcs_db.items():
+                    if n.get("recruited"):
+                        n["loyalty"] = max(0, n.get("loyalty", 5) - 1)
+                self.steward.apply_damage(1)
+                self.explorer.apply_damage(1)
+                display.warning("  Hunger takes its toll. Everyone suffers.")
+            elif tier["aspect"] == "People Are Starving":
+                departed = []
+                for nid, n in self.npcs_db.items():
+                    if n.get("recruited") and n.get("loyalty", 5) < 3:
+                        departed.append(nid)
+                for nid in departed:
+                    npc = self.npcs_db[nid]
+                    display.warning(f"  {npc['name']} has left the colony — too hungry to stay.")
+                    npc["recruited"] = False
+                    npc["assignment"] = "idle"
+                    if nid in self.state.get("recruited_npcs", []):
+                        self.state["recruited_npcs"].remove(nid)
+                self.steward.apply_damage(1)
+                self.explorer.apply_damage(1)
 
         self.state["event_log"].append(f"Day {day}: The skerry endures.")
         display.display_seed(self.seed.to_dict(), name=self.seed_name)

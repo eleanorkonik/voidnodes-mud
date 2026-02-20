@@ -107,7 +107,7 @@
         "description": "A dense growth of crystallized organic matter, glowing with soft bioluminescence. The coral structures twist and branch in impossible patterns, creating a labyrinth of beauty and danger.",
         "aspect": "Everything Here Grows Toward Something Hungry",
         "difficulty": "medium",
-        "scavenge_pool": ["coral_fragments", "luminous_moss", "seeds", "resin"],
+        "scavenge_pool": ["coral_fragments", "luminous_moss", "reef_grain", "tangle_vine_cutting", "luminous_spore", "resin"],
         "rooms": [
             {
                 "id": "ct_entrance",
@@ -128,7 +128,7 @@
                 "zone": "coral_thicket",
                 "exits": {"south": "ct_entrance", "east": "ct_spore_chamber", "north": "ct_heart"},
                 "aspects": ["The Light Never Holds Still", "Someone Lived Here For a Reason"],
-                "items": ["resin", "seeds"],
+                "items": ["resin", "reef_grain"],
                 "npcs": ["chris"],
                 "enemies": [],
                 "discovered": false
@@ -164,7 +164,7 @@
                 "zone": "coral_thicket",
                 "exits": {"south": "ct_grove", "east": "ct_spore_chamber"},
                 "aspects": ["Old Enough to Have Secrets", "Someone's Been Tending This Place"],
-                "items": ["seeds", "coral_fragments"],
+                "items": ["luminous_spore", "coral_fragments"],
                 "npcs": ["tilly"],
                 "enemies": ["thorn_crawler_alpha"],
                 "discovered": false
@@ -191,7 +191,7 @@
                 "skills": {"Fight": 4, "Endure": 3, "Notice": 2},
                 "stress": [false, false, false],
                 "consequences": {"mild": null, "moderate": null},
-                "loot": ["coral_fragments", "seeds"]
+                "loot": ["coral_fragments", "tangle_vine_cutting"]
             },
             {
                 "id": "spore_cloud",
@@ -210,7 +210,7 @@
         "description": "An ancient ship, petrified and encrusted with void-ice. It drifts in eerie silence, its surfaces glittering with frost. Whatever happened here happened long ago, and some things are best left undisturbed.",
         "aspect": "The Cold Preserves What Should Have Been Forgotten",
         "difficulty": "hard",
-        "scavenge_pool": ["crystal_shards", "frozen_water", "ancient_alloys", "preserved_food"],
+        "scavenge_pool": ["crystal_shards", "frozen_water", "ancient_alloys", "preserved_food", "cryo_pod_specimen"],
         "rooms": [
             {
                 "id": "fw_entrance",
@@ -324,7 +324,7 @@
         "description": "A massive biodome ship fragment — the growing section of a colony ship. When it broke apart, the growth systems kept running, fueled by void energy. Now it's a small jungle floating in nothing.",
         "aspect": "Life That Outlasted Its Makers",
         "difficulty": "easy",
-        "scavenge_pool": ["resin", "seeds", "luminous_moss", "torn_fabric"],
+        "scavenge_pool": ["resin", "biodome_wheat", "feral_tuber", "moss_leaf", "torn_fabric"],
         "rooms": [
             {
                 "id": "vw_airlock",
@@ -369,7 +369,7 @@
                 "zone": "verdant_wreck",
                 "exits": {"west": "vw_promenade"},
                 "aspects": ["Seeds of a Dead World"],
-                "items": ["seeds", "resin", "scattered_notes"],
+                "items": ["biodome_wheat", "resin", "scattered_notes"],
                 "npcs": [],
                 "enemies": [],
                 "discovered": false
@@ -488,7 +488,7 @@
                 "skills": {"Fight": 1, "Athletics": 2},
                 "stress": [false, false, false],
                 "consequences": {"mild": null},
-                "loot": ["resin", "seeds", "luminous_moss"],
+                "loot": ["resin", "feral_tuber", "luminous_moss"],
                 "aggressive": false
             }
         ]

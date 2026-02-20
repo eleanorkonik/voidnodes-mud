@@ -115,10 +115,14 @@ def display_room(room, game_state):
 
     if room.items:
         items = game_state.get("items_db", {})
+        from engine.farming import load_specimens
+        specimens = load_specimens()
         item_strs = []
         for item_id in room.items:
             if item_id in items:
                 item_strs.append(item_name(items[item_id]["name"]))
+            elif item_id in specimens:
+                item_strs.append(f"{BRIGHT_GREEN}{specimens[item_id]['name']}{RESET} {DIM}(specimen){RESET}")
             else:
                 item_strs.append(item_name(item_id.replace("_", " ").title()))
         print(f"  You see: {', '.join(item_strs)}")
@@ -239,7 +243,7 @@ def display_self(character, items_db, artifacts_db=None):
         print(f"    {aspect_text(a)}")
 
 
-def display_inventory(character, items_db, artifacts_db=None):
+def display_inventory(character, items_db, artifacts_db=None, specimens_db=None):
     """Display character inventory."""
     header(f"{character.name}'s Inventory")
     if not character.inventory:
@@ -247,6 +251,7 @@ def display_inventory(character, items_db, artifacts_db=None):
         return
 
     artifacts_db = artifacts_db or {}
+    specimens_db = specimens_db or {}
 
     # Count stackable items
     counts = {}
@@ -258,6 +263,12 @@ def display_inventory(character, items_db, artifacts_db=None):
             art = artifacts_db[item_id]
             motes = art.get("mote_value", 0)
             print(f"  {BRIGHT_WHITE}{BOLD}{art['name']}{RESET} {DIM}({motes} motes){RESET}")
+        elif item_id in specimens_db:
+            spec = specimens_db[item_id]
+            if count > 1:
+                print(f"  {BRIGHT_GREEN}{spec['name']}{RESET} x{count} {DIM}(specimen){RESET}")
+            else:
+                print(f"  {BRIGHT_GREEN}{spec['name']}{RESET} {DIM}(specimen){RESET}")
         elif item_id in items_db:
             name = items_db[item_id]["name"]
             if count > 1:
@@ -348,6 +359,18 @@ def display_help(phase, seed_name="Tuft"):
         ("ASSIGN <npc> <task>", "Assign an NPC to a task"),
         ("ORGANIZE", "View all NPC assignments"),
         ("TRADE <npc>", "Trade with an NPC"),
+        ("PLANT <specimen> [plot]", "Plant a specimen in a garden plot"),
+        ("HARVEST [plot]", "Harvest ready crops (all if no plot)"),
+        ("SURVEY", "View all garden plots and growth"),
+        ("STORE <food>", "Move food from inventory to stores"),
+        ("UPROOT <plot>", "Remove a plant from a plot"),
+        ("CHECK STORES", "View food stores status"),
+        ("CHECK VAULT", "View seed vault contents"),
+        ("SELECT <plot> FOR <trait>", "Selective breed for a trait"),
+        ("CROSS <plot> WITH <plot>", "Cross-pollinate two plants"),
+        ("CLONE <plot>", "Clone a cutting/transplant"),
+        ("BANK <plot>", "Store plant genetics in vault"),
+        ("WITHDRAW <#>", "Retrieve specimen from vault"),
     ]
 
     for cmd, desc in universal:
@@ -423,3 +446,217 @@ def prompt(phase):
     if phase == "explorer":
         return f"{BOLD}{CYAN}>{RESET} "
     return f"{BOLD}{GREEN}>{RESET} "
+
+
+# ── Food & Farming Displays ──────────────────────────────────
+
+def trait_bar(value, width=10):
+    """Render a trait value as a ■░ bar."""
+    filled = min(value, width)
+    empty = width - filled
+    return "■" * filled + "░" * empty
+
+
+def display_food_stores(food_stores, population, current_day):
+    """Display the food stores status panel."""
+    from engine.farming import total_calories, days_of_food, variety_score, avg_pleasure
+
+    header("FOOD STORES")
+
+    if not food_stores:
+        print(f"  {DIM}(empty){RESET}")
+        print(f"\n  Total: 0 calories | 0 days at current pop ({population})")
+        return
+
+    for entry in food_stores:
+        name = entry.get("name", entry["item_id"].replace("_", " ").title())
+        qty = entry["quantity"]
+        cal = entry.get("calories", 40)
+        sl = entry.get("shelf_life", -1)
+        if sl == -1:
+            shelf_str = f"{BRIGHT_GREEN}stable{RESET}"
+        else:
+            days_left = sl - (current_day - entry["day_stored"])
+            if days_left <= 2:
+                shelf_str = f"{BRIGHT_RED}{days_left} days left{RESET}"
+            else:
+                shelf_str = f"{days_left} days left"
+        print(f"  {BRIGHT_YELLOW}{name}{RESET} x{qty}       {cal} cal each    {shelf_str}")
+
+    total = total_calories(food_stores)
+    dof = days_of_food(food_stores, population)
+    var = variety_score(food_stores)
+    pleasure = avg_pleasure(food_stores)
+
+    print()
+    print(f"  Total: {total} calories | ~{dof:.1f} days at current pop ({population})")
+    print(f"  Variety: {var}/6 categories", end="")
+    if var > 0:
+        cats = set()
+        for e in food_stores:
+            if e["quantity"] > 0:
+                cats.add(e.get("variety_category", "unknown"))
+        print(f" ({', '.join(sorted(cats))})")
+    else:
+        print()
+
+    # Pleasure description
+    if pleasure >= 7:
+        p_desc = "People are eating well."
+    elif pleasure >= 5:
+        p_desc = "Decent enough. No complaints."
+    elif pleasure >= 3:
+        p_desc = "Edible, but nobody's excited."
+    else:
+        p_desc = "Survival rations. Morale is suffering."
+    print(f"  Avg Pleasure: {pleasure:.1f} — \"{p_desc}\"")
+
+    # Warnings
+    if var < 3 and var > 0:
+        print(f"\n  {BRIGHT_YELLOW}! Low variety — people are getting bored of the same food.{RESET}")
+    if dof < 2:
+        print(f"\n  {BRIGHT_RED}!! FOOD CRITICAL — less than 2 days of food remaining!{RESET}")
+
+
+def display_plot_survey(plots, current_day):
+    """Display all garden plots in a survey view."""
+    header("GARDEN SURVEY")
+
+    if not plots:
+        print(f"  {DIM}No garden plots available. Build a garden first.{RESET}")
+        return
+
+    for plot in plots:
+        plot_id = plot["id"]
+        plant = plot.get("plant")
+        if not plant:
+            print(f"\n  {DIM}Plot {plot_id}: (empty){RESET}")
+            continue
+
+        name = plant.get("name", plant["specimen_id"].replace("_", " ").title())
+        spec_type = plant.get("specimen_type", "unknown")
+        growth = plant["growth"]
+        needed = plant["growth_needed"]
+        gen = plant.get("generation", 1)
+
+        # Growth bar
+        if growth >= needed:
+            growth_bar = f"{BRIGHT_GREEN}{'█' * 10} READY — harvest available{RESET}"
+        else:
+            filled = min(10, round(growth / needed * 10))
+            empty = 10 - filled
+            days_left = needed - growth
+            growth_bar = f"{'█' * filled}{'░' * empty} {growth}/{needed} — ~{days_left} day{'s' if days_left != 1 else ''} left"
+
+        print(f"\n  {BOLD}Plot {plot_id}: {BRIGHT_GREEN}{name}{RESET} {DIM}(Gen {gen}, {spec_type}){RESET}")
+        print(f"  Growth: {growth_bar}")
+
+        # Trait axes display
+        traits = plant.get("traits", {})
+        _print_trait_axis("YIELD", traits.get("yield", 5), "DEFENSE", traits.get("defense", 5))
+        _print_trait_axis("SPEED", traits.get("speed", 5), "NUTRIENT", traits.get("nutrition", 5))
+        _print_trait_axis("EDIBLE", traits.get("edible", 5), "UTILITY", traits.get("utility", 5))
+        _print_trait_axis("UNIFORM", traits.get("uniformity", 5), "DIVERSE", traits.get("diversity", 5))
+        _print_trait_axis("SPECIAL", traits.get("specialist", 5), "GENERAL", traits.get("generalist", 5))
+
+        # Breeding options
+        from engine.farming import get_allowed_breeding
+        allowed = get_allowed_breeding(spec_type)
+        print(f"  Breed: {', '.join(a.upper() for a in allowed)}")
+
+        # Hidden traits (if revealed)
+        hidden = plant.get("hidden_traits", {})
+        revealed = [k for k, v in hidden.items() if v is True or (isinstance(v, str) and v != "unknown")]
+        if revealed:
+            for h in revealed:
+                print(f"  {BRIGHT_YELLOW}! {h.replace('_', ' ').title()}{RESET}")
+
+        # Health
+        health = plant.get("health", "good")
+        health_color = BRIGHT_GREEN if health == "good" else BRIGHT_YELLOW if health == "fair" else BRIGHT_RED
+        print(f"  Health: {health_color}{health.capitalize()}{RESET}")
+
+
+def _print_trait_axis(name_a, val_a, name_b, val_b):
+    """Print a single trait axis line: NAME_A  ■■■■░░░░░░  NAME_B"""
+    bar = trait_bar(val_a)
+    print(f"    {name_a:<8} {bar} {name_b}")
+
+
+def display_probe_plant(plant, plot_id):
+    """Display a detailed PROBE view of a plant in a garden plot."""
+    name = plant.get("name", plant["specimen_id"].replace("_", " ").title())
+    spec_type = plant.get("specimen_type", "unknown")
+    gen = plant.get("generation", 1)
+    growth = plant["growth"]
+    needed = plant["growth_needed"]
+
+    if growth >= needed:
+        growth_bar = f"{BRIGHT_GREEN}{'█' * 10} READY{RESET}"
+    else:
+        filled = min(10, round(growth / needed * 10))
+        empty = 10 - filled
+        growth_bar = f"{'█' * filled}{'░' * empty} {growth}/{needed}"
+
+    header(f"PLOT {plot_id}: {name} (Gen {gen}, {spec_type})")
+    print(f"  Growth: {growth_bar}")
+    print(f"  Compat: {plant.get('compatibility_group', '?')} | Family: {plant.get('family', '?')}")
+
+    traits = plant.get("traits", {})
+    print()
+    _print_trait_axis("YIELD", traits.get("yield", 5), "DEFENSE", traits.get("defense", 5))
+    _print_trait_axis("SPEED", traits.get("speed", 5), "NUTRIENT", traits.get("nutrition", 5))
+    _print_trait_axis("EDIBLE", traits.get("edible", 5), "UTILITY", traits.get("utility", 5))
+    _print_trait_axis("UNIFORM", traits.get("uniformity", 5), "DIVERSE", traits.get("diversity", 5))
+    _print_trait_axis("SPECIAL", traits.get("specialist", 5), "GENERAL", traits.get("generalist", 5))
+
+    from engine.farming import get_allowed_breeding
+    allowed = get_allowed_breeding(spec_type)
+    print(f"\n  Breed: {', '.join(a.upper() for a in allowed)}")
+
+    hidden = plant.get("hidden_traits", {})
+    revealed = [k for k, v in hidden.items() if v is True or (isinstance(v, str) and v != "unknown")]
+    unknown = [k for k, v in hidden.items() if v == "unknown"]
+    if revealed:
+        for h in revealed:
+            print(f"  {BRIGHT_YELLOW}! {h.replace('_', ' ').title()}{RESET}")
+    if unknown:
+        for h in unknown:
+            print(f"  {DIM}? {h.replace('_', ' ').title()} (unknown){RESET}")
+
+
+def display_probe_specimen(specimen):
+    """Display a detailed PROBE view of a specimen item."""
+    header(specimen["name"])
+    print(f"  Type: {specimen['specimen_type']} | Family: {specimen['family']}")
+    print(f"  Origin: {specimen['origin'].replace('_', ' ').title()}")
+    print(f"  Compat: {specimen['compatibility_group']}")
+    if specimen.get("probe_text"):
+        print()
+        narrate(f"  {specimen['probe_text']}")
+
+    traits = specimen["traits"]
+    print()
+    _print_trait_axis("YIELD", traits.get("yield", 5), "DEFENSE", traits.get("defense", 5))
+    _print_trait_axis("SPEED", traits.get("speed", 5), "NUTRIENT", traits.get("nutrition", 5))
+    _print_trait_axis("EDIBLE", traits.get("edible", 5), "UTILITY", traits.get("utility", 5))
+    _print_trait_axis("UNIFORM", traits.get("uniformity", 5), "DIVERSE", traits.get("diversity", 5))
+    _print_trait_axis("SPECIAL", traits.get("specialist", 5), "GENERAL", traits.get("generalist", 5))
+
+    from engine.farming import get_allowed_breeding
+    allowed = get_allowed_breeding(specimen["specimen_type"])
+    print(f"\n  Breed: {', '.join(a.upper() for a in allowed)}")
+    print(f"  Growth time: {specimen['growth_time']} days | Base yield: {specimen['base_yield']}")
+
+
+def display_seed_vault(seed_vault):
+    """Display the contents of the seed vault."""
+    header("SEED VAULT")
+    if not seed_vault:
+        print(f"  {DIM}(empty){RESET}")
+        return
+    for i, entry in enumerate(seed_vault):
+        name = entry.get("name", entry["specimen_id"].replace("_", " ").title())
+        spec_type = entry.get("specimen_type", "?")
+        gen = entry.get("generation", 1)
+        print(f"  {i + 1}. {BRIGHT_YELLOW}{name}{RESET} ({spec_type}, Gen {gen})")

@@ -61,5 +61,38 @@
         "difficulty": 4,
         "skill": "Craft",
         "description": "Craft a powerful beacon from ancient metals and bioluminescent moss."
+    },
+    "hearty_stew": {
+        "id": "hearty_stew",
+        "name": "Hearty Stew",
+        "materials": {"biodome_wheat_harvest": 2, "moss_leaf_harvest": 1},
+        "result": "hearty_stew_meal",
+        "difficulty": 1,
+        "skill": "Craft",
+        "recipe_type": "food",
+        "description": "A filling stew that lifts spirits. Requires grain and greens.",
+        "from_stores": true
+    },
+    "griddle_cakes": {
+        "id": "griddle_cakes",
+        "name": "Griddle Cakes",
+        "materials": {"feral_tuber_harvest": 2, "reef_grain_harvest": 1},
+        "result": "griddle_cakes_meal",
+        "difficulty": 2,
+        "skill": "Craft",
+        "recipe_type": "food",
+        "description": "Flat cakes from tuber starch and grain flour. Keeps you going.",
+        "from_stores": true
+    },
+    "spore_broth": {
+        "id": "spore_broth",
+        "name": "Spore Broth",
+        "materials": {"glowcap_mushroom": 2, "frozen_water": 1},
+        "result": "spore_broth_meal",
+        "difficulty": 1,
+        "skill": "Lore",
+        "recipe_type": "food",
+        "description": "A luminous, medicinal broth. The Lore skill brings out the healing properties.",
+        "from_stores": true
     }
 }

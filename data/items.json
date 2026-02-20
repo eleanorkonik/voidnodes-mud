@@ -118,7 +118,11 @@
         "mote_value": 1,
         "stat_bonuses": {},
         "stackable": true,
-        "special": "restore_stress"
+        "special": "restore_stress",
+        "calories": 40,
+        "shelf_life": -1,
+        "pleasure": 2,
+        "variety_category": "preserved"
     },
     "crystal_shards": {
         "id": "crystal_shards",
@@ -265,6 +269,98 @@
         "mote_value": 0,
         "stat_bonuses": {},
         "stackable": false,
+        "special": null
+    },
+    "hearty_stew_meal": {
+        "id": "hearty_stew_meal",
+        "name": "Hearty Stew",
+        "description": "A bowl of thick, warming stew. Smells like something worth fighting for.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 0,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "restore_stress",
+        "calories": 120,
+        "shelf_life": 3,
+        "pleasure": 6,
+        "variety_category": "grain",
+        "buff": {"mood_bonus": 1, "duration": 2}
+    },
+    "griddle_cakes_meal": {
+        "id": "griddle_cakes_meal",
+        "name": "Griddle Cakes",
+        "description": "Flat cakes cooked on hot metal. Simple but satisfying. The tuber starch makes them filling.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 0,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "skill_buff",
+        "calories": 100,
+        "shelf_life": 2,
+        "pleasure": 5,
+        "variety_category": "root",
+        "buff": {"skill": "Craft", "bonus": 1, "duration": 1}
+    },
+    "spore_broth_meal": {
+        "id": "spore_broth_meal",
+        "name": "Spore Broth",
+        "description": "A luminous broth made from glowcap mushrooms. The glow fades as it cools, but the medicinal warmth lingers.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 0,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "restore_stress",
+        "calories": 60,
+        "shelf_life": 1,
+        "pleasure": 4,
+        "variety_category": "fungal",
+        "buff": {"mood_bonus": 2, "duration": 1}
+    },
+    "plant_fiber": {
+        "id": "plant_fiber",
+        "name": "Plant Fiber",
+        "description": "Strong, flexible fiber stripped from tangle vine. Good for cordage, fabric, or reinforcement.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "tuber_skin_compound": {
+        "id": "tuber_skin_compound",
+        "name": "Tuber Skin Compound",
+        "description": "An acrid paste rendered from feral tuber skins. Pests hate it. Might have medicinal uses.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "crystal_compound": {
+        "id": "crystal_compound",
+        "name": "Crystal Compound",
+        "description": "A faintly humming crystalline substance extracted from the cryo-specimen's structures. Purpose unknown.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "luminous_extract": {
+        "id": "luminous_extract",
+        "name": "Luminous Extract",
+        "description": "A concentrated extract from glowcap mushrooms. Glows steadily. May have medicinal applications.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
         "special": null
     }
 }

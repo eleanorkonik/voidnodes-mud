@@ -29,6 +29,9 @@ COMMAND_ALIASES = {
     "ca": "exploit", "setup": "exploit",
     "quest": "quests",
     "repair": "fix", "fix": "fix",
+    "sow": "plant",
+    "dig": "uproot",
+    "vault": "bank",
 }
 
 # All recognized commands and which phase they're valid in
@@ -81,6 +84,18 @@ COMMANDS = {
     "assign":    {"phases": ["steward"], "args": "required"},
     "organize":  {"phases": ["steward"], "args": "none"},
     "trade":     {"phases": ["steward"], "args": "required"},
+    # Farming commands (steward phase)
+    "plant":     {"phases": ["steward"], "args": "required"},
+    "harvest":   {"phases": ["steward"], "args": "optional"},
+    "survey":    {"phases": ["steward"], "args": "none"},
+    "store":     {"phases": ["steward"], "args": "required"},
+    "uproot":    {"phases": ["steward"], "args": "required"},
+    # Breeding commands (steward phase)
+    "cross-pollinate": {"phases": ["steward"], "args": "required"},
+    "select":    {"phases": ["steward"], "args": "required"},
+    "clone":     {"phases": ["steward"], "args": "required"},
+    "bank":      {"phases": ["steward"], "args": "required"},
+    "withdraw":  {"phases": ["steward"], "args": "required"},
 }
 
 
@@ -98,6 +113,16 @@ def parse(raw_input):
     parts = raw.lower().split()
     verb = parts[0]
     args = parts[1:]
+
+    # Handle multi-word commands: "cross pollinate" / "cross-pollinate" → "cross-pollinate"
+    if verb == "cross" and args and args[0] == "pollinate":
+        return "cross-pollinate", args[1:]
+    if verb == "cross-pollinate":
+        return "cross-pollinate", args
+
+    # Handle CHECK STORES as a subcommand
+    if verb == "check" and args and args[0] == "stores":
+        return "check", args  # handled in cmd_check
 
     # Check direction shortcuts (just typing "north" or "n")
     if verb in DIRECTION_ALIASES:

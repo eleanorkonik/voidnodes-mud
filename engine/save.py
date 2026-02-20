@@ -128,6 +128,12 @@ def _migrate_state(state):
     for recipe_id in ("basic_tools", "bandages"):
         if recipe_id not in state.get("discovered_recipes", []):
             state.setdefault("discovered_recipes", []).append(recipe_id)
+    # Farming system fields
+    skerry_state = state.get("skerry", {})
+    skerry_state.setdefault("food_stores", [])
+    skerry_state.setdefault("garden", {"plots": [], "max_plots": 4})
+    skerry_state.setdefault("seed_vault", [])
+    skerry_state.setdefault("dynamic_aspects", [])
     # Rename old "scavenging" task to "salvage" + ensure recruit_attempts exists
     for npc_id, npc in state.get("npcs", {}).items():
         if npc.get("assignment") == "scavenging":

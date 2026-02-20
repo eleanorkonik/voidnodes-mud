@@ -1,6 +1,7 @@
 """Skerry state — the home base, expandable island in the void."""
 
 from models.room import Room
+from engine import farming
 
 
 class Skerry:
@@ -9,6 +10,10 @@ class Skerry:
         self.expandable = data.get("expandable_rooms", [])
         self.structures = list(data.get("structures_built", []))
         self.npc_houses = dict(data.get("npc_houses", {}))  # {npc_id: house_level}
+        self.food_stores = list(data.get("food_stores", []))
+        self.garden = data.get("garden", {"plots": [], "max_plots": 4})
+        self.seed_vault = list(data.get("seed_vault", []))
+        self.dynamic_aspects = list(data.get("dynamic_aspects", []))
 
     def get_room(self, room_id):
         """Get a skerry room by ID."""
@@ -17,6 +22,10 @@ class Skerry:
     def get_all_rooms(self):
         """Get all skerry rooms."""
         return list(self.rooms.values())
+
+    def has_structure(self, structure_name):
+        """Check if a structure has been built on the skerry."""
+        return structure_name in self.structures
 
     def can_build(self, room_template, inventory_counts, npc_count, seed_stage):
         """Check if an expandable room can be built."""
@@ -34,6 +43,13 @@ class Skerry:
         # Check world seed stage
         if seed_stage < requires.get("seed_stage", 0):
             return False, f"World seed must reach stage {requires['seed_stage']}"
+
+        # Check any_specimen requirement (garden needs at least 1 specimen in inventory)
+        if requires.get("any_specimen", 0) > 0:
+            specimen_count = sum(1 for item_id in inventory_counts
+                                if farming.is_specimen(item_id) and inventory_counts[item_id] > 0)
+            if specimen_count < requires["any_specimen"]:
+                return False, f"Need at least {requires['any_specimen']} specimen(s) to plant"
 
         return True, "Can build"
 
@@ -59,6 +75,10 @@ class Skerry:
 
         self.structures.append(room_data.get("structures", [None])[0])
 
+        # Initialize garden plots if this is the garden
+        if "garden" in room_data:
+            self.garden = room_data["garden"]
+
         # Remove from expandable list
         self.expandable = [r for r in self.expandable if r["id"] != room_data["id"]]
 
@@ -76,6 +96,17 @@ class Skerry:
         """Get NPC house level. 0=none, 1=tent, 2=house."""
         return self.npc_houses.get(npc_id, 0)
 
+    def get_garden_plots(self):
+        """Get the garden plot list."""
+        return self.garden.get("plots", [])
+
+    def get_plot(self, plot_id):
+        """Get a specific garden plot by ID."""
+        for plot in self.garden.get("plots", []):
+            if plot["id"] == plot_id:
+                return plot
+        return None
+
     def to_dict(self):
         """Serialize to dict."""
         return {
@@ -83,4 +114,8 @@ class Skerry:
             "expandable_rooms": self.expandable,
             "structures_built": self.structures,
             "npc_houses": self.npc_houses,
+            "food_stores": self.food_stores,
+            "garden": self.garden,
+            "seed_vault": self.seed_vault,
+            "dynamic_aspects": self.dynamic_aspects,
         }

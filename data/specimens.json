@@ -1,0 +1,197 @@
+{
+    "reef_grain": {
+        "id": "reef_grain",
+        "name": "Reef Grain",
+        "specimen_type": "seeds",
+        "family": "grain",
+        "origin": "coral_thicket",
+        "domestication": "feral",
+        "compatibility_group": "grain-A",
+        "description": "Salt-crusted seed heads from a grass that colonized the coral shelves. Tough and wind-resistant, but the kernels are small and bitter.",
+        "traits": {
+            "yield": 3, "defense": 7,
+            "speed": 4, "nutrition": 6,
+            "specialist": 7, "generalist": 3,
+            "uniformity": 3, "diversity": 7,
+            "edible": 7, "utility": 3
+        },
+        "hidden_traits": {
+            "salt_tolerance": true,
+            "allelopathic": false,
+            "recessive_blight_susceptibility": false
+        },
+        "produces": {
+            "food_id": "reef_grain_harvest",
+            "utility_id": null
+        },
+        "growth_time": 8,
+        "base_yield": 2,
+        "probe_text": "Wiry stalks with dense, compact seed heads. The salt-adapted root system runs deep. Low yield, but this thing could grow in a hurricane."
+    },
+    "feral_tuber": {
+        "id": "feral_tuber",
+        "name": "Feral Tuber",
+        "specimen_type": "tuber",
+        "family": "rootcrop",
+        "origin": "verdant_wreck",
+        "domestication": "feral",
+        "compatibility_group": "rootcrop-B",
+        "description": "A soil-crusted tuber the size of your fist, covered in coarse reddish skin with deep-set eyes. Sharp, acrid smell from the thick skin.",
+        "traits": {
+            "yield": 2, "defense": 8,
+            "speed": 4, "nutrition": 6,
+            "specialist": 3, "generalist": 7,
+            "uniformity": 2, "diversity": 8,
+            "edible": 5, "utility": 5
+        },
+        "hidden_traits": {
+            "salt_tolerance": false,
+            "allelopathic": false,
+            "pest_repellent_skin": true
+        },
+        "produces": {
+            "food_id": "feral_tuber_harvest",
+            "utility_id": "tuber_skin_compound"
+        },
+        "growth_time": 10,
+        "base_yield": 1,
+        "probe_text": "Thick defensive skin, deep-set eyes. High genetic variability \u2014 kernel sizes and skin colors vary from rust to amber. The acrid skin compounds may have pest-repellent applications."
+    },
+    "tangle_vine_cutting": {
+        "id": "tangle_vine_cutting",
+        "name": "Tangle Vine Cutting",
+        "specimen_type": "cutting",
+        "family": "vine",
+        "origin": "coral_thicket",
+        "domestication": "wild",
+        "compatibility_group": "vine-C",
+        "description": "A thick, ropy segment of vine with aerial roots already groping for purchase. Grows fast. Produces strong fiber but barely edible fruit.",
+        "traits": {
+            "yield": 4, "defense": 6,
+            "speed": 8, "nutrition": 2,
+            "specialist": 5, "generalist": 5,
+            "uniformity": 8, "diversity": 2,
+            "edible": 2, "utility": 8
+        },
+        "hidden_traits": {
+            "allelopathic": true,
+            "aggressive_growth": true
+        },
+        "produces": {
+            "food_id": "vine_fruit",
+            "utility_id": "plant_fiber"
+        },
+        "growth_time": 4,
+        "base_yield": 2,
+        "probe_text": "Aggressive grower \u2014 aerial roots seek any surface. Primarily a fiber source; the small, sour fruit is an afterthought. WARNING: may suppress neighboring plants."
+    },
+    "biodome_wheat": {
+        "id": "biodome_wheat",
+        "name": "Biodome Wheat",
+        "specimen_type": "seeds",
+        "family": "grain",
+        "origin": "verdant_wreck",
+        "domestication": "feral",
+        "compatibility_group": "grain-A",
+        "description": "Tall stalks gone wild in the wreck's broken greenhouse. Three generations feral \u2014 still carries domesticated yield genes but defense is creeping back.",
+        "traits": {
+            "yield": 6, "defense": 4,
+            "speed": 5, "nutrition": 5,
+            "specialist": 4, "generalist": 6,
+            "uniformity": 4, "diversity": 6,
+            "edible": 8, "utility": 2
+        },
+        "hidden_traits": {
+            "rust_susceptibility": true
+        },
+        "produces": {
+            "food_id": "biodome_wheat_harvest",
+            "utility_id": null
+        },
+        "growth_time": 6,
+        "base_yield": 3,
+        "probe_text": "Recognizably wheat \u2014 someone bred this, once. Gone feral but the yield genes are still there. The rust-colored spots on some leaves suggest a latent disease susceptibility."
+    },
+    "cryo_pod_specimen": {
+        "id": "cryo_pod_specimen",
+        "name": "Cryo-Preserved Specimen",
+        "specimen_type": "transplant",
+        "family": "unknown",
+        "origin": "frozen_wreck",
+        "domestication": "engineered",
+        "compatibility_group": "exotic-X",
+        "description": "A sealed cryo-tube containing a pale rootlet suspended in nutrient gel. The manifest fragment reads 'Iteration 14.' Crystalline structures stud the rootlet.",
+        "traits": {
+            "yield": 5, "defense": 5,
+            "speed": 7, "nutrition": 3,
+            "specialist": 8, "generalist": 2,
+            "uniformity": 9, "diversity": 1,
+            "edible": 3, "utility": 7
+        },
+        "hidden_traits": {
+            "engineered_sterility": true,
+            "crystal_compound_production": true,
+            "allelopathic": "unknown"
+        },
+        "produces": {
+            "food_id": "pod_fruit",
+            "utility_id": "crystal_compound"
+        },
+        "growth_time": 3,
+        "base_yield": 4,
+        "probe_text": "Lab-engineered. Fast growth, crystalline structures, designed for something specific you don't understand yet. Extreme monoculture risk \u2014 clonal stock, zero genetic diversity."
+    },
+    "luminous_spore": {
+        "id": "luminous_spore",
+        "name": "Luminous Spore Culture",
+        "specimen_type": "spore",
+        "family": "fungal",
+        "origin": "coral_thicket",
+        "domestication": "wild",
+        "compatibility_group": "fungal-F",
+        "description": "A sealed vial of glowing spores scraped from deep coral formations. Not a plant at all \u2014 but it grows on organic substrate and produces edible fruiting bodies.",
+        "traits": {
+            "yield": 5, "defense": 5,
+            "speed": 6, "nutrition": 4,
+            "specialist": 6, "generalist": 4,
+            "uniformity": 3, "diversity": 7,
+            "edible": 6, "utility": 4
+        },
+        "hidden_traits": {
+            "shade_dependent": true,
+            "medicinal_compound": true
+        },
+        "produces": {
+            "food_id": "glowcap_mushroom",
+            "utility_id": "luminous_extract"
+        },
+        "growth_time": 3,
+        "base_yield": 3,
+        "probe_text": "Not a plant \u2014 fungal. Grows in darkness on organic waste. The glowing fruiting bodies are edible and may have medicinal properties. Unpredictable \u2014 spore cultures resist selective breeding."
+    },
+    "moss_leaf": {
+        "id": "moss_leaf",
+        "name": "Moss Leaf Spores",
+        "specimen_type": "spore",
+        "family": "leafy",
+        "origin": "verdant_wreck",
+        "domestication": "feral",
+        "compatibility_group": "moss-M",
+        "description": "Fine green powder from the wreck's walls. Grows anywhere damp. Fast, nutritious, utterly flavorless.",
+        "traits": {
+            "yield": 5, "defense": 5,
+            "speed": 9, "nutrition": 1,
+            "specialist": 2, "generalist": 8,
+            "uniformity": 2, "diversity": 8,
+            "edible": 9, "utility": 1
+        },
+        "hidden_traits": {},
+        "produces": {
+            "food_id": "moss_leaf_harvest",
+            "utility_id": null
+        },
+        "growth_time": 2,
+        "base_yield": 4,
+        "probe_text": "Grows on anything wet. Extremely fast. High volume, zero flavor, low nutrition per unit. Emergency calories \u2014 nobody wants to eat this long-term but it keeps you alive."
+    }
+}
