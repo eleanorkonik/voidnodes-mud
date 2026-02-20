@@ -1083,12 +1083,32 @@ class Game:
                             mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
                         else:
                             mat_parts.append(label)
+                    if reqs.get("any_specimen", 0) > 0:
+                        spec_count = sum(1 for i in inv_counts if farming.is_specimen(i) and inv_counts[i] > 0)
+                        label = f"{reqs['any_specimen']}x specimen"
+                        if spec_count >= reqs["any_specimen"]:
+                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                        else:
+                            mat_parts.append(label)
+                    if reqs.get("npcs", 0) > 0:
+                        label = f"{reqs['npcs']} NPC{'s' if reqs['npcs'] > 1 else ''}"
+                        if npc_count >= reqs["npcs"]:
+                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                        else:
+                            mat_parts.append(label)
+                    if reqs.get("seed_stage", 0) > 0:
+                        label = f"seed stage {reqs['seed_stage']}"
+                        if self.seed.growth_stage >= reqs["seed_stage"]:
+                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                        else:
+                            mat_parts.append(label)
                     mats = ", ".join(mat_parts)
+                    loc = self._build_location_label(tmpl)
                     can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
                     if can:
-                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
+                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} ({loc}) — needs: {mats}")
                     else:
-                        print(f"    {tmpl['name']} — needs: {mats}")
+                        print(f"    {tmpl['name']} ({loc}) — needs: {mats}")
             return
 
         # Check NPC
@@ -3559,6 +3579,14 @@ class Game:
             else:
                 print(f"  {display.DIM}{recipe.get('name', rid)}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)}){display.RESET}")
 
+    def _build_location_label(self, tmpl):
+        """Get a human-readable location label for a buildable room template."""
+        for room_id, direction in tmpl.get("connect_to", {}).items():
+            room = self.rooms.get(room_id)
+            if room:
+                return f"{direction} of {room.name}"
+        return "on the skerry"
+
     def cmd_build(self, args):
         if not args:
             display.error("Build what? Type CHECK SKERRY to see buildable structures.")
@@ -3652,7 +3680,8 @@ class Game:
                 room = self.skerry.build_room(tmpl)
                 self.rooms[room.id] = room
 
-                display.success(f"Built: {room.name}!")
+                loc = self._build_location_label(tmpl)
+                display.success(f"Built: {room.name}! ({loc})")
                 display.narrate(f"  {room.description}")
 
                 # Garden walkthrough on first build
