@@ -632,7 +632,8 @@ def _explorer_free_hints(cmd, args, game):
     if combat_done and scavenge_done and not quest_done:
         quest_status = game.state.get("quests", {}).get("verdant_bloom", {}).get("status", "inactive")
         if quest_status == "inactive" and room.zone == "skerry":
-            if cmd in ("go", "look", "ih"):
+            if cmd in ("go", "look", "ih") and not game.state.get("_life_hint_shown"):
+                game.state["_life_hint_shown"] = True
                 print()
                 display.seed_speak("I sense life — real life — somewhere in the void.")
                 display.seed_speak("Not like the debris. Something growing.")
