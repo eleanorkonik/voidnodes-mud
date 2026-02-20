@@ -3935,6 +3935,7 @@ class Game:
                 return
             else:
                 # Player wins initiative — they noticed it first
+                self._start_combat(enemy_id)
                 display.warning(f"  {enemy_data['name']} tenses, ready to spring!")
                 display.info("  You have the initiative. ATTACK or EXPLOIT to act first.")
                 return
