@@ -150,8 +150,8 @@ def collect_invokable_aspects(game, context="combat"):
             for a in _flatten_npc_aspects(npc_data):
                 aspects.append((a, npc_data.get("name", "NPC")))
 
-    # World seed aspects
-    if game.seed:
+    # World seed aspects — only invokable in its room
+    if game.seed and room and room.id == "skerry_hollow":
         for a in game.seed.aspects:
             aspects.append((a, game.seed_name))
 
@@ -444,8 +444,8 @@ def get_treatment_aspects(game):
         for a in room.aspects:
             aspects.append((a, "room"))
 
-    # World seed aspects
-    if game.seed:
+    # World seed aspects — only invokable in its room
+    if game.seed and room and room.id == "skerry_hollow":
         for a in game.seed.aspects:
             aspects.append((a, game.seed_name))
 
