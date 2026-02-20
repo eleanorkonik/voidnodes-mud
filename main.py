@@ -3641,6 +3641,10 @@ class Game:
                 display.success(f"Built: {room.name}!")
                 display.narrate(f"  {room.description}")
 
+                # Garden walkthrough on first build
+                if "garden" in tmpl.get("structures", []):
+                    tutorial.garden_walkthrough(self)
+
                 # Update skerry state
                 self.state["skerry"] = self.skerry.to_dict()
                 return

@@ -25,7 +25,7 @@ STEPS = [
 
     # Act 3 — Miria Steward
     "steward_arrive",        # orientation narration
-    "steward_build",         # BUILD STOREHOUSE with Lira's help
+    "steward_build",         # BUILD whatever's affordable
     "steward_assign",        # ASSIGN recruited NPC
     "steward_complete",      # tutorial done
 
@@ -309,7 +309,7 @@ def after_command(cmd, args, game):
 
     if step == "steward_build" and cmd == "build":
         # Check if any new expandable room was built
-        built = len(game.skerry.built_rooms) > 0
+        built = len(game.skerry.structures) > 0
         if built:
             print()
             recruited = game.state.get("recruited_npcs", [])
@@ -775,6 +775,44 @@ def _explorer_free_resume_hint(gs):
             display.seed_speak("Find a way past the root wall in the verdant wreck.")
     else:
         display.seed_speak("Head south to the entry room, then SEEK HOME.")
+
+
+def garden_walkthrough(game):
+    """One-time walkthrough when the garden is first built. Not gated — just informational."""
+    if game.state.get("garden_walkthrough_done"):
+        return
+    game.state["garden_walkthrough_done"] = True
+
+    seed_name = game.state.get("world_seed_name", "Tuft")
+    print()
+    display.seed_speak("A garden! I can feel the soil already.")
+    display.seed_speak("Let me show you how this works.")
+    print()
+
+    display.seed_speak("You brought specimens back from the void — alien plants")
+    display.seed_speak("that grow in my light. Each one is different.")
+    print()
+
+    display.seed_speak("PLANT <specimen> <plot#> puts a specimen in a plot.")
+    display.seed_speak("SURVEY shows all your plots and what's growing.")
+    display.seed_speak("HARVEST <plot#> collects food when a plant is ready.")
+    display.seed_speak("STORE <item> moves harvested food into long-term storage.")
+    print()
+
+    display.seed_speak("Assigned NPCs will plant and harvest automatically,")
+    display.seed_speak("but breeding is your job.")
+    print()
+
+    display.seed_speak("CROSS-POLLINATE <plot> <plot> mixes two plants' traits.")
+    display.seed_speak("SELECT <plot> <trait> pushes a trait in one direction.")
+    display.seed_speak("Each specimen type has its own tricks — PROBE a specimen")
+    display.seed_speak("to see what's possible.")
+    print()
+
+    display.seed_speak("CHECK STORES to see your food supply.")
+    display.seed_speak("CHECK VAULT for banked specimens.")
+    display.seed_speak("Keep the colony fed, and they'll be happy. Let them starve...")
+    display.seed_speak("well. Don't.")
 
 
 def _tutorial_prompt(text):
