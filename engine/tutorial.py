@@ -512,6 +512,7 @@ def _explorer_free_hints(cmd, args, game):
         if not game.state.get("_free_invoke_celebrated") and combat_done:
             # Enemy was defeated by the free-invocation attack
             game.state["_free_invoke_celebrated"] = True
+            game.state["tutorial_invoke_done"] = True  # explained = learned
             print()
             display.seed_speak("EXPLOIT is free but takes a turn to set up.")
             display.seed_speak("There's another option: INVOKE spends a fate point")
@@ -519,11 +520,11 @@ def _explorer_free_hints(cmd, args, game):
         elif not game.state.get("_free_invoke_celebrated") and game.in_combat:
             # Enemy survived — show the payoff, mention INVOKE
             game.state["_free_invoke_celebrated"] = True
+            game.state["tutorial_invoke_done"] = True  # explained = learned
             print()
             display.seed_speak("See? That free invocation hit hard.")
             display.seed_speak("There's a faster option too — INVOKE spends a fate")
             display.seed_speak("point to get +2 immediately, no setup turn needed.")
-            _tutorial_prompt("Try it: INVOKE <aspect> (costs 1 FP, instant +2).")
         return
 
     # Just invoked successfully
