@@ -12,8 +12,8 @@ QUEST_INFO = {
         "zone": "The Verdant Wreck",
         "summary": "Massive roots block access to a crystallized bloom at the biodome's heart.",
         "hints": {
-            "active": "Lira mentioned two ways through: repair the Growth Controller (west of the root wall), or weaken the roots with solvent and burn through.",
-            "roots_weakened": "The roots are weakened. Something hot might finish the job.",
+            "active": "Lira mentioned two ways through: repair the Growth Controller (west of the root wall), or coat the roots with resin and burn through.",
+            "roots_weakened": "The roots are coated with resin. A torch should catch now.",
             "roots_cleared": "The way north is open. The bloom awaits.",
         },
     },
@@ -85,10 +85,10 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
             if quest.get("status") != "active":
                 _auto_start_quest(game_state, rooms)
                 quest = game_state["quests"]["verdant_bloom"]
-            display.narrate("You spread the resin across the thick roots. The organic")
-            display.narrate("solvent soaks in, and you hear faint cracking as the outer")
-            display.narrate("layer softens. The roots sag but hold.")
-            display.info("  Something hotter might finish the job.")
+            display.narrate("You smear the resin across the thick roots, working it into")
+            display.narrate("the bark. The sticky coating soaks into every crack and fiber,")
+            display.narrate("turning the damp surface dark and glossy.")
+            display.info("  The roots are coated. A flame should catch now.")
             quest["roots_weakened"] = True
             return True, True  # consume resin
 
@@ -96,7 +96,7 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
             if quest.get("status") != "active":
                 _auto_start_quest(game_state, rooms)
                 quest = game_state["quests"]["verdant_bloom"]
-            display.narrate("You hold the torch to the weakened roots. They catch")
+            display.narrate("You hold the torch to the resin-coated roots. They catch")
             display.narrate("instantly, curling and blackening. In moments, a narrow")
             display.narrate("passage opens to the north, revealing a green glow beyond.")
             print()
@@ -111,8 +111,8 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
 
         if item_id == "torch" and not quest.get("roots_weakened"):
             display.narrate("You hold the torch to the roots, but they're too thick")
-            display.narrate("and damp to catch. The surface barely singes.")
-            display.info("  They might catch if something weakened them first.")
+            display.narrate("and damp to catch. The flame licks the bark and dies.")
+            display.info("  You'd need something flammable to coat them first.")
             return True, False
 
     # PATH A (careful) — basic_tools on console at control room

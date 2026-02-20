@@ -3233,23 +3233,23 @@ class Game:
             print()
             if not quest.get("roots_weakened"):
                 if "resin" in inv:
-                    print(f"  {display.npc_name('Lira')}: \"Those roots won't budge by hand. But resin")
-                    print(f"  eats through organic matter. USE RESIN ON ROOTS.\"")
+                    print(f"  {display.npc_name('Lira')}: \"Those roots are too damp to burn. But resin's")
+                    print(f"  flammable — coat them and a torch would catch. USE RESIN ON ROOTS.\"")
                 elif "basic_tools" in inv:
                     print(f"  {display.npc_name('Lira')}: \"There's a Growth Controller west of here.")
                     print(f"  Go WEST and USE BASIC TOOLS ON CONSOLE.\"")
                 else:
                     print(f"  {display.npc_name('Lira')}: \"We need to get past these roots. The Growth")
                     print(f"  Controller is west of here — GO WEST and USE BASIC TOOLS ON CONSOLE.")
-                    print(f"  Or find some resin and USE RESIN ON ROOTS to weaken them.\"")
+                    print(f"  Or coat these roots with resin — USE RESIN ON ROOTS — and burn through.\"")
             else:
                 # Roots weakened, need fire
                 if "torch" in inv:
-                    print(f"  {display.npc_name('Lira')}: \"The roots are sagging — the resin did its work.")
+                    print(f"  {display.npc_name('Lira')}: \"The roots are coated — they'll burn now.")
                     print(f"  USE TORCH ON ROOTS to burn through.\" She hesitates.")
                     print(f"  {display.npc_name('Lira')}: \"Be ready to move fast.\"")
                 else:
-                    print(f"  {display.npc_name('Lira')}: \"The resin weakened them, but they're still holding.")
+                    print(f"  {display.npc_name('Lira')}: \"The resin's on — they'll catch now, but we need fire.")
                     print(f"  We need a torch. CRAFT TORCH if you have luminous moss and wire.\"")
 
         elif room.id == "vw_control" and not quest.get("roots_cleared"):
@@ -3278,7 +3278,7 @@ class Game:
             # First attempt — she confronts you
             quest["lira_warned"] = True
             print()
-            display.narrate("You raise the torch toward the weakened roots —")
+            display.narrate("You raise the torch toward the resin-coated roots —")
             print()
             display.narrate("A hand grabs your wrist. Hard.")
             print()
