@@ -24,7 +24,6 @@ DIR_OFFSETS = {
     "east": (0, 1), "west": (0, -1),
     "northwest": (-1, -1), "northeast": (-1, 1),
     "southwest": (1, -1), "southeast": (1, 1),
-    "up": (-1, 0), "down": (1, 0),
 }
 
 
@@ -98,6 +97,8 @@ def _build_skerry_grid(rooms):
         for direction, target_id in room.exits.items():
             if target_id in placed:
                 continue
+            if direction in _VERTICAL_DIRS:
+                continue  # UP/DOWN can't be placed on 2D grid
             target_room = rooms.get(target_id)
             if not target_room or target_room.zone != "skerry":
                 continue
@@ -149,14 +150,25 @@ def _room_box(room_id, rooms, current_room_id, zone_id):
         return f"{display.CYAN}[ ]{display.RESET}"
 
 
+_VERTICAL_DIRS = {"up", "down"}
+
+
 def _are_connected(room_id_a, room_id_b, rooms):
-    """Check if two rooms are directly connected via exits."""
+    """Check if two rooms are directly connected via planar exits.
+
+    Ignores UP/DOWN exits — those represent vertical layers that can't be
+    drawn on a 2D map without creating misleading diagonal lines.
+    """
     room_a = rooms.get(room_id_a)
-    if room_a and room_id_b in room_a.exits.values():
-        return True
+    if room_a:
+        for d, target in room_a.exits.items():
+            if target == room_id_b and d not in _VERTICAL_DIRS:
+                return True
     room_b = rooms.get(room_id_b)
-    if room_b and room_id_a in room_b.exits.values():
-        return True
+    if room_b:
+        for d, target in room_b.exits.items():
+            if target == room_id_a and d not in _VERTICAL_DIRS:
+                return True
     return False
 
 
