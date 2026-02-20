@@ -22,8 +22,8 @@ COMBAT_EFFECTS = {
         "desc": "+2 defense",
     },
     "SETUP": {
-        "label": "Free Invoke",
-        "desc": "free invoke on enemy aspect",
+        "label": "Exploit Advantage",
+        "desc": "exploit advantage on enemy aspect",
     },
 }
 

@@ -471,7 +471,7 @@ def _steward_arrive(game):
 def _explorer_free_hints(cmd, args, game):
     """Contextual hints during the explorer_free step.
 
-    Teaching order: ATTACK → EXPLOIT → free invocation on ATTACK → INVOKE (paid).
+    Teaching order: ATTACK → EXPLOIT → exploit advantage on ATTACK → INVOKE (paid).
     """
     room = game.current_room()
     if not room:
@@ -509,15 +509,15 @@ def _explorer_free_hints(cmd, args, game):
     if cmd == "exploit" and exploit_done and not game.state.get("_exploit_celebrated"):
         game.state["_exploit_celebrated"] = True
         print()
-        display.seed_speak("Now ATTACK — your free invocation will fire automatically.")
+        display.seed_speak("Now ATTACK — your exploit advantage will fire automatically.")
         display.seed_speak("+2 to your strike, no fate point spent.")
-        _tutorial_prompt("ATTACK to use your free invocation.")
+        _tutorial_prompt("ATTACK to use your exploit advantage.")
         return
 
-    # Attack consumed a free invocation — celebrate, then teach INVOKE
+    # Attack consumed an exploit advantage — celebrate, then teach INVOKE
     if cmd == "attack" and exploit_done and not invoke_done:
         if not game.state.get("_free_invoke_celebrated") and combat_done:
-            # Enemy was defeated by the free-invocation attack
+            # Enemy was defeated by the exploit-boosted attack
             game.state["_free_invoke_celebrated"] = True
             game.state["tutorial_invoke_done"] = True  # explained = learned
             print()
@@ -530,7 +530,7 @@ def _explorer_free_hints(cmd, args, game):
             game.state["_free_invoke_celebrated"] = True
             game.state["tutorial_invoke_done"] = True  # explained = learned
             print()
-            display.seed_speak("See? That free invocation hit hard.")
+            display.seed_speak("That exploit advantage hit hard.")
             display.seed_speak("There's a faster option too — INVOKE spends a fate")
             display.seed_speak("point to get +2 immediately, no setup turn needed.")
             display.seed_speak("Type INVOKE with no arguments to see all the ways you can use it.")
@@ -735,7 +735,7 @@ def _explorer_free_resume_hint(gs):
         display.seed_speak("Find enemies and ATTACK them.")
     elif not exploit_done:
         display.seed_speak("Find an enemy and try EXPLOIT [aspect] during combat.")
-        display.seed_speak("It sets up free invocations — tactical advantage, no cost.")
+        display.seed_speak("It sets up exploit advantages — free +2 on your next attack, no cost.")
     elif not invoke_done:
         display.seed_speak("You've used EXPLOIT (free setup). Now try INVOKE —")
         display.seed_speak("it spends a fate point for an instant +2, no setup turn.")

@@ -113,6 +113,6 @@ Movement: `n/s/e/w/u/d`. Look: `l/x`. Inventory: `i/inv`. Take: `get/grab/pick`.
 
 - **OFFER is not FEED** — separate verbs, separate handlers, even if similar
 - **Each verb gets its own command** — no combining or aliasing new functionality onto existing commands
-- **FATE system faithful** — aspects, invokes, free invocations, consequences all work per FATE Core rules
+- **FATE system faithful** — aspects, invokes, exploit advantages, consequences all work per FATE Core rules
 - **Recruit minigame uses compass directions** (N/S/E/W), not WASD
 - **Tutorial is thorough** — 3 acts, teaches seed bonding → exploration → steward phase

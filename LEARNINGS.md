@@ -142,13 +142,14 @@ A cosmic entity referenced in endgame lore. Not yet mechanically relevant in the
 
 Combat went through a major overhaul (commit `05d3c07`):
 
-- **EXPLOIT** = FATE's "Create an Advantage" renamed for MUD brevity. Roll Notice vs difficulty. Success = 1 free invocation on that aspect.
-- **Free Invocations** auto-consumed on next ATTACK for +2. Don't cost Fate Points. Can stack (EXPLOIT twice = +4).
+- **EXPLOIT** = FATE's "Create an Advantage" renamed for MUD brevity. Roll Notice vs difficulty. Success = 1 exploit advantage on that aspect.
+- **Exploit advantages** auto-consumed on next ATTACK for +2. Don't cost Fate Points. Can stack (EXPLOIT twice = +4).
 - **EXPLOIT targets:** Room aspects (difficulty 1), enemy aspects (enemy Notice skill). NOT your own aspects — that's what INVOKE is for.
+- **INVOKE** = Spend 1 FP for +2. Works anywhere (not just combat). Floating bonus consumed by next roll (attack, scavenge, craft, treatment, recruitment, initiative).
 - **Enemy turns** happen independently after player actions. Some enemies are aggressive (attack first).
 - **Boosts:** Ties on attack give attacker a one-use +2.
-- **Success with Style on EXPLOIT** grants 2 free invocations instead of 1.
-- **Teaching order:** ATTACK -> EXPLOIT (free!) -> Free Invocations -> INVOKE (paid). This progression from free to costly was deliberate tutorial design.
+- **Success with Style on EXPLOIT** grants 2 exploit advantages instead of 1.
+- **Teaching order:** ATTACK -> EXPLOIT (free!) -> exploit advantages -> INVOKE (paid). This progression from free to costly was deliberate tutorial design.
 
 ## Quest System (Verdant Wreck)
 

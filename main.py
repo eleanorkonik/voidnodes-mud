@@ -46,7 +46,7 @@ class Game:
         self.in_combat = False
         self.combat_target = None
         self.defending = False
-        self.free_invocations = {}  # {aspect_name: count}
+        self.exploit_advantages = {}  # {aspect_name: count} — free +2 from EXPLOIT
         self.combat_boost = 0  # one-use +2 from ties
         self.combat_consequences_taken = 0  # for CONCEDE FP calculation
         self.invoked_aspects = set()  # aspects invoked this combat (once each)
@@ -1758,15 +1758,15 @@ class Game:
         if not enemy_data:
             return
 
-        # Calculate bonus from pending invoke, free invocations, and boost
+        # Calculate bonus from pending invoke, exploit advantages, and boost
         bonus = self._consume_invoke_bonus()
         used_aspect = None
-        if self.free_invocations:
-            # Auto-consume one free invocation
-            aspect_name = next(iter(self.free_invocations))
-            self.free_invocations[aspect_name] -= 1
-            if self.free_invocations[aspect_name] <= 0:
-                del self.free_invocations[aspect_name]
+        if self.exploit_advantages:
+            # Auto-consume one exploit advantage
+            aspect_name = next(iter(self.exploit_advantages))
+            self.exploit_advantages[aspect_name] -= 1
+            if self.exploit_advantages[aspect_name] <= 0:
+                del self.exploit_advantages[aspect_name]
             bonus += 2
             used_aspect = aspect_name
 
@@ -1781,7 +1781,7 @@ class Game:
 
         display.header(f"Combat: {self.explorer.name} vs {enemy_data['name']}")
         if used_aspect:
-            print(f"  {display.DIM}(Free invocation: {display.aspect_text(used_aspect)}){display.RESET}")
+            print(f"  {display.DIM}(Exploit advantage: {display.aspect_text(used_aspect)}){display.RESET}")
         skill_label = f"Fight+{bonus}" if bonus else "Fight"
         base_fight = self.explorer.get_skill("Fight")
         print(f"  {self.explorer.name}: {dice.roll_description(atk_dice, base_fight + bonus, skill_label)}")
@@ -1816,8 +1816,8 @@ class Game:
     def cmd_exploit(self, args):
         """EXPLOIT <aspect> — Create an Advantage by exploiting an aspect.
 
-        Roll Notice vs difficulty to place free invocations on the aspect.
-        Success: 1 free invocation. Success with style (3+): 2 free invocations.
+        Roll Notice vs difficulty to set up a tactical advantage on the aspect.
+        Success: 1 advantage. Success with style (3+): 2 advantages.
         Tie: boost (+2 one-use). Fail: wasted turn, enemy still attacks.
         """
         if not args:
@@ -1872,17 +1872,17 @@ class Game:
         print(f"  {self.explorer.name}: {dice.roll_description(dice_result, notice_val, 'Notice')} ({diff_label})")
 
         if shifts >= 3:
-            # Success with style — 2 free invocations
-            self.free_invocations[found] = self.free_invocations.get(found, 0) + 2
+            # Success with style — 2 advantages
+            self.exploit_advantages[found] = self.exploit_advantages.get(found, 0) + 2
             display.success(f"  Brilliant! You spot exactly how to use {display.aspect_text(found)}.")
-            display.info(f"  (2 free invocations on {found})")
+            display.info(f"  (2 exploit advantages on {found} — free +2 each on your next attacks)")
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_exploit_done"] = True
         elif shifts >= 0:
-            # Success — 1 free invocation
-            self.free_invocations[found] = self.free_invocations.get(found, 0) + 1
+            # Success — 1 advantage
+            self.exploit_advantages[found] = self.exploit_advantages.get(found, 0) + 1
             display.success(f"  You find a way to use {display.aspect_text(found)} to your advantage.")
-            display.info(f"  (1 free invocation on {found})")
+            display.info(f"  (Exploit advantage on {found} — free +2 on your next attack)")
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_exploit_done"] = True
         elif shifts == -1:
@@ -2066,11 +2066,11 @@ class Game:
 
         bonus = 2  # invoke bonus
         used_free = None
-        if self.free_invocations:
-            free_aspect = next(iter(self.free_invocations))
-            self.free_invocations[free_aspect] -= 1
-            if self.free_invocations[free_aspect] <= 0:
-                del self.free_invocations[free_aspect]
+        if self.exploit_advantages:
+            free_aspect = next(iter(self.exploit_advantages))
+            self.exploit_advantages[free_aspect] -= 1
+            if self.exploit_advantages[free_aspect] <= 0:
+                del self.exploit_advantages[free_aspect]
             bonus += 2
             used_free = free_aspect
 
@@ -2086,7 +2086,7 @@ class Game:
         base_fight = self.explorer.get_skill("Fight")
         skill_label = f"Fight+{bonus}"
         if used_free:
-            print(f"  {display.DIM}(Also using free invocation: {display.aspect_text(used_free)}){display.RESET}")
+            print(f"  {display.DIM}(Also using exploit advantage: {display.aspect_text(used_free)}){display.RESET}")
         print(f"  {self.explorer.name}: {dice.roll_description(atk_dice, base_fight + bonus, skill_label)}")
         print(f"  {enemy_data['name']}: {dice.roll_description(def_dice, def_skill_val, 'Fight')}")
 
@@ -2112,14 +2112,14 @@ class Game:
         self._enemy_turn()
 
     def _invoke_setup(self, invoked_aspect):
-        """INVOKE for free invocation — gain a free invoke on a random enemy aspect."""
+        """INVOKE SETUP — gain an exploit advantage on a random enemy aspect."""
         enemy_data = self.enemies_db.get(self.combat_target, {})
         enemy_aspects = enemy_data.get("aspects", [])
         if enemy_aspects:
             target_aspect = random.choice(enemy_aspects)
-            self.free_invocations[target_aspect] = self.free_invocations.get(target_aspect, 0) + 1
+            self.exploit_advantages[target_aspect] = self.exploit_advantages.get(target_aspect, 0) + 1
             display.narrate(f"  You spot an opening in {display.aspect_text(target_aspect)}.")
-            display.info(f"  (Free invocation gained — will auto-apply on your next attack)")
+            display.info(f"  (Exploit advantage gained — free +2 on your next attack)")
         else:
             # No enemy aspects — grant a generic boost instead
             self.combat_boost += 2
@@ -3492,7 +3492,7 @@ class Game:
         self.in_combat = True
         self.combat_target = enemy_id
         self.defending = False
-        self.free_invocations = {}
+        self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
         self.invoked_aspects = set()
@@ -3506,7 +3506,7 @@ class Game:
         self.in_combat = False
         self.combat_target = None
         self.defending = False
-        self.free_invocations = {}
+        self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
         self.invoked_aspects = set()
