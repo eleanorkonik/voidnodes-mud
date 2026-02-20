@@ -1269,6 +1269,10 @@ class Game:
                     display.seed_speak("Not yet. Get to know this place first.")
                     return
             elif phase == "explorer" and step != "explorer_handoff":
+                steward_name = self.steward_name
+                display.narrate(f"{self.seed_name} refuses to turn its attention away. There's more")
+                display.narrate(f"you need to learn before it's comfortable focusing on {steward_name} again.")
+                print()
                 tutorial.get_current_hint(step, self.state)
                 return
 
