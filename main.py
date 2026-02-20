@@ -1064,7 +1064,13 @@ class Game:
                     beds = f"{len(settled_names)}/{room.max_workers}"
                     parts.append(f"settled={settled_str} ({beds}), workers={worker_str}")
                 if not parts:
-                    parts.append("—")
+                    # Landing pad: count reachable void nodes
+                    if room.id == "skerry_landing":
+                        node_count = sum(1 for dest in room.exits.values()
+                                         if not dest.startswith("skerry_"))
+                        parts.append(f"{node_count} node{'s' if node_count != 1 else ''} within sensing distance")
+                    else:
+                        parts.append("—")
                 print(f"  {display.npc_name(room.name)}: {', '.join(parts)}")
             if self.skerry.expandable:
                 inv_counts = self._inventory_counts(self.steward)
