@@ -791,7 +791,7 @@ class Game:
         if room.zone != target_room.zone:
             display.narrate("The void stretches before you.")
             if target_room.zone == "skerry":
-                display.seed_speak("I feel the skerry pulling us back.")
+                display.seed_speak("Are you ready to come home?")
                 display.info("  SEEK HOME to return.")
             else:
                 aspect = self._get_zone_aspect_for_zone(target_room.zone)
