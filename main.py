@@ -1269,7 +1269,7 @@ class Game:
                     display.seed_speak("Not yet. Get to know this place first.")
                     return
             elif phase == "explorer" and step != "explorer_handoff":
-                display.seed_speak("You still have work to do out here.")
+                tutorial.get_current_hint(step, self.state)
                 return
 
         # Validate: not switching to current
