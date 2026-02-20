@@ -987,11 +987,21 @@ class Game:
                 structures = ", ".join(room.structures) if room.structures else "none"
                 print(f"  {display.npc_name(room.name)}: structures={structures}")
             if self.skerry.expandable:
+                inv_counts = self._inventory_counts(self.steward)
+                room = self.current_room()
+                if room:
+                    for item_id in room.items:
+                        inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+                npc_count = len(self.state.get("recruited_npcs", []))
                 print(f"\n  {display.BOLD}Buildable:{display.RESET}")
                 for tmpl in self.skerry.expandable:
                     reqs = tmpl.get("requires", {})
                     mats = ", ".join(f"{v}x {k.replace('_', ' ')}" for k, v in reqs.get("materials", {}).items())
-                    print(f"    {tmpl['name']} — needs: {mats}")
+                    can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
+                    if can:
+                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
+                    else:
+                        print(f"    {tmpl['name']} — needs: {mats}")
             return
 
         # Check NPC
