@@ -10,7 +10,7 @@ STEPS = [
     "first_look",            # prompt to LOOK — first perception of the skerry
     "movement",              # prompt to GO somewhere
     "exploring",             # free exploration, encounter explorer at shelter
-    "check_seed",            # CHECK SEED — learn about motes
+    "check_seed",            # CHECK SKERRY — learn about domain overview
     "handoff",               # switch focus to explorer
 
     # Act 2 — Sevarik Explorer
@@ -171,7 +171,6 @@ def after_command(cmd, args, game):
         print()
         display.seed_speak("See? Through our bond, you can sense the whole skerry.")
         display.seed_speak("Who's here, what's built, what we can still build.")
-        display.seed_speak("Feed me artifacts and materials, and I grow stronger — more motes means more I can do.")
         print()
         display.seed_speak(f"Now... is it OK if I switch my focus to {explorer_name}?")
         display.seed_speak("Now that you're here, it's safe to let him explore.")
@@ -402,8 +401,7 @@ def _show_the_split(game):
 
     display.seed_speak("I can only focus on one of you at a time, though.")
     display.seed_speak("Perhaps that will change later, as we expand the skerry.")
-    display.seed_speak("But I need more motes before I can grow. I'm limited")
-    display.seed_speak("in what I can protect, for now.")
+    display.seed_speak("I'm limited in what I can protect, for now.")
     print()
 
     display.seed_speak("Before we go further — CHECK the skerry. See how we're doing.")
