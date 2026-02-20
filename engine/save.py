@@ -140,13 +140,16 @@ def _migrate_state(state):
             npc["assignment"] = "salvage"
         if npc.get("assignment") == "building":
             npc["assignment"] = "idle"
+        if npc.get("assignment") == "resting":
+            npc["assignment"] = "communal"
         npc.setdefault("recruit_attempts", 0)
         npc.setdefault("following", False)
         npc.setdefault("settled_room", None)
+        npc.setdefault("assigned_subtask", None)
     # Ensure skerry rooms have role/barracks_spaces/tool_level fields
     _room_defaults = {
         "skerry_central": {"role": None},
-        "skerry_shelter": {"role": "rest", "barracks_spaces": 2},
+        "skerry_shelter": {"role": "communal", "barracks_spaces": 2},
         "skerry_hollow": {"role": None},
         "skerry_junkyard": {"role": "salvage"},
         "skerry_landing": {"role": None},
@@ -165,6 +168,9 @@ def _migrate_state(state):
         room_data.setdefault("role", None)
         room_data.setdefault("barracks_spaces", 0)
         room_data.setdefault("tool_level", 0)
+        # Migrate old "rest" role → "communal"
+        if room_data.get("role") == "rest":
+            room_data["role"] = "communal"
     for tmpl in skerry_data.get("expandable_rooms", []):
         rid = tmpl.get("id", "")
         defaults = _room_defaults.get(rid, {})
