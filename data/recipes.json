@@ -42,7 +42,8 @@
         "result": "water_filter",
         "difficulty": 3,
         "skill": "Craft",
-        "description": "Build a filtration device using crystal resonance to purify void-mist."
+        "description": "Build a filtration device using crystal resonance to purify void-mist.",
+        "requires_room": "skerry_workshop"
     },
     "bandages": {
         "id": "bandages",
@@ -60,7 +61,8 @@
         "result": "signal_beacon",
         "difficulty": 4,
         "skill": "Craft",
-        "description": "Craft a powerful beacon from ancient metals and bioluminescent moss."
+        "description": "Craft a powerful beacon from ancient metals and bioluminescent moss.",
+        "requires_room": "skerry_workshop"
     },
     "hearty_stew": {
         "id": "hearty_stew",

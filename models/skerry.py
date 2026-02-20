@@ -23,6 +23,11 @@ class Skerry:
         """Get all skerry rooms."""
         return list(self.rooms.values())
 
+    def population_cap(self):
+        """Total population the skerry can support: room count + barracks spaces."""
+        barracks = sum(r.barracks_spaces for r in self.rooms.values())
+        return len(self.rooms) + barracks
+
     def has_structure(self, structure_name):
         """Check if a structure has been built on the skerry."""
         return structure_name in self.structures

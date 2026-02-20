@@ -317,8 +317,8 @@ def after_command(cmd, args, game):
                 npc_id = recruited[0]
                 npc_name = game.npcs_db.get(npc_id, {}).get("name", npc_id)
                 display.seed_speak(f"Now put your recruit to work.")
-                display.seed_speak(f"ASSIGN {npc_name.upper()} SALVAGE — she can sort what comes in.")
-                _tutorial_prompt(f"ASSIGN {npc_name.upper()} SALVAGE.")
+                display.seed_speak(f"ASSIGN {npc_name.upper()} JUNKYARD — she can sort what comes in.")
+                _tutorial_prompt(f"ASSIGN {npc_name.upper()} JUNKYARD.")
             else:
                 display.seed_speak("Well done. You'll need help eventually —")
                 display.seed_speak("Sevarik can recruit survivors on his next expedition.")
@@ -736,8 +736,8 @@ def get_current_hint(step, game_state=None):
         recruited = gs.get("recruited_npcs", [])
         if recruited:
             npc_name = recruited[0].replace("_", " ").title()
-            display.seed_speak(f"ASSIGN {npc_name.upper()} SALVAGE.")
-            _tutorial_prompt(f"ASSIGN {npc_name.upper()} SALVAGE.")
+            display.seed_speak(f"ASSIGN {npc_name.upper()} JUNKYARD.")
+            _tutorial_prompt(f"ASSIGN {npc_name.upper()} JUNKYARD.")
         else:
             display.seed_speak("You'll need recruits to assign tasks.")
 

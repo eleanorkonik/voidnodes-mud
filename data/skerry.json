@@ -14,7 +14,9 @@
             "discovered": true,
             "structures": [],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": null,
+            "max_workers": 0
         },
         {
             "id": "skerry_shelter",
@@ -29,7 +31,10 @@
             "discovered": true,
             "structures": ["basic_shelter"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "rest",
+            "max_workers": 2,
+            "barracks_spaces": 2
         },
         {
             "id": "skerry_hollow",
@@ -44,7 +49,9 @@
             "discovered": true,
             "structures": [],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": null,
+            "max_workers": 0
         },
         {
             "id": "skerry_junkyard",
@@ -59,7 +66,9 @@
             "discovered": true,
             "structures": ["junkyard"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "salvage",
+            "max_workers": 2
         },
         {
             "id": "skerry_landing",
@@ -74,7 +83,9 @@
             "discovered": true,
             "structures": [],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": null,
+            "max_workers": 0
         }
     ],
     "expandable_rooms": [
@@ -89,7 +100,9 @@
             "requires": {"materials": {"metal_scraps": 2, "rope": 1}, "npcs": 1},
             "structures": ["storehouse"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "organize",
+            "max_workers": 2
         },
         {
             "id": "skerry_workshop",
@@ -102,7 +115,10 @@
             "requires": {"materials": {"metal_scraps": 3, "basic_tools": 1}, "npcs": 1},
             "structures": ["workshop"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "craft",
+            "max_workers": 2,
+            "tool_level": 0
         },
         {
             "id": "skerry_garden",
@@ -116,6 +132,8 @@
             "structures": ["garden"],
             "assigned_npcs": [],
             "resources": {},
+            "role": "garden",
+            "max_workers": 2,
             "garden": {
                 "plots": [
                     {"id": 1, "plant": null, "soil": {"n": 10, "p": 10, "k": 10}},
@@ -137,7 +155,9 @@
             "requires": {"materials": {"crystal_shards": 2, "frozen_water": 1}, "seed_stage": 1},
             "structures": ["water_collection"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "gather",
+            "max_workers": 2
         },
         {
             "id": "skerry_lookout",
@@ -150,7 +170,9 @@
             "requires": {"materials": {"ancient_alloys": 2, "wire": 2}, "npcs": 2},
             "structures": ["lookout_post"],
             "assigned_npcs": [],
-            "resources": {}
+            "resources": {},
+            "role": "guard",
+            "max_workers": 2
         }
     ]
 }

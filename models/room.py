@@ -19,6 +19,10 @@ class Room:
         self.structures = list(data.get("structures", []))
         self.assigned_npcs = list(data.get("assigned_npcs", []))
         self.resources = dict(data.get("resources", {}))
+        self.role = data.get("role")
+        self.max_workers = data.get("max_workers", 2)
+        self.tool_level = data.get("tool_level", 0)
+        self.barracks_spaces = data.get("barracks_spaces", 0)
 
     def discover(self):
         """Mark room as discovered."""
@@ -85,4 +89,12 @@ class Room:
             d["assigned_npcs"] = self.assigned_npcs
         if self.resources:
             d["resources"] = self.resources
+        if self.role is not None:
+            d["role"] = self.role
+        if self.max_workers:
+            d["max_workers"] = self.max_workers
+        if self.tool_level:
+            d["tool_level"] = self.tool_level
+        if self.barracks_spaces:
+            d["barracks_spaces"] = self.barracks_spaces
         return d

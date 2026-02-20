@@ -1024,9 +1024,25 @@ class Game:
 
         if target == "skerry":
             display.header("Skerry Status")
+            cap = self.skerry.population_cap()
+            current = 2 + len(self.state.get("recruited_npcs", []))
+            print(f"  Population: {current}/{cap}")
+            print()
             for room in self.skerry.get_all_rooms():
-                structures = ", ".join(room.structures) if room.structures else "none"
-                print(f"  {display.npc_name(room.name)}: structures={structures}")
+                parts = []
+                if room.structures:
+                    parts.append(f"structures={', '.join(room.structures)}")
+                if room.role:
+                    worker_names = []
+                    for npc_id in room.assigned_npcs:
+                        npc = self.npcs_db.get(npc_id)
+                        if npc:
+                            worker_names.append(npc["name"])
+                    worker_str = ", ".join(worker_names) if worker_names else "none"
+                    parts.append(f"role={room.role}, workers={worker_str} ({len(room.assigned_npcs)}/{room.max_workers})")
+                if not parts:
+                    parts.append("—")
+                print(f"  {display.npc_name(room.name)}: {', '.join(parts)}")
             if self.skerry.expandable:
                 inv_counts = self._inventory_counts(self.steward)
                 room = self.current_room()
@@ -1060,7 +1076,14 @@ class Game:
             if npc.get("recruited"):
                 display.info(f"  Loyalty: {npc.get('loyalty', 0)}/10")
                 display.info(f"  Mood: {npc.get('mood', 'unknown')}")
-                display.info(f"  Assignment: {npc.get('assignment', 'idle')}")
+                assignment = npc.get("assignment", "idle")
+                assigned_room_id = npc.get("assigned_room")
+                if assigned_room_id:
+                    assigned_room_obj = self.skerry.get_room(assigned_room_id)
+                    room_name = assigned_room_obj.name if assigned_room_obj else assigned_room_id
+                    display.info(f"  Assignment: {assignment} ({room_name})")
+                else:
+                    display.info(f"  Assignment: {assignment}")
                 house_level = npc.get("house_level", 0)
                 house_names = {0: "none", 1: "tent", 2: "proper house"}
                 display.info(f"  Housing: {house_names.get(house_level, 'unknown')}")
@@ -2831,6 +2854,14 @@ class Game:
             display.narrate(f"{npc['name']} can't be recruited.")
             return
 
+        # Population cap check
+        cap = self.skerry.population_cap()
+        current = 2 + len(self.state.get("recruited_npcs", []))
+        if current >= cap:
+            display.seed_speak("We can't support any more people yet.")
+            display.info(f"  Population: {current}/{cap}. Build more rooms.")
+            return
+
         # Special conditions
         condition = npc.get("recruit_condition")
         if condition == "combat_demo":
@@ -3243,20 +3274,29 @@ class Game:
                 npc["location"] = target_room_id
 
     def _followers_to_skerry(self):
-        """Move all followers to the skerry when the explorer comes home."""
+        """Move all followers to the skerry when the explorer comes home.
+        NPCs assigned to rooms stay where they are."""
         for npc_id, npc in self.npcs_db.items():
             if npc.get("following"):
                 npc["following"] = False
-                npc["location"] = "skerry_central"
-                skerry_central = self.rooms.get("skerry_central")
-                if skerry_central and npc_id not in skerry_central.npcs:
-                    skerry_central.add_npc(npc_id)
+                # Room-assigned NPCs stay at their post
+                if npc.get("assigned_room"):
+                    npc["location"] = npc["assigned_room"]
+                else:
+                    npc["location"] = "skerry_central"
+                    skerry_central = self.rooms.get("skerry_central")
+                    if skerry_central and npc_id not in skerry_central.npcs:
+                        skerry_central.add_npc(npc_id)
 
     def _followers_rejoin_explorer(self):
-        """Followers leave the skerry and rejoin the explorer."""
+        """Followers leave the skerry and rejoin the explorer.
+        NPCs assigned to rooms stay on the skerry."""
         explorer_loc = self.state.get("explorer_location", "skerry_central")
         for npc_id, npc in self.npcs_db.items():
             if npc.get("recruited") and npc_id != "sevarik":
+                # Skip NPCs assigned to rooms — they stay working
+                if npc.get("assigned_room"):
+                    continue
                 npc["following"] = True
                 npc["location"] = explorer_loc
                 # Remove from skerry room
@@ -3323,6 +3363,16 @@ class Game:
             display.error(f"You haven't learned the {recipe['name']} recipe yet.")
             return
 
+        # Check room requirement
+        required_room = recipe.get("requires_room")
+        if required_room:
+            room = self.current_room()
+            if not room or room.id != required_room:
+                req_room_obj = self.rooms.get(required_room)
+                req_name = req_room_obj.name if req_room_obj else required_room
+                display.error(f"This recipe requires the {req_name}. Go there first.")
+                return
+
         # Check materials — inventory + room items + food stores (for food recipes)
         char = self.current_character()
         room = self.current_room()
@@ -3352,9 +3402,17 @@ class Game:
         dc = recipe["difficulty"]
         invoke_bonus = self._consume_invoke_bonus()
         skill_val = char.get_skill(skill_name) + invoke_bonus
+        # Workshop bonus when crafting in the workshop
+        workshop_bonus = 0
+        craft_room = self.current_room()
+        if craft_room and craft_room.id == "skerry_workshop":
+            workshop_bonus = 1 + craft_room.tool_level
+            skill_val += workshop_bonus
         label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
         total, shifts, dice_result = dice.skill_check(skill_val, dc)
         print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)}")
+        if workshop_bonus:
+            print(f"  Workshop bonus: +{workshop_bonus}")
         print(f"  DC: {dc:+d}")
 
         if shifts >= 0:
@@ -3523,30 +3581,66 @@ class Game:
 
         display.error(f"Nothing called '{target}' to build. Type CHECK SKERRY for options.")
 
+    def _unassign_npc(self, npc_id, npc):
+        """Remove an NPC from their current room assignment."""
+        old_room_id = npc.get("assigned_room")
+        if old_room_id:
+            old_room = self.skerry.get_room(old_room_id)
+            if old_room and npc_id in old_room.assigned_npcs:
+                old_room.assigned_npcs.remove(npc_id)
+        npc["assignment"] = "idle"
+        npc["assigned_room"] = None
+
     def cmd_assign(self, args):
         if len(args) < 2:
-            display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, building, gardening, guarding, crafting)")
+            display.error("Usage: ASSIGN <npc> <room>  (e.g. ASSIGN LIRA JUNKYARD, or ASSIGN LIRA IDLE)")
             return
 
         npc_target = args[0].lower()
-        task = args[1].lower()
-        valid_tasks = ["salvage", "building", "gardening", "guarding", "crafting", "idle"]
-
-        if task not in valid_tasks:
-            display.error(f"Unknown task: '{task}'. Valid tasks: {', '.join(valid_tasks)}")
-            return
+        room_target = " ".join(args[1:]).lower()
 
         npc_id, npc = self._find_in_db(npc_target, self.npcs_db)
         if not npc or not npc.get("recruited"):
             display.error(f"No recruited NPC named '{npc_target}'.")
             return
 
+        # IDLE unassigns
+        if room_target == "idle":
+            self._unassign_npc(npc_id, npc)
+            display.success(f"{npc['name']} is now idle.")
+            return
+
+        # Fuzzy-match room name
+        target_room = None
+        for room in self.skerry.get_all_rooms():
+            if room_target in room.name.lower() or room_target == room.id:
+                target_room = room
+                break
+
+        if not target_room:
+            display.error(f"No skerry room matching '{room_target}'.")
+            return
+
+        if target_room.role is None:
+            display.error(f"{target_room.name} doesn't accept workers.")
+            return
+
+        if len(target_room.assigned_npcs) >= target_room.max_workers:
+            display.error(f"{target_room.name} is full ({target_room.max_workers}/{target_room.max_workers} workers).")
+            return
+
+        # Organize skill check (DC 1)
         total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Organize"), 1)
         print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Organize'), 'Organize')}")
 
         if shifts >= 0:
-            npc["assignment"] = task
-            display.success(f"Assigned {npc['name']} to {task}.")
+            # Remove from old room first
+            self._unassign_npc(npc_id, npc)
+            # Assign to new room
+            target_room.assigned_npcs.append(npc_id)
+            npc["assignment"] = target_room.role
+            npc["assigned_room"] = target_room.id
+            display.success(f"Assigned {npc['name']} to {target_room.name}.")
         else:
             display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
 
@@ -3562,7 +3656,15 @@ class Game:
                               "crisis": display.BRIGHT_RED}
                 mood = npc.get("mood", "content")
                 mc = mood_colors.get(mood, display.WHITE)
-                print(f"  {display.npc_name(npc['name'])}: {npc.get('assignment', 'idle')} — "
+                assignment = npc.get("assignment", "idle")
+                assigned_room_id = npc.get("assigned_room")
+                if assigned_room_id:
+                    ar_obj = self.skerry.get_room(assigned_room_id)
+                    loc = ar_obj.name if ar_obj else assigned_room_id
+                    assign_str = f"{assignment} ({loc})"
+                else:
+                    assign_str = assignment
+                print(f"  {display.npc_name(npc['name'])}: {assign_str} — "
                       f"Loyalty: {npc.get('loyalty', 0)}/10 — {mc}{mood}{display.RESET}")
         if not has_npcs:
             print("  No NPCs recruited yet.")
@@ -4533,26 +4635,61 @@ class Game:
                         npc["mood"] = "restless"
                         display.info(f"  {npc['name']} is getting restless without proper shelter.")
 
-        # NPC task yields
-        for npc_id, npc in self.npcs_db.items():
-            if not npc.get("recruited"):
+        # Room-driven NPC production
+        for room in self.skerry.get_all_rooms():
+            if not room.role or not room.assigned_npcs:
                 continue
-            task = npc.get("assignment", "idle")
-            if task == "salvage":
-                if random.random() < 0.6:
-                    loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
-                    # Deposit in junkyard room, not steward inventory
-                    junkyard = self.rooms.get("skerry_junkyard")
-                    if junkyard:
-                        junkyard.add_item(loot)
-                    else:
-                        self.steward.add_to_inventory(loot)
-                    loot_name = self.items_db.get(loot, {}).get("name", loot)
-                    display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
-            elif task == "gardening":
+            workers = [self.npcs_db[nid] for nid in room.assigned_npcs
+                       if nid in self.npcs_db and self.npcs_db[nid].get("recruited")]
+            if not workers:
+                continue
+
+            if room.role == "salvage":
+                for npc in workers:
+                    if random.random() < 0.6:
+                        loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
+                        room.add_item(loot)
+                        loot_name = self.items_db.get(loot, {}).get("name", loot)
+                        display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
+
+            elif room.role == "garden":
                 pass  # Gardening handled below in auto-farming section
-            elif task == "guarding":
-                display.info(f"  {npc['name']} keeps watch over the skerry.")
+
+            elif room.role == "guard":
+                names = " and ".join(w["name"] for w in workers)
+                display.info(f"  {names} keeps watch over the skerry.")
+
+            elif room.role == "craft":
+                for npc in workers:
+                    if random.random() < 0.5:
+                        craft_skill = npc.get("skills", {}).get("Craft", 1)
+                        if craft_skill >= 3:
+                            item = random.choice(["basic_tools", "shelter_patch", "rope"])
+                        else:
+                            item = random.choice(["rope", "shelter_patch"])
+                        room.add_item(item)
+                        item_name = self.items_db.get(item, {}).get("name", item)
+                        display.success(f"  {npc['name']} (workshop) crafted: {item_name}")
+                # Chance to improve tool_level
+                if room.tool_level < 3 and random.random() < 0.3:
+                    room.tool_level += 1
+                    display.success(f"  Workshop tools improved! Tool level: {room.tool_level}")
+
+            elif room.role == "organize":
+                names = " and ".join(w["name"] for w in workers)
+                display.info(f"  {names} keeps the storehouse in order.")
+
+            elif room.role == "gather":
+                for npc in workers:
+                    if random.random() < 0.5:
+                        room.add_item("frozen_water")
+                        display.success(f"  {npc['name']} (water collection) gathered: Frozen Water")
+
+            elif room.role == "rest":
+                for npc in workers:
+                    if npc.get("mood") == "restless":
+                        npc["mood"] = "content"
+                        display.info(f"  {npc['name']} rests and feels better.")
 
         # Random event
         if random.random() < 0.4:
@@ -4612,8 +4749,8 @@ class Game:
         # ── Auto-farming: plant growth, NPC harvest, NPC planting ──
         if self.skerry.has_structure("garden"):
             plots = self.skerry.get_garden_plots()
-            gardening_count = sum(1 for n in self.npcs_db.values()
-                                  if n.get("recruited") and n.get("assignment") == "gardening")
+            garden_room = self.skerry.get_room("skerry_garden")
+            gardening_count = len(garden_room.assigned_npcs) if garden_room else 0
 
             # Advance growth on all plots
             newly_ready = farming.advance_growth(plots, gardening_count)
@@ -4703,8 +4840,8 @@ class Game:
                 for nid in departed:
                     npc = self.npcs_db[nid]
                     display.warning(f"  {npc['name']} has left the colony — too hungry to stay.")
+                    self._unassign_npc(nid, npc)
                     npc["recruited"] = False
-                    npc["assignment"] = "idle"
                     if nid in self.state.get("recruited_npcs", []):
                         self.state["recruited_npcs"].remove(nid)
                 self.steward.apply_damage(1)
