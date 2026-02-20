@@ -259,7 +259,7 @@ def after_command(cmd, args, game):
                 _advance_to_artifact_or_stash(game)
         return False
 
-    if step == "explorer_settle" and cmd == "settle":
+    if step == "explorer_settle":
         if game.state.get("tutorial_settle_done"):
             _advance_to_artifact_or_stash(game)
         return False
