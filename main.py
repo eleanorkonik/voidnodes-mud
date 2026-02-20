@@ -2737,6 +2737,34 @@ class Game:
                 self._narrate_void_crossing(from_room, to_room)
             display.display_room(to_room, self.game_context())
 
+    def cmd_settle(self, args):
+        """SETTLE <npc> — settle a following NPC on the skerry."""
+        if not args:
+            display.error("Settle who? SETTLE <name>.")
+            return
+        target = " ".join(args).lower()
+        room = self.current_room()
+        if not room or room.zone != "skerry":
+            display.error("You can only settle people on the skerry.")
+            return
+
+        npc_id, npc = self._find_in_db(target, self.npcs_db)
+        if not npc or not npc.get("recruited"):
+            display.error(f"No recruited companion named '{target}'.")
+            return
+        if not npc.get("following"):
+            display.narrate(f"{npc['name']} is already settled here.")
+            return
+
+        npc["following"] = False
+        npc["location"] = "skerry_central"
+        skerry_central = self.rooms.get("skerry_central")
+        if skerry_central and npc_id not in skerry_central.npcs:
+            skerry_central.add_npc(npc_id)
+        display.success(f"{npc['name']} settles in on the skerry.")
+        display.narrate(f"{npc['name']} looks around, taking it in. For now, the clearing will do.")
+        self.state["tutorial_settle_done"] = True
+
     # ── Steward Commands ─────────────────────────────────────────
 
     def cmd_craft(self, args):

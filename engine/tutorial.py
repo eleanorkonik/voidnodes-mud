@@ -18,6 +18,7 @@ STEPS = [
     "explorer_void_cross",   # SEEK — first void crossing
     "explorer_free",         # flexible exploration: combat, invoke, artifact, recruit
     "explorer_return",       # SEEK HOME back to skerry
+    "explorer_settle",       # SETTLE recruited NPC on the skerry
     "explorer_artifact",     # resolve artifact: KEEP, OFFER, or GIVE
     "explorer_stash",        # go to junkyard, DROP materials
     "explorer_handoff",      # SWITCH FOCUS TO MIRIA
@@ -248,18 +249,25 @@ def after_command(cmd, args, game):
             print()
             display.narrate(f"{game.steward_name} hurries out to the landing pad as you arrive.")
             print()
-            # Check if player has an unresolved artifact
-            _has_artifact = _player_has_unresolved_artifact(game)
-            if _has_artifact:
-                seed_name = game.state.get("world_seed_name", "Tuft")
-                steward_name = game.state.get("steward_name", "Miria")
-                display.seed_speak("Now, what about that artifact you brought back?")
-                display.seed_speak(f"You have three choices: KEEP it for the stat bonus.")
-                display.seed_speak(f"OFFER it TO {seed_name.upper()} for motes.")
-                display.seed_speak(f"Or GIVE it TO {steward_name.upper()}.")
-                game.state["tutorial_step"] = "explorer_artifact"
+            # Check if player brought a recruited NPC home
+            _has_follower = any(
+                npc.get("following") for npc in game.npcs_db.values()
+                if npc.get("recruited")
+            )
+            if _has_follower:
+                follower_name = next(
+                    npc["name"] for npc in game.npcs_db.values()
+                    if npc.get("following") and npc.get("recruited")
+                )
+                display.seed_speak(f"You brought someone back. SETTLE {follower_name.upper()} so she has a place here.")
+                game.state["tutorial_step"] = "explorer_settle"
             else:
-                _advance_to_stash(game)
+                _advance_to_artifact_or_stash(game)
+        return False
+
+    if step == "explorer_settle" and cmd == "settle":
+        if game.state.get("tutorial_settle_done"):
+            _advance_to_artifact_or_stash(game)
         return False
 
     if step == "explorer_artifact":
@@ -411,6 +419,20 @@ def _player_has_unresolved_artifact(game):
             if status not in ("kept", "fed", "given"):
                 return True
     return False
+
+
+def _advance_to_artifact_or_stash(game):
+    """After settling followers, prompt artifact resolution or skip to stash."""
+    if _player_has_unresolved_artifact(game):
+        seed_name = game.state.get("world_seed_name", "Tuft")
+        steward_name = game.state.get("steward_name", "Miria")
+        print()
+        display.seed_speak("You brought something back. Something with power.")
+        display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
+        display.seed_speak(f"or GIVE it TO {steward_name.upper()}.")
+        game.state["tutorial_step"] = "explorer_artifact"
+    else:
+        _advance_to_stash(game)
 
 
 def _advance_to_stash(game):
@@ -661,6 +683,14 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_return":
         display.seed_speak("Head south to the entry room, then SEEK home.")
         _tutorial_prompt("SEEK HOME to return to the skerry.")
+    elif step == "explorer_settle":
+        follower_name = next(
+            (npc["name"] for npc in gs.get("npcs", {}).values()
+             if npc.get("following") and npc.get("recruited")),
+            "your companion"
+        )
+        display.seed_speak(f"SETTLE {follower_name.upper()} so they have a place here.")
+        _tutorial_prompt(f"SETTLE {follower_name.upper()}.")
     elif step == "explorer_artifact":
         display.seed_speak(f"What will you do with the artifact?")
         display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")

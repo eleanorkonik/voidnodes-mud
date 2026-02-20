@@ -66,6 +66,7 @@ COMMANDS = {
     "keep":      {"phases": ["explorer", "prologue"], "args": "required"},
     "recruit":   {"phases": ["explorer"], "args": "required"},
     "retreat":   {"phases": ["explorer"], "args": "none"},
+    "settle":    {"phases": ["explorer"], "args": "required"},
     "enter":     {"phases": ["explorer", "steward"], "args": "required"},
     "seek":      {"phases": ["explorer", "steward"], "args": "required"},
     "take":      {"phases": ["explorer", "prologue"], "args": "required"},
