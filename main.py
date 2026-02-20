@@ -1103,12 +1103,11 @@ class Game:
                         else:
                             mat_parts.append(label)
                     mats = ", ".join(mat_parts)
-                    loc = self._build_location_label(tmpl)
                     can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
                     if can:
-                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} ({loc}) — needs: {mats}")
+                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
                     else:
-                        print(f"    {tmpl['name']} ({loc}) — needs: {mats}")
+                        print(f"    {tmpl['name']} — needs: {mats}")
             return
 
         # Check NPC
@@ -3579,13 +3578,47 @@ class Game:
             else:
                 print(f"  {display.DIM}{recipe.get('name', rid)}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)}){display.RESET}")
 
-    def _build_location_label(self, tmpl):
-        """Get a human-readable location label for a buildable room template."""
-        for room_id, direction in tmpl.get("connect_to", {}).items():
-            room = self.rooms.get(room_id)
-            if room:
-                return f"{direction} of {room.name}"
-        return "on the skerry"
+    OPPOSITE_DIR = {
+        "north": "south", "south": "north",
+        "east": "west", "west": "east",
+        "up": "down", "down": "up",
+    }
+
+    def _get_build_sites(self):
+        """Get available build sites — open directions on existing skerry rooms."""
+        sites = []
+        for room in self.skerry.get_all_rooms():
+            used = set(room.exits.keys())
+            for direction in ("north", "south", "east", "west"):
+                if direction not in used:
+                    sites.append((room.id, room.name, direction))
+        return sites
+
+    def _parse_build_location(self, words):
+        """Parse '<direction> of <room>' from build args. Returns (room_id, direction) or None."""
+        # Find 'of' to split direction from room name
+        if "of" not in words:
+            return None
+        of_idx = words.index("of")
+        dir_part = " ".join(words[:of_idx]).lower()
+        room_part = " ".join(words[of_idx + 1:]).lower()
+        if not dir_part or not room_part:
+            return None
+
+        # Resolve direction alias
+        direction = parser.DIRECTION_ALIASES.get(dir_part, dir_part)
+        if direction not in self.OPPOSITE_DIR:
+            return None
+
+        # Find the anchor room
+        for room in self.skerry.get_all_rooms():
+            if room_part in room.name.lower() or room_part in room.id.lower():
+                if direction not in room.exits:
+                    return room.id, direction
+                else:
+                    display.error(f"{room.name} already has an exit to the {direction}.")
+                    return "occupied"
+        return None
 
     def cmd_build(self, args):
         if not args:
@@ -3645,54 +3678,114 @@ class Game:
                 display.success(f"  {npc['name']}'s mood improves to content.")
             return
 
-        # Check expandable skerry rooms
-        for tmpl in list(self.skerry.expandable):
-            if target in tmpl["name"].lower():
-                inv_counts = self._inventory_counts(self.steward)
-                room = self.current_room()
-                if room:
-                    for item_id in room.items:
-                        inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+        # Match structure name, then parse optional location
+        matched_tmpl = None
+        location_words = []
+        for tmpl in self.skerry.expandable:
+            tmpl_name = tmpl["name"].lower()
+            # Check if args start with the structure name
+            name_words = tmpl_name.split()
+            arg_words = args
+            if len(arg_words) >= len(name_words):
+                if [w.lower() for w in arg_words[:len(name_words)]] == name_words:
+                    matched_tmpl = tmpl
+                    location_words = arg_words[len(name_words):]
+                    break
+            # Also check substring match for single-word names
+            if tmpl_name in target and not matched_tmpl:
+                # Find where the name ends in args
+                for i in range(len(args)):
+                    if " ".join(args[:i+1]).lower() == tmpl_name or tmpl_name in " ".join(args[:i+1]).lower():
+                        matched_tmpl = tmpl
+                        location_words = args[i+1:]
+                        break
+                if matched_tmpl:
+                    break
 
-                npc_count = len(self.state.get("recruited_npcs", []))
-                can, reason = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
+        if not matched_tmpl:
+            display.error(f"Nothing called '{target}' to build. Type CHECK SKERRY for options.")
+            return
 
-                if not can:
-                    display.error(f"Can't build {tmpl['name']}: {reason}")
-                    return
+        tmpl = matched_tmpl
 
-                # Consume materials — take from room first, then inventory
-                for mat, count in tmpl.get("requires", {}).get("materials", {}).items():
-                    for _ in range(count):
-                        if room and mat in room.items:
-                            room.remove_item(mat)
-                        else:
-                            self.steward.remove_from_inventory(mat)
+        # Check if player can afford it
+        inv_counts = self._inventory_counts(self.steward)
+        room = self.current_room()
+        if room:
+            for item_id in room.items:
+                inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
 
-                # Consume specimen if required (garden)
-                spec_needed = tmpl.get("requires", {}).get("any_specimen", 0)
-                for _ in range(spec_needed):
-                    for item_id in list(self.steward.inventory):
-                        if farming.is_specimen(item_id):
-                            self.steward.remove_from_inventory(item_id)
-                            break
+        npc_count = len(self.state.get("recruited_npcs", []))
+        can, reason = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
 
-                room = self.skerry.build_room(tmpl)
-                self.rooms[room.id] = room
+        if not can:
+            display.error(f"Can't build {tmpl['name']}: {reason}")
+            return
 
-                loc = self._build_location_label(tmpl)
-                display.success(f"Built: {room.name}! ({loc})")
-                display.narrate(f"  {room.description}")
-
-                # Garden walkthrough on first build
-                if "garden" in tmpl.get("structures", []):
-                    tutorial.garden_walkthrough(self)
-
-                # Update skerry state
-                self.state["skerry"] = self.skerry.to_dict()
+        # Parse or prompt for location
+        placement = None
+        if location_words:
+            result = self._parse_build_location(location_words)
+            if result == "occupied":
                 return
+            if result is None:
+                display.error("Couldn't understand that location.")
+                display.info("  Syntax: BUILD <name> <direction> OF <room>")
+                display.info("  Example: BUILD GARDEN NORTH OF CLEARING")
+                return
+            placement = result
+        else:
+            # No location given — show available sites
+            sites = self._get_build_sites()
+            if not sites:
+                display.error("No open build sites on the skerry.")
+                return
+            display.info(f"Where should the {tmpl['name']} go?")
+            for room_id, room_name, direction in sites:
+                print(f"    {direction} of {room_name}")
+            print()
+            display.info(f"  Syntax: BUILD {tmpl['name'].upper()} <direction> OF <room>")
+            return
 
-        display.error(f"Nothing called '{target}' to build. Type CHECK SKERRY for options.")
+        anchor_room_id, direction = placement
+        anchor_room = self.rooms.get(anchor_room_id)
+        opposite = self.OPPOSITE_DIR[direction]
+
+        # Consume materials
+        for mat, count in tmpl.get("requires", {}).get("materials", {}).items():
+            for _ in range(count):
+                if room and mat in room.items:
+                    room.remove_item(mat)
+                else:
+                    self.steward.remove_from_inventory(mat)
+
+        # Consume specimen if required (garden)
+        spec_needed = tmpl.get("requires", {}).get("any_specimen", 0)
+        for _ in range(spec_needed):
+            for item_id in list(self.steward.inventory):
+                if farming.is_specimen(item_id):
+                    self.steward.remove_from_inventory(item_id)
+                    break
+
+        # Override template exits/connect_to with player's choice
+        tmpl_copy = dict(tmpl)
+        tmpl_copy["exits"] = {opposite: anchor_room_id}
+        tmpl_copy["connect_to"] = {anchor_room_id: direction}
+
+        new_room = self.skerry.build_room(tmpl_copy)
+        self.rooms[new_room.id] = new_room
+        # Sync connection to Game's rooms (separate from Skerry's Room objects)
+        anchor_room.exits[direction] = new_room.id
+
+        display.success(f"Built: {new_room.name}! ({direction} of {anchor_room.name})")
+        display.narrate(f"  {new_room.description}")
+
+        # Garden walkthrough on first build
+        if "garden" in tmpl.get("structures", []):
+            tutorial.garden_walkthrough(self)
+
+        # Update skerry state
+        self.state["skerry"] = self.skerry.to_dict()
 
     # Room-name → task aliases so players can say ASSIGN LIRA JUNKYARD or ASSIGN LIRA SALVAGE
     _ROOM_TO_TASK = {

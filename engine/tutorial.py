@@ -325,8 +325,10 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "steward_assign"
         else:
             print()
-            display.seed_speak("Hmm, that didn't work. Make sure you have the materials.")
-            display.seed_speak("CHECK SKERRY to see what you need.")
+            build_name = _first_buildable_name(game)
+            display.seed_speak("Hmm, that didn't work. Make sure you have the materials")
+            display.seed_speak("and tell me where to put it.")
+            _tutorial_prompt(f"BUILD {build_name.upper()} <direction> OF <room>.")
         return False
 
     if step == "steward_assign" and cmd == "assign":
@@ -464,7 +466,8 @@ def _steward_arrive(game):
     print()
     display.seed_speak("We need to start building. The salvage won't organize itself.")
     display.seed_speak(f"CHECK SKERRY to see what's possible, then BUILD {build_name.upper()}.")
-    _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()}.")
+    display.seed_speak("You'll pick where to put it — just say which direction off an existing room.")
+    _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()} <direction> OF <room>.")
     game.state["tutorial_step"] = "steward_build"
 
 
@@ -727,11 +730,11 @@ def get_current_hint(step, game_state=None):
         _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
     elif step == "steward_arrive":
         build_name = _first_buildable_name(game)
-        _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()}.")
+        _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()} <direction> OF <room>.")
     elif step == "steward_build":
         build_name = _first_buildable_name(game)
         display.seed_speak(f"CHECK SKERRY to see what you can build.")
-        _tutorial_prompt(f"BUILD {build_name.upper()}.")
+        _tutorial_prompt(f"BUILD {build_name.upper()} <direction> OF <room>.")
     elif step == "steward_assign":
         recruited = gs.get("recruited_npcs", [])
         if recruited:
