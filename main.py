@@ -2935,8 +2935,9 @@ class Game:
             if npc.get("recruited"):
                 has_npcs = True
                 mood_colors = {"content": display.GREEN, "happy": display.BRIGHT_GREEN,
-                              "restless": display.YELLOW, "unhappy": display.RED,
-                              "angry": display.BRIGHT_RED, "crisis": display.BRIGHT_RED}
+                              "restless": display.YELLOW, "grim": display.YELLOW,
+                              "unhappy": display.RED, "angry": display.BRIGHT_RED,
+                              "crisis": display.BRIGHT_RED}
                 mood = npc.get("mood", "content")
                 mc = mood_colors.get(mood, display.WHITE)
                 print(f"  {display.npc_name(npc['name'])}: {npc.get('assignment', 'idle')} — "
@@ -3351,18 +3352,17 @@ class Game:
         if lira.get("location") != explorer_loc:
             return
         print()
-        print(f"  {display.npc_name('Lira')}: \"What have you — \"")
+        display.narrate("Lira watches the fire climb. Her jaw tightens.")
         print()
-        display.narrate("She stops mid-sentence. The canopy above is already catching.")
-        display.narrate("Weeks of dried vines and leaf litter, all fuel. Her face goes white.")
+        print(f"  {display.npc_name('Lira')}: \"I knew it would spread. I told you it would.\"")
         print()
-        print(f"  {display.npc_name('Lira')}: \"Every root. Every — do you understand what you've — \"")
+        display.narrate("She's not looking at you. She's watching the canopy catch,")
+        display.narrate("weeks of growth curling black in seconds.")
         print()
-        display.narrate("She breaks off, coughing. The smoke is already thickening.")
-        print(f"  {display.npc_name('Lira')}: \"Get the bloom. Get it and let's go.\"")
+        print(f"  {display.npc_name('Lira')}: \"Get the bloom. Before we lose that too.\"")
         print()
-        # Mood and mechanical impact
-        lira["mood"] = "angry"
+        # Mood and mechanical impact — she suggested it, but watching still hurts
+        lira["mood"] = "grim"
         lira["loyalty"] = max(0, lira.get("loyalty", 0) - 1)
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
         quest["lira_witnessed_fire"] = True
