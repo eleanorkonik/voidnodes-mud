@@ -254,6 +254,8 @@ class Game:
             if current_room:
                 current_room.discover()
                 display.display_room(current_room, self.game_context())
+                if current_room.id == "skerry_landing":
+                    self._show_landing_pad_destinations(current_room)
             display.display_status(current_char, phase)
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
             print()
@@ -387,6 +389,8 @@ class Game:
 
         if not args:
             display.display_room(room, self.game_context())
+            if room.id == "skerry_landing":
+                self._show_landing_pad_destinations(room)
             return
 
         self._examine_target(" ".join(args))
@@ -581,6 +585,14 @@ class Game:
             display.narrate("The skerry rises under your feet. The tendril loosens, satisfied.")
         print()
 
+    # Zone-to-artifact mapping (each void node has one artifact)
+    _ZONE_ARTIFACTS = {
+        "debris_field": "stabilization_engine",
+        "coral_thicket": "growth_lattice",
+        "frozen_wreck": "eliok_house",
+        "verdant_wreck": "bloom_catalyst",
+    }
+
     def _get_void_crossings(self, room):
         """Find exits from this room that cross into a different zone."""
         crossings = {}
@@ -595,6 +607,42 @@ class Game:
         if zone_id == "skerry":
             return self.state.get("skerry", {}).get("aspect", "")
         return self.state.get("zones", {}).get(zone_id, {}).get("aspect", "")
+
+    def _is_zone_depleted(self, zone_id):
+        """Check if a zone's artifact has been resolved (kept/fed/given/stored/spent)."""
+        art_id = self._ZONE_ARTIFACTS.get(zone_id)
+        if not art_id:
+            return False
+        status = self.state.get("artifacts_status", {}).get(art_id)
+        return status in ("kept", "fed", "given", "stored", "spent")
+
+    def _show_landing_pad_destinations(self, room):
+        """Show available void destinations from the landing pad."""
+        crossings = self._get_void_crossings(room)
+        if not crossings:
+            return
+        # Deduplicate by zone
+        seen_zones = set()
+        destinations = []  # (zone_id, aspect, depleted)
+        for direction, target in crossings.items():
+            if target.zone in seen_zones or target.zone == "skerry":
+                continue
+            seen_zones.add(target.zone)
+            aspect = self._get_zone_aspect_for_zone(target.zone)
+            depleted = self._is_zone_depleted(target.zone)
+            destinations.append((target.zone, aspect, depleted))
+        if not destinations:
+            return
+        print()
+        display.seed_speak("I sense nodes in the void...")
+        for zone_id, aspect, depleted in destinations:
+            if depleted:
+                print(f"    {display.DIM}{aspect} (depleted){display.RESET}")
+            else:
+                hint = _aspect_hint_words(aspect)
+                print(f"    {display.aspect_text(aspect)}  {display.DIM}— SEEK {hint}{display.RESET}")
+        mote_cost = 1
+        print(f"  {display.DIM}(Travel costs {mote_cost} mote. {self.seed_name} has {self.seed.motes}.){display.RESET}")
 
     def _show_sensed_nodes(self, room):
         """Have the seed announce what void nodes it senses from this room."""
@@ -669,7 +717,12 @@ class Game:
     def cmd_seek(self, args):
         """Handle SEEK <aspect keywords> [IN VOID] — cross to a void node by its aspect."""
         if not args:
-            display.error("Seek what? SEEK <aspect> to follow a node's resonance.")
+            # No args — show destinations if at landing pad, else generic error
+            room = self.current_room()
+            if room and self._get_void_crossings(room):
+                self._show_landing_pad_destinations(room)
+            else:
+                display.error("Seek what? SEEK <aspect> to follow a node's resonance.")
             return
 
         if self.in_combat:
@@ -689,8 +742,27 @@ class Game:
         if not direction:
             # No match found
             display.error("No node resonates with that.")
-            self._show_sensed_nodes(room)
+            self._show_landing_pad_destinations(room)
             return
+
+        # Block travel to depleted zones
+        if target_room.zone != "skerry" and self._is_zone_depleted(target_room.zone):
+            aspect = self._get_zone_aspect_for_zone(target_room.zone)
+            display.seed_speak(f"That node is spent. Nothing left to find there.")
+            display.info(f"  {display.DIM}{aspect} (depleted){display.RESET}")
+            return
+
+        # Travel costs 1 mote (returning home is free)
+        if target_room.zone != "skerry":
+            mote_cost = 1
+            if self.seed.motes < mote_cost:
+                display.seed_speak(f"I don't have the strength. I need at least {mote_cost} mote to launch you.")
+                return
+            self.seed.spend_motes(mote_cost)
+            # Explain cost on first crossing
+            if not self.state.get("_seek_cost_explained"):
+                self.state["_seek_cost_explained"] = True
+                display.seed_speak(f"Crossing costs me a mote each time. I have {self.seed.motes} left.")
 
         # Move and FWOOM
         target_id = room.exits[direction]
@@ -703,6 +775,10 @@ class Game:
 
         self._narrate_void_crossing(room, target_room)
         display.display_room(target_room, self.game_context())
+
+        # Show destinations if we just arrived at the landing pad
+        if target_room.id == "skerry_landing":
+            self._show_landing_pad_destinations(target_room)
 
         # Check for aggressive enemies
         if self.state["current_phase"] == "explorer":
@@ -730,6 +806,19 @@ class Game:
                 return
             direction = list(crossings.keys())[0]
             target_room = crossings[direction]
+            # Depleted check
+            if target_room.zone != "skerry" and self._is_zone_depleted(target_room.zone):
+                display.seed_speak("That node is spent. Nothing left to find there.")
+                return
+            # Mote cost (returning home is free)
+            if target_room.zone != "skerry":
+                if self.seed.motes < 1:
+                    display.seed_speak("I don't have the strength. I need at least 1 mote to launch you.")
+                    return
+                self.seed.spend_motes(1)
+                if not self.state.get("_seek_cost_explained"):
+                    self.state["_seek_cost_explained"] = True
+                    display.seed_speak(f"Crossing costs me a mote each time. I have {self.seed.motes} left.")
             target_id = room.exits[direction]
             phase = self.state["current_phase"]
             self.state[f"{phase}_location"] = target_id
@@ -793,6 +882,8 @@ class Game:
             if target_room.zone == "skerry":
                 display.seed_speak("Are you ready to come home?")
                 display.info("  SEEK HOME to return.")
+            elif self._is_zone_depleted(target_room.zone):
+                display.seed_speak("That node is spent. Nothing left to find there.")
             else:
                 aspect = self._get_zone_aspect_for_zone(target_room.zone)
                 if aspect:
@@ -816,6 +907,10 @@ class Game:
             self._move_followers(target_id)
 
         display.display_room(target_room, self.game_context())
+
+        # Show destinations if we just arrived at the landing pad
+        if target_id == "skerry_landing":
+            self._show_landing_pad_destinations(target_room)
 
         # Contextual quest hints on room entry
         self._quest_room_hints(target_room)
