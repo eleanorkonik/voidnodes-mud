@@ -16,7 +16,7 @@
             "Craft": 1,
             "Rapport": 1,
             "Commune": 1,
-            "Organize": 1
+            "Lore": 1
         },
         "stress": [false, false, false],
         "consequences": {"mild": null, "moderate": null, "severe": null},
@@ -38,8 +38,9 @@
             "Rapport": 3,
             "Craft": 2,
             "Notice": 2,
-            "Endure": 2,
+            "Lore": 2,
             "Will": 1,
+            "Endure": 1,
             "Scavenge": 1,
             "Navigate": 1,
             "Fight": 1

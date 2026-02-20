@@ -234,6 +234,17 @@
         "stackable": false,
         "special": null
     },
+    "bandages": {
+        "id": "bandages",
+        "name": "Bandages",
+        "description": "Clean strips of fabric, tightly rolled and ready for wound care. Won't win any awards for comfort, but they'll hold.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 1,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "cure_wound"
+    },
     "scattered_notes": {
         "id": "scattered_notes",
         "name": "Scattered Notes",

@@ -121,9 +121,13 @@ def _migrate_state(state):
     state.setdefault("tutorial_quest_done", False)
     state.setdefault("tutorial_settle_done", False)
     state.setdefault("quests", {})
-    # Ensure basic_tools recipe is known
-    if "basic_tools" not in state.get("discovered_recipes", []):
-        state.setdefault("discovered_recipes", []).append("basic_tools")
+    # Healing system fields
+    state.setdefault("zones_cleared", 0)
+    state.setdefault("consequence_meta", {})
+    # Ensure basic_tools and bandages recipes are known
+    for recipe_id in ("basic_tools", "bandages"):
+        if recipe_id not in state.get("discovered_recipes", []):
+            state.setdefault("discovered_recipes", []).append(recipe_id)
     # Rename old "scavenging" task to "salvage" + ensure recruit_attempts exists
     for npc_id, npc in state.get("npcs", {}).items():
         if npc.get("assignment") == "scavenging":
@@ -233,6 +237,8 @@ def new_game_state():
         "steward_name": "Miria",
         "world_seed_name": "Tuft",
         "recruited_npcs": [],
-        "discovered_recipes": ["rope", "torch", "basic_tools"],  # Start knowing basic recipes
+        "discovered_recipes": ["rope", "torch", "basic_tools", "bandages"],  # Start knowing basic recipes
+        "zones_cleared": 0,
+        "consequence_meta": {},  # {char_severity: {taken_at: N, cure: item_id}}
     }
     return state

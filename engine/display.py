@@ -318,6 +318,7 @@ def display_help(phase, seed_name="Tuft"):
         ("REMOVE <item>", "Take off something you're wearing"),
         ("EXAMINE SELF", "See your appearance, worn items, and aspects"),
         (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
+        ("REQUEST TREATMENT", "Treat injuries (needs cure item + Lore)"),
         ("INVENTORY", "Show your inventory"),
         ("STATUS", "Show your character sheet"),
         ("HELP", "Show this help"),

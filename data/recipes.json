@@ -44,6 +44,15 @@
         "skill": "Craft",
         "description": "Build a filtration device using crystal resonance to purify void-mist."
     },
+    "bandages": {
+        "id": "bandages",
+        "name": "Bandages",
+        "materials": {"torn_fabric": 2},
+        "result": "bandages",
+        "difficulty": 0,
+        "skill": "Lore",
+        "description": "Tear and roll clean fabric strips into proper bandages."
+    },
     "signal_beacon": {
         "id": "signal_beacon",
         "name": "Signal Beacon",

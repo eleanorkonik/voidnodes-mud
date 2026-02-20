@@ -616,6 +616,25 @@ class Game:
         status = self.state.get("artifacts_status", {}).get(art_id)
         return status in ("kept", "fed", "given", "stored", "spent")
 
+    def _on_artifact_resolved(self, art_id):
+        """Called when any artifact is resolved. Increments zones_cleared for zone artifacts."""
+        # Only zone artifacts count as zone clears
+        if art_id in self._ZONE_ARTIFACTS.values():
+            self.state["zones_cleared"] = self.state.get("zones_cleared", 0) + 1
+            cleared = aspects.check_mild_auto_heal(self)
+            for char_key, consequence_text in cleared:
+                char_name = self.state.get(f"{char_key}_name", char_key.title())
+                display.success(f"  {char_name}'s mild injury ({consequence_text}) has healed with time.")
+
+    def _record_consequence(self, char_key, severity, consequence_text):
+        """Track consequence metadata for the healing system."""
+        meta = self.state.setdefault("consequence_meta", {})
+        meta_key = f"{char_key}_{severity}"
+        meta[meta_key] = {
+            "taken_at": self.state.get("zones_cleared", 0),
+            "cure": aspects.get_cure_for_consequence(consequence_text),
+        }
+
     def _show_landing_pad_destinations(self, room):
         """Show available void destinations from the landing pad."""
         crossings = self._get_void_crossings(room)
@@ -1183,6 +1202,7 @@ class Game:
             if art:
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "given"
+                self._on_artifact_resolved(art_id)
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_resolved"] = True
                 display.success(f"You give the {art['name']} to {npc_data['name']}.")
@@ -1200,6 +1220,7 @@ class Game:
             char.remove_from_inventory(art_id)
             target_char.add_to_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "given"
+            self._on_artifact_resolved(art_id)
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_artifact_resolved"] = True
             display.success(f"You give the {art['name']} to {agent_data['name']}.")
@@ -1259,6 +1280,7 @@ class Game:
             char.remove_from_inventory(art_id)
             room.add_item(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "stored"
+            self._on_artifact_resolved(art_id)
             display.success(f"You set down the {art['name']}.")
             if room.zone == "skerry":
                 display.narrate("It'll be safe here until you decide what to do with it.")
@@ -1566,6 +1588,7 @@ class Game:
                     display.narrate("The crystal is spent. It crumbles to dust in your hands.")
                     char.remove_from_inventory(art_id)
                     self.state.get("artifacts_status", {})[art_id] = "spent"
+                    self._on_artifact_resolved(art_id)
                     return
                 art["uses_remaining"] = uses - 1
                 char.add_to_inventory("preserved_food")
@@ -1581,6 +1604,7 @@ class Game:
                     display.narrate("The crystal dims and crumbles to dust. Its blooms are spent.")
                     char.remove_from_inventory(art_id)
                     self.state.get("artifacts_status", {})[art_id] = "spent"
+                    self._on_artifact_resolved(art_id)
                 return
             elif art_id == "silver_slippers":
                 display.narrate("You slip them on and click the heels together.")
@@ -2226,6 +2250,7 @@ class Game:
             new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+            self._on_artifact_resolved(art_id)
             self._move_artifact(art_id, None, None)
 
             if art.get("feed_effect"):
@@ -2282,6 +2307,7 @@ class Game:
                     char.add_to_inventory(art_id)
                     self._move_artifact(art_id, "inventory", char_role)
                 self.state.setdefault("artifacts_status", {})[art_id] = "kept"
+                self._on_artifact_resolved(art_id)
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_resolved"] = True
 
@@ -2333,6 +2359,7 @@ class Game:
                 new_total, stage_changed = self.seed.feed(motes)
                 char.remove_from_inventory(art_id)
                 self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+                self._on_artifact_resolved(art_id)
                 self._move_artifact(art_id, None, None)
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_resolved"] = True
@@ -2375,6 +2402,154 @@ class Game:
 
         # Target is an NPC — future functionality
         display.narrate("They don't seem interested.")
+
+    def cmd_request(self, args):
+        """REQUEST TREATMENT [FROM <name>] — treat a consequence with Lore + cure item."""
+        if not args:
+            display.error("Request what? Usage: REQUEST TREATMENT [FROM <name>]")
+            return
+
+        raw = " ".join(args).lower()
+
+        # Must start with "treatment"
+        if not raw.startswith("treatment"):
+            display.error("Request what? Usage: REQUEST TREATMENT [FROM <name>]")
+            return
+
+        char = self.current_character()
+        phase = self.state.get("current_phase", "explorer")
+        char_key = "explorer" if phase == "explorer" else "steward"
+
+        # Figure out the treater
+        treater_name = None
+        treater_lore = None
+        remainder = raw[len("treatment"):].strip()
+        if remainder.startswith("from "):
+            treater_name = remainder[5:].strip()
+
+        if treater_name:
+            # Check if it's the other player character
+            other_key = "steward" if char_key == "explorer" else "explorer"
+            other_name = self.state.get(f"{other_key}_name", "").lower()
+            if treater_name == other_name:
+                other_char_data = self.state.get(other_key, {})
+                treater_lore = other_char_data.get("skills", {}).get("Lore", 0)
+                treater_name = self.state.get(f"{other_key}_name")
+            else:
+                # Check NPCs at this location
+                room = self.current_room()
+                npc_pool = list(room.npcs or [])
+                # Also check followers
+                for npc_id, npc in self.npcs_db.items():
+                    if npc.get("following") and npc.get("location") == room.id and npc_id not in npc_pool:
+                        npc_pool.append(npc_id)
+                npc_id, npc_data = self._find_entity(npc_pool, treater_name, self.npcs_db)
+                if npc_data:
+                    treater_lore = npc_data.get("skills", {}).get("Lore", 0)
+                    treater_name = npc_data.get("name", npc_id)
+                else:
+                    display.error(f"There's nobody called '{treater_name}' here to treat you.")
+                    return
+        else:
+            # Self-treatment — use own Lore
+            treater_lore = char.get_skill("Lore")
+            treater_name = char.name
+
+        # Check what consequences need treatment
+        consequences = []
+        for sev in ["severe", "moderate", "mild"]:
+            con = char.consequences.get(sev)
+            if con:
+                consequences.append((sev, con))
+
+        if not consequences:
+            display.narrate(f"{char.name} has no injuries to treat.")
+            return
+
+        # Show status and find treatable consequences
+        display.header("Injuries")
+        treatable = []
+        for sev, con in consequences:
+            eligible, reason = aspects.can_treat_consequence(self, char_key, sev)
+            cure = aspects.get_cure_for_consequence(con)
+            cure_name = self.items_db.get(cure, {}).get("name", cure) if cure else "unknown"
+
+            if sev == "mild":
+                zones_cleared = self.state.get("zones_cleared", 0)
+                meta = self.state.get("consequence_meta", {})
+                taken_at = meta.get(f"{char_key}_mild", {}).get("taken_at", 0)
+                remaining = max(0, aspects.ZONE_CLEARS_REQUIRED["mild"] - (zones_cleared - taken_at))
+                print(f"  {display.BOLD}Mild:{display.RESET} {con}")
+                display.info(f"    Heals on its own. {remaining} zone clear{'s' if remaining != 1 else ''} remaining.")
+            elif eligible:
+                has_cure = cure in char.inventory
+                difficulty = aspects.TREATMENT_DIFFICULTY[sev]
+                ladder = {0: "Mediocre", 1: "Average", 2: "Fair", 3: "Good", 4: "Great"}
+                diff_label = ladder.get(difficulty, f"+{difficulty}")
+                print(f"  {display.BOLD}{sev.capitalize()}:{display.RESET} {con}")
+                if has_cure:
+                    print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_GREEN}(have){display.RESET} + Lore check ({diff_label})")
+                    if sev == "severe":
+                        display.info(f"    Treatment will downgrade to moderate, not fully heal.")
+                    treatable.append((sev, con, cure, difficulty))
+                else:
+                    print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_RED}(missing){display.RESET} + Lore check ({diff_label})")
+            else:
+                print(f"  {display.BOLD}{sev.capitalize()}:{display.RESET} {con}")
+                display.info(f"    {reason}")
+
+        if not treatable:
+            if any(sev != "mild" for sev, _ in consequences):
+                display.narrate("No consequences are ready for treatment right now.")
+            return
+
+        # Treat the most severe treatable consequence
+        sev, con, cure, difficulty = treatable[0]
+
+        # Consume cure item
+        char.remove_from_inventory(cure)
+        cure_name = self.items_db.get(cure, {}).get("name", cure)
+
+        # Roll Lore check
+        print()
+        display.narrate(f"{treater_name} prepares the {cure_name} and gets to work...")
+        atk_dice = dice.roll_4df()
+        total = sum(atk_dice) + treater_lore
+
+        print(f"  {treater_name}: {dice.roll_description(atk_dice, treater_lore, 'Lore')}")
+        print(f"  Difficulty: {difficulty} ({['Mediocre', 'Average', 'Fair', 'Good', 'Great'][difficulty]})")
+
+        shifts = total - difficulty
+
+        if shifts >= 0:
+            # Success
+            if sev == "severe":
+                # Downgrade to moderate
+                char.consequences["severe"] = None
+                char.consequences["moderate"] = con
+                # Update metadata — moderate now tracks from current zone clears
+                meta = self.state.setdefault("consequence_meta", {})
+                meta.pop(f"{char_key}_severe", None)
+                meta[f"{char_key}_moderate"] = {
+                    "taken_at": self.state.get("zones_cleared", 0),
+                    "cure": cure,
+                }
+                print()
+                display.success(f"The treatment takes hold. The injury stabilizes.")
+                display.narrate(f"  {con} downgraded from severe to moderate.")
+                display.info(f"  Will need another round of treatment to fully heal.")
+            else:
+                # Full heal for moderate
+                char.consequences[sev] = None
+                meta = self.state.setdefault("consequence_meta", {})
+                meta.pop(f"{char_key}_{sev}", None)
+                print()
+                display.success(f"The treatment works. {con} has healed.")
+        else:
+            # Failure — cure item is still consumed
+            print()
+            display.warning(f"The treatment doesn't take. The {cure_name} is used up, but the injury persists.")
+            display.info(f"  (Failed by {abs(shifts)} — try again with better aspects or a more skilled healer.)")
 
     def cmd_take(self, args):
         if not args:
@@ -3310,7 +3485,9 @@ class Game:
                 if self.explorer.consequences.get(sev) == "Pending":
                     self.combat_consequences_taken += 1
                     # Name the consequence based on enemy
-                    self.explorer.consequences[sev] = f"Wounded by {enemy_data['name']}"
+                    con_text = f"Wounded by {enemy_data['name']}"
+                    self.explorer.consequences[sev] = con_text
+                    self._record_consequence("explorer", sev, con_text)
             # Show current stress
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
             display.info(f"  Stress: {stress_str}")
@@ -3622,7 +3799,9 @@ class Game:
                     for sev in ["mild", "moderate", "severe"]:
                         if self.explorer.consequences.get(sev) == "Pending":
                             self.combat_consequences_taken += 1
-                            self.explorer.consequences[sev] = f"Ambushed by {enemy_data['name']}"
+                            con_text = f"Ambushed by {enemy_data['name']}"
+                            self.explorer.consequences[sev] = con_text
+                            self._record_consequence("explorer", sev, con_text)
                     stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
                     display.info(f"  Stress: {stress_str}")
                 else:

@@ -317,6 +317,154 @@ def resolve_compel_accept(game, compel):
     return messages
 
 
+# ── Consequence healing ──────────────────────────────────────────────
+
+# Maps consequence text patterns to cure items.
+# "Wounded by" and "Ambushed by" are the current combat consequence formats.
+# As more consequence types are added, extend this mapping.
+CONSEQUENCE_CURES = {
+    "Wounded": "bandages",
+    "Ambushed": "bandages",
+    "Burned": "bandages",
+    "Gashed": "bandages",
+    "Clawed": "bandages",
+    "Bitten": "bandages",
+}
+
+# Treatment difficulty by severity (Fate ladder values)
+TREATMENT_DIFFICULTY = {
+    "mild": 0,       # auto-clears, no check needed
+    "moderate": 2,   # Fair (+2)
+    "severe": 4,     # Great (+4), only downgrades to moderate
+}
+
+# Zone clears required before treatment
+ZONE_CLEARS_REQUIRED = {
+    "mild": 3,       # auto-clears after 3 zone clears
+    "moderate": 0,   # treatable immediately with item + check
+    "severe": 3,     # gated behind 3 zone clears before treatment
+}
+
+
+def get_cure_for_consequence(consequence_text):
+    """Determine what cure item a consequence requires based on its name.
+
+    Returns the item_id of the cure, or "bandages" as default for unknown types.
+    """
+    if not consequence_text:
+        return None
+    for pattern, cure in CONSEQUENCE_CURES.items():
+        if pattern.lower() in consequence_text.lower():
+            return cure
+    # Default: all combat injuries use bandages until more cure types exist
+    return "bandages"
+
+
+def check_mild_auto_heal(game):
+    """Check if any mild consequences should auto-clear based on zone clears.
+
+    Returns list of (character_key, consequence_text) that were cleared.
+    """
+    zones_cleared = game.state.get("zones_cleared", 0)
+    meta = game.state.get("consequence_meta", {})
+    cleared = []
+
+    for char_key in ("explorer", "steward"):
+        char_data = game.state.get(char_key)
+        if not char_data:
+            continue
+        cons = char_data.get("consequences", {})
+        mild = cons.get("mild")
+        if not mild:
+            continue
+
+        # Check when this consequence was taken
+        meta_key = f"{char_key}_mild"
+        taken_at = meta.get(meta_key, {}).get("taken_at", 0)
+        if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
+            cons["mild"] = None
+            # Clean up metadata
+            meta.pop(meta_key, None)
+            cleared.append((char_key, mild))
+
+    return cleared
+
+
+def can_treat_consequence(game, char_key, severity):
+    """Check if a consequence is eligible for treatment.
+
+    Returns (eligible, reason_if_not).
+    """
+    char_data = game.state.get(char_key)
+    if not char_data:
+        return False, "Character not found."
+
+    cons = char_data.get("consequences", {})
+    consequence_text = cons.get(severity)
+    if not consequence_text:
+        return False, f"No {severity} consequence to treat."
+
+    if severity == "mild":
+        return False, "Mild consequences heal on their own with time."
+
+    zones_cleared = game.state.get("zones_cleared", 0)
+    meta = game.state.get("consequence_meta", {})
+    meta_key = f"{char_key}_{severity}"
+    taken_at = meta.get(meta_key, {}).get("taken_at", 0)
+
+    clears_needed = ZONE_CLEARS_REQUIRED.get(severity, 0)
+    if clears_needed > 0 and (zones_cleared - taken_at) < clears_needed:
+        remaining = clears_needed - (zones_cleared - taken_at)
+        return False, f"The injury is too fresh. Need {remaining} more zone{'s' if remaining != 1 else ''} cleared before treatment can begin."
+
+    return True, None
+
+
+def get_treatment_aspects(game):
+    """Gather invokable aspects for a treatment skill check.
+
+    Similar to combat/recruit but for healing context. Includes:
+    - Treater's character aspects
+    - Patient's consequence aspects
+    - Room aspects
+    - World seed aspects
+    - Inventory item aspects
+    - Kept artifact aspects
+    """
+    aspects = []
+    char = game.current_character()
+
+    # Treater's character aspects
+    for a in char.get_all_aspects():
+        aspects.append((a, "yours"))
+
+    # Room aspects
+    room = game.current_room()
+    if room:
+        for a in room.aspects:
+            aspects.append((a, "room"))
+
+    # World seed aspects
+    if game.seed:
+        for a in game.seed.aspects:
+            aspects.append((a, game.seed_name))
+
+    # Inventory item aspects
+    for item_id in char.inventory:
+        item = game.items_db.get(item_id, {})
+        for a in item.get("aspects", []):
+            aspects.append((a, item.get("name", item_id)))
+
+    # Kept artifact aspects
+    kept = game.state.get("kept_artifact")
+    if kept:
+        artifact = game.artifacts_db.get(kept, {})
+        for a in artifact.get("aspects", []):
+            aspects.append((a, artifact.get("name", kept)))
+
+    return aspects
+
+
 def resolve_compel_refuse(game, compel):
     """Spend FP to refuse a compel. Returns message strings."""
     char = game.current_character()
