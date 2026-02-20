@@ -1971,7 +1971,13 @@ class Game:
     def cmd_scavenge(self, args):
         room = self.current_room()
         if room.has_enemies():
-            display.error("You can't scavenge while enemies are present!")
+            enemy_id = room.enemies[0]
+            enemy_name = self.enemies_db.get(enemy_id, {}).get("name", "something")
+            display.narrate(f"You start rummaging through the debris — and the {enemy_name}")
+            display.narrate("takes the opening.")
+            print()
+            self._start_combat(enemy_id)
+            self._enemy_turn()
             return
 
         # Scaling difficulty: each scavenge in a room raises the DC by 1
