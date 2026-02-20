@@ -829,7 +829,17 @@ class Game:
         if phase == "explorer":
             self._move_followers(target_id)
 
-        self._narrate_void_crossing(room, target_room)
+        # Returning to the skerry from the void — a day passes
+        if room.zone != "skerry" and target_room.zone == "skerry":
+            self.state["day"] += 1
+            self._narrate_void_crossing(room, target_room)
+            print()
+            display.narrate(f"The void crossing takes its toll. By the time you reach")
+            display.narrate(f"the skerry, it is morning. Day {self.state['day']}.")
+            self._day_transition()
+        else:
+            self._narrate_void_crossing(room, target_room)
+
         display.display_room(target_room, self.game_context())
 
         # Show destinations if we just arrived at the landing pad
@@ -881,7 +891,16 @@ class Game:
             target_room.discover()
             if phase == "explorer":
                 self._move_followers(target_id)
-            self._narrate_void_crossing(room, target_room)
+            # Returning to the skerry from the void — a day passes
+            if room.zone != "skerry" and target_room.zone == "skerry":
+                self.state["day"] += 1
+                self._narrate_void_crossing(room, target_room)
+                print()
+                display.narrate(f"The void crossing takes its toll. By the time you reach")
+                display.narrate(f"the skerry, it is morning. Day {self.state['day']}.")
+                self._day_transition()
+            else:
+                self._narrate_void_crossing(room, target_room)
             display.display_room(target_room, self.game_context())
             if self.state["current_phase"] == "explorer":
                 self._on_room_enter(target_room)
@@ -1532,25 +1551,14 @@ class Game:
         self.save_game(silent=True)
 
         if target_role == "steward":
-            # Explorer → Steward
-            explorer_room = self.current_room()
-            returning_from_void = explorer_room and explorer_room.zone != "skerry"
-
+            # Explorer → Steward (focus shift only — no day increment)
             self.state["current_phase"] = "steward"
             self.explorer.clear_stress()
             self.in_combat = False
             self.combat_target = None
 
             print()
-            if returning_from_void:
-                # Day increments — time passes in the void crossing
-                self.state["day"] += 1
-                display.narrate(f"The void crossing takes its toll. By the time {self.explorer_name}")
-                display.narrate("reaches the skerry, it is morning.")
-                self._day_transition()
-            else:
-                display.narrate(f"{self.explorer_name} steps back from the edge. Still Day {self.state['day']}.")
-
+            display.narrate(f"Day {self.state['day']}.")
             print()
             display.narrate(f"{self.seed_name}'s tendril around him dims — not gone, but")
             display.narrate("quieter, like a heartbeat fading into the background.")
