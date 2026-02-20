@@ -8,7 +8,7 @@ import sys
 import json
 import random
 
-from engine import parser, display, save, dice, tutorial, map_renderer, recruit, aspects, farming
+from engine import parser, display, save, dice, tutorial, map_renderer, recruit, aspects, farming, subtasks
 from models.character import Character, BODY_SLOTS
 from models.room import Room
 from models.world_seed import WorldSeed
@@ -1532,24 +1532,31 @@ class Game:
         self.save_game(silent=True)
 
         if target_role == "steward":
-            # Explorer → Steward (day increment — time passes in the void)
-            self.state["day"] += 1
+            # Explorer → Steward
+            explorer_room = self.current_room()
+            returning_from_void = explorer_room and explorer_room.zone != "skerry"
+
             self.state["current_phase"] = "steward"
+            self.explorer.clear_stress()
+            self.in_combat = False
+            self.combat_target = None
+
             print()
-            display.narrate(f"The void crossing takes its toll. By the time {self.explorer_name}")
-            display.narrate("reaches the skerry, it is morning.")
+            if returning_from_void:
+                # Day increments — time passes in the void crossing
+                self.state["day"] += 1
+                display.narrate(f"The void crossing takes its toll. By the time {self.explorer_name}")
+                display.narrate("reaches the skerry, it is morning.")
+                self._day_transition()
+            else:
+                display.narrate(f"{self.explorer_name} steps back from the edge. Still Day {self.state['day']}.")
+
             print()
             display.narrate(f"{self.seed_name}'s tendril around him dims — not gone, but")
             display.narrate("quieter, like a heartbeat fading into the background.")
             print()
             display.narrate(f"The other tendril brightens — the one reaching toward")
             display.narrate(f"{self.steward_name}. {self.seed_name}'s presence floods back in.")
-            self.explorer.clear_stress()
-            self.in_combat = False
-            self.combat_target = None
-
-            # Day transition events (food spoilage, NPC tasks, etc.)
-            self._day_transition()
 
             # Followers arrive at the skerry with the explorer
             self._followers_to_skerry()
@@ -3658,9 +3665,9 @@ class Game:
         "workshop": "crafting", "the workshop": "crafting",
         "storehouse": "organizing", "the storehouse": "organizing",
         "water": "gathering", "water collection": "gathering",
-        "shelter": "resting", "basic shelter": "resting",
+        "shelter": "communal", "basic shelter": "communal",
     }
-    _VALID_TASKS = {"salvage", "gardening", "guarding", "crafting", "organizing", "gathering", "resting", "idle"}
+    _VALID_TASKS = {"salvage", "gardening", "guarding", "crafting", "organizing", "gathering", "communal", "idle"}
     # Which task needs which room built to be useful
     _TASK_REQUIRES_ROOM = {
         "salvage": "junkyard",
@@ -3669,7 +3676,7 @@ class Game:
         "crafting": "workshop",
         "organizing": "storehouse",
         "gathering": "water_collection",
-        "resting": "basic_shelter",
+        "communal": "basic_shelter",
     }
     # Map room role → NPC task name (for counting workers per room)
     _ROLE_TO_TASK = {
@@ -3679,7 +3686,7 @@ class Game:
         "craft": "crafting",
         "organize": "organizing",
         "gather": "gathering",
-        "rest": "resting",
+        "communal": "communal",
     }
 
     def _role_to_task(self, role):
@@ -3688,7 +3695,8 @@ class Game:
 
     def cmd_assign(self, args):
         if len(args) < 2:
-            display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, gardening, guarding, crafting, organizing, gathering, resting, idle)")
+            display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, gardening, guarding, crafting, organizing, gathering, communal, idle)")
+            display.info("  You can also assign a specific subtask: ASSIGN <npc> <subtask>  (e.g., ASSIGN LIRA WATER PLANTS)")
             return
 
         npc_target = args[0].lower()
@@ -3699,15 +3707,39 @@ class Game:
             display.error(f"No recruited NPC named '{npc_target}'.")
             return
 
+        # Try matching as a subtask ID first (e.g., "water plants" → "water_plants")
+        subtask_id = task_input.replace(" ", "_")
+        subtask_role, subtask_def = subtasks.find_subtask_role(subtask_id)
+        if subtask_role:
+            master_task = self._role_to_task(subtask_role)
+            # Warn if the required facility isn't built
+            required_structure = self._TASK_REQUIRES_ROOM.get(master_task)
+            if required_structure and not self.skerry.has_structure(required_structure):
+                display.warning(f"The {required_structure.replace('_', ' ')} hasn't been built yet — {npc['name']} won't be able to do this.")
+
+            # Organize skill check (DC 1)
+            total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Organize"), 1)
+            print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Organize'), 'Organize')}")
+
+            if shifts >= 0:
+                npc["assignment"] = master_task
+                npc["assigned_subtask"] = subtask_id
+                display.success(f"Assigned {npc['name']} to {subtask_def['name']} ({master_task}).")
+            else:
+                display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
+            return
+
         # Resolve room-name aliases to tasks
         task = self._ROOM_TO_TASK.get(task_input, task_input)
 
         if task not in self._VALID_TASKS:
             display.error(f"Unknown task: '{task_input}'. Valid: {', '.join(sorted(self._VALID_TASKS))}")
+            display.info("  Or assign a specific subtask (e.g., ASSIGN LIRA WATER PLANTS). Type TASKS to see options.")
             return
 
         if task == "idle":
             npc["assignment"] = "idle"
+            npc["assigned_subtask"] = None
             display.success(f"{npc['name']} is now idle.")
             return
 
@@ -3722,6 +3754,7 @@ class Game:
 
         if shifts >= 0:
             npc["assignment"] = task
+            npc["assigned_subtask"] = None  # master task, no specific subtask
             display.success(f"Assigned {npc['name']} to {task}.")
         else:
             display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
@@ -3742,6 +3775,58 @@ class Game:
                       f"Loyalty: {npc.get('loyalty', 0)}/10 — {mc}{mood}{display.RESET}")
         if not has_npcs:
             print("  No NPCs recruited yet.")
+
+    def cmd_tasks(self, args):
+        """Show subtask queues for all rooms with workers."""
+        display.header("Task Queues")
+        any_shown = False
+        for room in self.skerry.get_all_rooms():
+            if not room.role:
+                continue
+            st_defs = subtasks.get_subtasks_for_role(room.role)
+            if not st_defs:
+                continue
+
+            task_name = self._role_to_task(room.role)
+            workers = [n for n in self.npcs_db.values()
+                       if n.get("recruited") and n.get("assignment") == task_name]
+
+            print(f"\n  {display.BRIGHT_WHITE}{room.name}{display.RESET} ({room.role})")
+            for st in st_defs:
+                # Find who's working on this subtask
+                assigned_names = []
+                for w in workers:
+                    is_settled = w.get("settled_room") == room.id
+                    assigned_sub = w.get("assigned_subtask")
+                    if is_settled:
+                        assigned_names.append(f"{display.npc_name(w['name'])} [settled]")
+                    elif assigned_sub == st["id"]:
+                        assigned_names.append(display.npc_name(w['name']))
+                    elif assigned_sub is None and st["order"] == 1:
+                        # Floating with no specific subtask → defaults to first
+                        assigned_names.append(f"{display.npc_name(w['name'])} [default]")
+
+                worker_str = ", ".join(assigned_names) if assigned_names else f"{display.DIM}unassigned{display.RESET}"
+                skill_str = f" ({st['skill']} DC {st['dc']})" if st.get("skill") else ""
+                print(f"    {st['order']}. {st['name']}{skill_str} — {worker_str}")
+                print(f"       {display.DIM}{st['description']}{display.RESET}")
+            any_shown = True
+
+        if not any_shown:
+            print("  No rooms with task queues yet.")
+
+    def cmd_rest(self, args):
+        """Advance the day from steward phase. Time passes on the skerry."""
+        self.state["day"] += 1
+        day = self.state["day"]
+        print()
+        display.narrate("The skerry dims. Something like night settles over the void.")
+        display.narrate("You sleep, and the seed keeps watch.")
+        print()
+        self._day_transition()
+        print()
+        display.narrate(f"Morning. Day {day}.")
+        display.display_status(self.current_character(), "steward")
 
     def cmd_trade(self, args):
         display.narrate("Trading isn't fully set up yet — NPCs share resources with the community for now.")
@@ -4709,7 +4794,7 @@ class Game:
                         npc["mood"] = "restless"
                         display.info(f"  {npc['name']} is getting restless without proper shelter.")
 
-        # Room-driven NPC production — room is the facility, NPC task is the labor
+        # Room-driven NPC production via subtask queues
         for room in self.skerry.get_all_rooms():
             if not room.role:
                 continue
@@ -4719,52 +4804,20 @@ class Game:
             if not workers:
                 continue
 
-            if room.role == "salvage":
-                for npc in workers:
-                    if random.random() < 0.6:
-                        loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
-                        room.add_item(loot)
-                        loot_name = self.items_db.get(loot, {}).get("name", loot)
-                        display.success(f"  {npc['name']} (salvage) processed: {loot_name}")
+            # Garden pre-step: base growth ticks (time passing, not an NPC action)
+            if room.role == "garden":
+                plots = self.skerry.get_garden_plots()
+                newly_ready = farming.advance_growth(plots, len(workers))
+                for plot_id in newly_ready:
+                    plot = self.skerry.get_plot(plot_id)
+                    if plot and plot.get("plant"):
+                        display.success(f"  Plot {plot_id}: {plot['plant'].get('name')} is ready!")
 
-            elif room.role == "garden":
-                pass  # Gardening handled below in auto-farming section
-
-            elif room.role == "guard":
-                names = " and ".join(w["name"] for w in workers)
-                display.info(f"  {names} keeps watch over the skerry.")
-
-            elif room.role == "craft":
-                for npc in workers:
-                    if random.random() < 0.5:
-                        craft_skill = npc.get("skills", {}).get("Craft", 1)
-                        if craft_skill >= 3:
-                            item = random.choice(["basic_tools", "shelter_patch", "rope"])
-                        else:
-                            item = random.choice(["rope", "shelter_patch"])
-                        room.add_item(item)
-                        item_name = self.items_db.get(item, {}).get("name", item)
-                        display.success(f"  {npc['name']} (workshop) crafted: {item_name}")
-                # Chance to improve tool_level
-                if room.tool_level < 3 and random.random() < 0.3:
-                    room.tool_level += 1
-                    display.success(f"  Workshop tools improved! Tool level: {room.tool_level}")
-
-            elif room.role == "organize":
-                names = " and ".join(w["name"] for w in workers)
-                display.info(f"  {names} keeps the storehouse in order.")
-
-            elif room.role == "gather":
-                for npc in workers:
-                    if random.random() < 0.5:
-                        room.add_item("frozen_water")
-                        display.success(f"  {npc['name']} (water collection) gathered: Frozen Water")
-
-            elif room.role == "rest":
-                for npc in workers:
-                    if npc.get("mood") == "restless":
-                        npc["mood"] = "content"
-                        display.info(f"  {npc['name']} rests and feels better.")
+            # Run subtask queue
+            results = subtasks.run_room_subtasks(self, room, workers)
+            for npc_name, subtask_name, messages in results:
+                for msg in messages:
+                    display.success(f"  {npc_name} ({subtask_name}): {msg}")
 
         # Random event
         if random.random() < 0.4:
@@ -4820,45 +4873,6 @@ class Game:
                             for nid, n in self.npcs_db.items():
                                 if n.get("recruited"):
                                     n["mood"] = "content"
-
-        # ── Auto-farming: plant growth, NPC harvest, NPC planting ──
-        if self.skerry.has_structure("garden"):
-            plots = self.skerry.get_garden_plots()
-            gardening_count = sum(1 for n in self.npcs_db.values()
-                                  if n.get("recruited") and n.get("assignment") == "gardening")
-
-            # Advance growth on all plots
-            newly_ready = farming.advance_growth(plots, gardening_count)
-            for plot_id in newly_ready:
-                plot = self.skerry.get_plot(plot_id)
-                if plot and plot.get("plant"):
-                    plant_name = plot["plant"].get("name", "a plant")
-                    display.success(f"  Plot {plot_id}: {plant_name} is ready to harvest!")
-
-            # NPC auto-harvest
-            if gardening_count > 0:
-                harvested = farming.npc_auto_harvest(plots, day)
-                for food, utility in harvested:
-                    farming.add_to_stores(self.skerry.food_stores, food, day)
-                    food_name = food.get("name", food["id"])
-                    qty = food.get("quantity", 1)
-                    display.success(f"  Harvested: {food_name} x{qty} → food stores")
-                    if utility:
-                        util_name = utility.get("name", utility["id"])
-                        util_qty = utility.get("quantity", 1)
-                        for _ in range(util_qty):
-                            self.steward.add_to_inventory(utility["id"])
-                        display.success(f"  Byproduct: {util_name} x{util_qty}")
-
-                # NPC auto-plant: find specimens in steward inventory for empty plots
-                specimen_ids = [item_id for item_id in self.steward.inventory
-                                if farming.is_specimen(item_id)]
-                planted = farming.npc_auto_plant(plots, specimen_ids, day)
-                for plot_id, spec_id in planted:
-                    self.steward.remove_from_inventory(spec_id)
-                    spec = self.specimens_db.get(spec_id, {})
-                    spec_name = spec.get("name", spec_id)
-                    display.info(f"  NPC planted {spec_name} in plot {plot_id}.")
 
         # ── Food consumption + spoilage ──
         if self.skerry.has_structure("storehouse") and self.skerry.food_stores:

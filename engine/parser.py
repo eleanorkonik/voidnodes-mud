@@ -32,6 +32,8 @@ COMMAND_ALIASES = {
     "sow": "plant",
     "dig": "uproot",
     "vault": "bank",
+    "sleep": "rest",
+    "nap": "rest",
 }
 
 # All recognized commands and which phase they're valid in
@@ -78,11 +80,13 @@ COMMANDS = {
     "drop":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "request":   {"phases": ["explorer", "steward"], "args": "required"},
     # Steward commands
+    "rest":      {"phases": ["steward"], "args": "none"},
     "craft":     {"phases": ["explorer", "steward"], "args": "required"},
     "recipes":   {"phases": ["explorer", "steward"], "args": "none"},
     "build":     {"phases": ["steward"], "args": "required"},
     "assign":    {"phases": ["steward"], "args": "required"},
     "organize":  {"phases": ["steward"], "args": "none"},
+    "tasks":     {"phases": ["steward"], "args": "none"},
     "trade":     {"phases": ["steward"], "args": "required"},
     # Farming commands (steward phase)
     "plant":     {"phases": ["steward"], "args": "required"},
