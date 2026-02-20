@@ -405,6 +405,14 @@
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_greenhouse", "up": "vw_observation"},
                 "aspects": ["Impenetrable Roots"],
+                "features": [
+                    {
+                        "id": "roots",
+                        "name": "Roots",
+                        "keywords": ["roots", "root", "root wall", "wall"],
+                        "description": "Massive interwoven roots, each thicker than your arm, pulsing with slow green bioluminescence. The outer bark is tough and damp — resistant to cutting or burning. But the surface has a waxy sheen that might react to the right solvent."
+                    }
+                ],
                 "items": [],
                 "npcs": [],
                 "enemies": [],
@@ -436,6 +444,14 @@
                 "zone": "verdant_wreck",
                 "exits": {"east": "vw_root_wall"},
                 "aspects": ["The Machine Still Remembers"],
+                "features": [
+                    {
+                        "id": "console",
+                        "name": "Growth Controller Console",
+                        "keywords": ["console", "controller", "growth controller", "panel", "screen"],
+                        "description": "A flickering console showing a schematic of the biodome's root network. Most nodes pulse red — overgrown, unresponsive. The panel below is dented but not sealed. With the right tools, you could get inside and repair the circuits."
+                    }
+                ],
                 "items": ["growth_console", "wire"],
                 "npcs": [],
                 "enemies": [],
@@ -448,6 +464,14 @@
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_root_wall"},
                 "aspects": ["Crystallized Mid-Bloom", "The Last Garden"],
+                "features": [
+                    {
+                        "id": "bloom",
+                        "name": "Crystallized Bloom",
+                        "keywords": ["bloom", "bud", "crystal", "plant", "flower"],
+                        "description": "An enormous flower frozen mid-bloom, petals spiraling outward in crystallized green and gold. It hums faintly. At its base, a single living bud pulses with concentrated energy — small enough to carry, if you could detach it."
+                    }
+                ],
                 "items": [],
                 "npcs": [],
                 "enemies": [],

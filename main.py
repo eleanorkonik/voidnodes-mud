@@ -451,6 +451,13 @@ class Game:
             display.narrate(f"  {item.get('description', '')}")
             return
 
+        # Look at room feature (interactable objects — roots, consoles, etc.)
+        for feature in room.features:
+            if target in feature.get("keywords", []) or target in feature.get("name", "").lower():
+                display.header(feature["name"])
+                display.narrate(f"  {feature['description']}")
+                return
+
         # Look at artifact in inventory
         char = self.current_character()
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
@@ -545,10 +552,9 @@ class Game:
                 print(f"  {display.npc_name(agent_data['name'])} is here.")
                 has_contents = True
 
-        # Room aspects (the notable features of this place)
-        if room.aspects:
-            for aspect in room.aspects:
-                print(f"  {display.aspect_text(aspect)}")
+        # Room features (interactable objects)
+        for feature in room.features:
+            print(f"  {display.aspect_text(feature['name'])}")
             has_contents = True
 
         if not has_contents:

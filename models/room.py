@@ -13,6 +13,7 @@ class Room:
         self.items = list(data.get("items", []))
         self.npcs = list(data.get("npcs", []))
         self.enemies = list(data.get("enemies", []))
+        self.features = list(data.get("features", []))
         self.discovered = data.get("discovered", False)
         # Skerry-specific
         self.structures = list(data.get("structures", []))
@@ -73,6 +74,7 @@ class Room:
             "items": self.items,
             "npcs": self.npcs,
             "enemies": self.enemies,
+            "features": self.features,
             "discovered": self.discovered,
         }
         if self.locked_exits:
