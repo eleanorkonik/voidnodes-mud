@@ -169,9 +169,9 @@ def after_command(cmd, args, game):
         seed_name = game.state.get("world_seed_name", "Tuft")
         explorer_name = game.state.get("explorer_name", "Sevarik")
         print()
-        display.seed_speak("See? I have motes. That's what keeps us alive here.")
-        display.seed_speak("Feed me artifacts and materials, and I grow stronger.")
-        display.seed_speak("The more motes I have, the more I can do for all of us.")
+        display.seed_speak("See? Through our bond, you can sense the whole skerry.")
+        display.seed_speak("Who's here, what's built, what we can still build.")
+        display.seed_speak("Feed me artifacts and materials, and I grow stronger — more motes means more I can do.")
         print()
         display.seed_speak(f"Now... is it OK if I switch my focus to {explorer_name}?")
         display.seed_speak("Now that you're here, it's safe to let him explore.")
@@ -406,8 +406,8 @@ def _show_the_split(game):
     display.seed_speak("in what I can protect, for now.")
     print()
 
-    display.seed_speak(f"Before we go further — CHECK me. See how I'm doing.")
-    _tutorial_prompt(f"CHECK {seed_name.upper()} to see the seed's status.")
+    display.seed_speak("Before we go further — CHECK the skerry. See how we're doing.")
+    _tutorial_prompt("CHECK SKERRY to see an overview of our domain.")
 
     game.state["tutorial_step"] = "check_seed"
 
@@ -696,8 +696,8 @@ def get_current_hint(step, game_state=None):
     elif step == "exploring":
         display.seed_speak("Keep looking around. There's someone here you need to meet.")
     elif step == "check_seed":
-        display.seed_speak(f"CHECK {seed_name.upper()} to see the seed's status.")
-        _tutorial_prompt(f"CHECK {seed_name.upper()}.")
+        display.seed_speak("CHECK the skerry — you can see our whole domain through our bond.")
+        _tutorial_prompt("CHECK SKERRY.")
     elif step == "handoff":
         display.seed_speak(f"Is it OK if I switch my focus to {explorer_name}?")
         _tutorial_prompt(f"SWITCH FOCUS TO {explorer_name.upper()} when you're ready.")
