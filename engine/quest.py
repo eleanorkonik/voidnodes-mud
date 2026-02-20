@@ -76,12 +76,15 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
     removal if consumed.
     """
     quest = game_state.get("quests", {}).get("verdant_bloom", {})
-    if quest.get("status") != "active":
-        return False, False
 
     # PATH B (forceful) — resin + torch on roots at root wall
+    # Auto-starts quest if player figures out the solution without talking to Lira
     if room_id == "vw_root_wall" and target in ("roots", "root", "root wall"):
         if item_id == "resin" and not quest.get("roots_weakened"):
+            # Auto-start quest if player figured this out on their own
+            if quest.get("status") != "active":
+                _auto_start_quest(game_state, rooms)
+                quest = game_state["quests"]["verdant_bloom"]
             display.narrate("You spread the resin across the thick roots. The organic")
             display.narrate("solvent soaks in, and you hear faint cracking as the outer")
             display.narrate("layer softens. The roots sag but hold.")
@@ -90,6 +93,9 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
             return True, True  # consume resin
 
         if item_id == "torch" and quest.get("roots_weakened") and not quest.get("roots_cleared"):
+            if quest.get("status") != "active":
+                _auto_start_quest(game_state, rooms)
+                quest = game_state["quests"]["verdant_bloom"]
             display.narrate("You hold the torch to the weakened roots. They catch")
             display.narrate("instantly, curling and blackening. In moments, a narrow")
             display.narrate("passage opens to the north, revealing a green glow beyond.")
@@ -106,11 +112,15 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
         if item_id == "torch" and not quest.get("roots_weakened"):
             display.narrate("You hold the torch to the roots, but they're too thick")
             display.narrate("and damp to catch. The surface barely singes.")
+            display.info("  They might catch if something weakened them first.")
             return True, False
 
     # PATH A (careful) — basic_tools on console at control room
     if room_id == "vw_control" and target in ("console", "controller", "growth controller", "panel"):
         if item_id == "basic_tools" and not quest.get("roots_cleared"):
+            if quest.get("status") != "active":
+                _auto_start_quest(game_state, rooms)
+                quest = game_state["quests"]["verdant_bloom"]
             display.narrate("You pry open the console panel and get to work. Corroded")
             display.narrate("connectors, frayed wiring — but the core logic board is intact.")
             display.narrate("You clean the contacts and bridge the broken circuits.")
@@ -126,6 +136,23 @@ def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None
             return True, False  # tools not consumed
 
     return False, False
+
+
+def _auto_start_quest(game_state, rooms):
+    """Silently activate the verdant_bloom quest when the player solves it without talking to Lira."""
+    game_state.setdefault("quests", {})["verdant_bloom"] = {
+        "status": "active",
+        "roots_weakened": False,
+        "roots_cleared": False,
+        "path": None,
+        "control_revealed": False,
+    }
+    # Also reveal the control room exit since Lira won't get to
+    if rooms:
+        root_wall = rooms.get("vw_root_wall")
+        if root_wall and "west" not in root_wall.exits:
+            root_wall.exits["west"] = "vw_control"
+            game_state["quests"]["verdant_bloom"]["control_revealed"] = True
 
 
 # ── Quest-Aware TALK ─────────────────────────────────────────
