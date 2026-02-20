@@ -239,7 +239,7 @@ def after_command(cmd, args, game):
             game.state["tutorial_step"] = "explorer_return"
         return False
 
-    if step == "explorer_return" and cmd in ("seek", "enter"):
+    if step == "explorer_return":
         room = game.current_room()
         if room and room.zone == "skerry":
             print()
@@ -253,7 +253,7 @@ def after_command(cmd, args, game):
                     npc["name"] for npc in game.npcs_db.values()
                     if npc.get("following") and npc.get("recruited")
                 )
-                display.seed_speak(f"You brought someone back. SETTLE {follower_name.upper()} so she has a place here.")
+                display.seed_speak(f"You brought someone back. SETTLE {follower_name.upper()} so they have a place here.")
                 game.state["tutorial_step"] = "explorer_settle"
             else:
                 _advance_to_artifact_or_stash(game)
