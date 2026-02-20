@@ -2325,8 +2325,9 @@ class Game:
         if npc:
             display.header(npc["name"])
             display.narrate(self.sub(npc.get("description", "You see nothing unusual.")))
-            if npc.get("aspects"):
-                for a in npc["aspects"]:
+            npc_aspects = aspects._flatten_npc_aspects(npc)
+            if npc_aspects:
+                for a in npc_aspects:
                     print(f"    {display.aspect_text(a)}")
             if npc.get("skills"):
                 skills_str = ", ".join(f"{k} {v}" for k, v in npc["skills"].items())
