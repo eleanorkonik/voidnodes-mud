@@ -513,17 +513,17 @@ def _explorer_free_hints(cmd, args, game):
             # Enemy was defeated by the free-invocation attack
             game.state["_free_invoke_celebrated"] = True
             print()
-            display.seed_speak("EXPLOIT sets up free hits. INVOKE costs a fate point")
-            display.seed_speak("but works instantly, no setup needed.")
-            display.seed_speak("Save INVOKE for when you need a guaranteed edge.")
+            display.seed_speak("EXPLOIT is free but takes a turn to set up.")
+            display.seed_speak("There's another option: INVOKE spends a fate point")
+            display.seed_speak("to get +2 right now, no setup required.")
         elif not game.state.get("_free_invoke_celebrated") and game.in_combat:
             # Enemy survived — show the payoff, mention INVOKE
             game.state["_free_invoke_celebrated"] = True
             print()
             display.seed_speak("See? That free invocation hit hard.")
-            display.seed_speak("For tougher enemies, you can also INVOKE an aspect —")
-            display.seed_speak("costs a fate point, but gives +2 immediately.")
-            _tutorial_prompt("INVOKE <aspect> to spend a fate point for +2.")
+            display.seed_speak("There's a faster option too — INVOKE spends a fate")
+            display.seed_speak("point to get +2 immediately, no setup turn needed.")
+            _tutorial_prompt("Try it: INVOKE <aspect> (costs 1 FP, instant +2).")
         return
 
     # Just invoked successfully
@@ -726,7 +726,9 @@ def _explorer_free_resume_hint(gs):
         display.seed_speak("Find an enemy and try EXPLOIT [aspect] during combat.")
         display.seed_speak("It sets up free invocations — tactical advantage, no cost.")
     elif not invoke_done:
-        display.seed_speak("Try INVOKE [aspect] during combat — costs a fate point for +2.")
+        display.seed_speak("You've used EXPLOIT (free setup). Now try INVOKE —")
+        display.seed_speak("it spends a fate point for an instant +2, no setup turn.")
+        _tutorial_prompt("In combat: INVOKE <aspect> (costs 1 FP, instant +2).")
     elif not scavenge_done:
         display.seed_speak("SCAVENGE to search for materials.")
     elif not artifact_found:
