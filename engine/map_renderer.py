@@ -1,5 +1,11 @@
-"""ASCII map renderer with fog-of-war — Imperian-style [x]-[x] notation."""
+"""ASCII map renderer with fog-of-war — Imperian-style [x]-[x] notation.
 
+Supports cardinal and diagonal connections (NW/NE/SW/SE shown as \\ and /).
+Skerry layout is generated dynamically from room exits (player-placed structures).
+Zone layouts remain hardcoded.
+"""
+
+from collections import deque
 from engine import display
 
 
@@ -8,20 +14,22 @@ BOX_WIDTH = 3      # [x]
 H_CONNECTOR = "-"  # between rooms horizontally
 H_EMPTY = " "      # no connection
 V_CHAR = "|"       # vertical connector
+DIAG_SE = "\\"     # southeast connector
+DIAG_SW = "/"      # southwest connector
+DIAG_X = "X"       # both diagonals cross
+
+# Direction → grid offset (row_delta, col_delta)
+DIR_OFFSETS = {
+    "north": (-1, 0), "south": (1, 0),
+    "east": (0, 1), "west": (0, -1),
+    "northwest": (-1, -1), "northeast": (-1, 1),
+    "southwest": (1, -1), "southeast": (1, 1),
+    "up": (-1, 0), "down": (1, 0),
+}
 
 
-# Zone grid layouts: list of (row, col, room_id)
+# Zone grid layouts: list of (row, col, room_id) — for non-skerry zones
 ZONE_LAYOUTS = {
-    "skerry": {
-        "name": "The Skerry",
-        "grid": [
-            (0, 1, "skerry_shelter"),
-            (1, 0, "skerry_junkyard"),
-            (1, 1, "skerry_central"),
-            (1, 2, "skerry_hollow"),
-            (2, 1, "skerry_landing"),
-        ],
-    },
     "debris_field": {
         "name": "The Debris Field",
         "grid": [
@@ -71,14 +79,51 @@ ZONE_LAYOUTS = {
 }
 
 
+def _build_skerry_grid(rooms):
+    """Generate grid positions for skerry rooms via BFS from skerry_central."""
+    start = "skerry_central"
+    if start not in rooms:
+        return []
+
+    placed = {start: (0, 0)}
+    queue = deque([start])
+
+    while queue:
+        rid = queue.popleft()
+        room = rooms.get(rid)
+        if not room:
+            continue
+        row, col = placed[rid]
+
+        for direction, target_id in room.exits.items():
+            if target_id in placed:
+                continue
+            target_room = rooms.get(target_id)
+            if not target_room or target_room.zone != "skerry":
+                continue
+            offset = DIR_OFFSETS.get(direction)
+            if not offset:
+                continue
+            placed[target_id] = (row + offset[0], col + offset[1])
+            queue.append(target_id)
+
+    # Normalize so minimum row/col is 0
+    if not placed:
+        return []
+    min_row = min(r for r, c in placed.values())
+    min_col = min(c for r, c in placed.values())
+    return [(r - min_row, c - min_col, rid) for rid, (r, c) in placed.items()]
+
+
 def get_zone_for_room(room_id):
     """Return the zone_id for a given room_id, or None."""
+    if room_id and room_id.startswith("skerry_"):
+        return "skerry"
     for zone_id, layout in ZONE_LAYOUTS.items():
         for _, _, rid in layout["grid"]:
             if rid == room_id:
                 return zone_id
     return None
-
 
 
 def _room_box(room_id, rooms, current_room_id, zone_id):
@@ -89,8 +134,6 @@ def _room_box(room_id, rooms, current_room_id, zone_id):
         return " " * BOX_WIDTH
 
     if not room.discovered:
-        # Adjacent to a discovered room — imply its existence
-        # Only show if a discovered room has an exit leading here
         for rid, r in rooms.items():
             if r.discovered and room_id in r.exits.values():
                 return f"{display.DIM}[?]{display.RESET}"
@@ -124,26 +167,27 @@ def _either_discovered(room_a, room_b, rooms):
     return (a and a.discovered) or (b and b.discovered)
 
 
-def render_zone_map(zone_id, rooms, current_room_id):
-    """Render a fog-of-war ASCII map for a single zone.
+def _visible_connection(rid_a, rid_b, rooms):
+    """True if rooms are connected AND at least one is discovered."""
+    return (rid_a and rid_b
+            and _are_connected(rid_a, rid_b, rooms)
+            and _either_discovered(rid_a, rid_b, rooms))
 
-    Returns a list of strings (lines) to print.
-    """
-    layout = ZONE_LAYOUTS.get(zone_id)
-    if not layout:
-        return [f"  Unknown zone: {zone_id}"]
 
-    grid = layout["grid"]
+def _render_grid(grid, zone_name, zone_id, rooms, current_room_id):
+    """Render a grid layout with cardinal and diagonal connectors."""
+    if not grid:
+        return [f"  No rooms to display."]
+
     max_row = max(r for r, c, _ in grid)
     max_col = max(c for r, c, _ in grid)
 
-    # Build lookup: (row, col) -> room_id
     pos_to_room = {}
     for r, c, rid in grid:
         pos_to_room[(r, c)] = rid
 
     lines = []
-    lines.append(f"  {display.BOLD}{layout['name']}{display.RESET}")
+    lines.append(f"  {display.BOLD}{zone_name}{display.RESET}")
     lines.append("")
 
     for row in range(max_row + 1):
@@ -159,42 +203,55 @@ def render_zone_map(zone_id, rooms, current_room_id):
             # Horizontal connector between this col and col+1
             if col < max_col:
                 rid_right = pos_to_room.get((row, col + 1))
-                if rid and rid_right and _are_connected(rid, rid_right, rooms) and _either_discovered(rid, rid_right, rooms):
+                if _visible_connection(rid, rid_right, rooms):
                     box_parts.append(f"{display.DIM}{H_CONNECTOR}{display.RESET}")
                 else:
                     box_parts.append(H_EMPTY)
 
         lines.append("  " + "".join(box_parts))
 
-        # ── Vertical connectors line (between this row and next) ──
+        # ── Connector line between this row and next ──
         if row < max_row:
-            vert_parts = []
+            # Build as a character list, then join
+            line_width = (max_col + 1) * BOX_WIDTH + max_col  # cells + gaps
+            conn = [" "] * line_width
+
             for col in range(max_col + 1):
                 rid_here = pos_to_room.get((row, col))
-                has_vert = False
                 rid_below = pos_to_room.get((row + 1, col))
-                if rid_below:
-                    if rid_here and _are_connected(rid_here, rid_below, rooms) and _either_discovered(rid_here, rid_below, rooms):
-                        has_vert = True
-                    if not has_vert:
-                        for c2 in range(max_col + 1):
-                            if c2 == col:
-                                continue
-                            rid_other = pos_to_room.get((row, c2))
-                            if rid_other and _are_connected(rid_other, rid_below, rooms) and _either_discovered(rid_other, rid_below, rooms):
-                                has_vert = True
-                                break
+                center = col * (BOX_WIDTH + 1) + 1  # center of cell
 
-                if has_vert:
-                    # Center | under [x] — 1 space + | + 1 space
-                    vert_parts.append(f" {display.DIM}{V_CHAR}{display.RESET} ")
-                else:
-                    vert_parts.append(" " * BOX_WIDTH)
+                # Vertical connection
+                if _visible_connection(rid_here, rid_below, rooms):
+                    if 0 <= center < line_width:
+                        conn[center] = V_CHAR
 
+                # Diagonal SE: (row, col) → (row+1, col+1)
                 if col < max_col:
-                    vert_parts.append(H_EMPTY)
+                    gap_pos = col * (BOX_WIDTH + 1) + BOX_WIDTH  # gap after cell
+                    rid_se = pos_to_room.get((row + 1, col + 1))
+                    rid_sw_src = pos_to_room.get((row, col + 1))
+                    rid_sw_dst = pos_to_room.get((row + 1, col))
 
-            lines.append("  " + "".join(vert_parts))
+                    has_se = _visible_connection(rid_here, rid_se, rooms)
+                    has_sw = _visible_connection(rid_sw_src, rid_sw_dst, rooms)
+
+                    if 0 <= gap_pos < line_width:
+                        if has_se and has_sw:
+                            conn[gap_pos] = DIAG_X
+                        elif has_se:
+                            conn[gap_pos] = DIAG_SE
+                        elif has_sw:
+                            conn[gap_pos] = DIAG_SW
+
+            # Apply dim styling to connector characters
+            styled = []
+            for ch in conn:
+                if ch in (V_CHAR, DIAG_SE, DIAG_SW, DIAG_X):
+                    styled.append(f"{display.DIM}{ch}{display.RESET}")
+                else:
+                    styled.append(ch)
+            lines.append("  " + "".join(styled))
 
     lines.append("")
 
@@ -207,39 +264,54 @@ def render_zone_map(zone_id, rooms, current_room_id):
     return lines
 
 
-def render_all_zones_overview(zones_data, rooms, current_room_id):
-    """Render a high-level overview of all zones.
+def render_zone_map(zone_id, rooms, current_room_id):
+    """Render a fog-of-war ASCII map for a single zone."""
+    if zone_id == "skerry":
+        grid = _build_skerry_grid(rooms)
+        return _render_grid(grid, "The Skerry", "skerry", rooms, current_room_id)
 
-    Shows zone names with discovery progress.
-    """
+    layout = ZONE_LAYOUTS.get(zone_id)
+    if not layout:
+        return [f"  Unknown zone: {zone_id}"]
+
+    return _render_grid(layout["grid"], layout["name"], zone_id, rooms, current_room_id)
+
+
+def render_all_zones_overview(zones_data, rooms, current_room_id):
+    """Render a high-level overview of all zones."""
     lines = []
     lines.append(f"  {display.BOLD}Zone Overview{display.RESET}")
     lines.append("")
 
     current_zone = get_zone_for_room(current_room_id)
 
+    # Skerry (dynamic)
+    skerry_grid = _build_skerry_grid(rooms)
+    skerry_total = len(skerry_grid)
+    skerry_discovered = sum(1 for _, _, rid in skerry_grid
+                            if rooms.get(rid) and rooms[rid].discovered)
+    marker = " *" if current_zone == "skerry" else ""
+    bar = "\u2588" * skerry_discovered + "\u2591" * (skerry_total - skerry_discovered)
+    lines.append(f"  {display.GREEN}The Skerry{display.RESET} [{bar}] {skerry_discovered}/{skerry_total}{marker}")
+
+    # Other zones (hardcoded)
     for zone_id, layout in ZONE_LAYOUTS.items():
         grid = layout["grid"]
         total = len(grid)
         discovered = sum(1 for _, _, rid in grid
                         if rooms.get(rid) and rooms[rid].discovered)
 
-        marker = " *" if zone_id == current_zone else ""
+        zone_marker = " *" if zone_id == current_zone else ""
 
-        if discovered == 0 and zone_id != "skerry":
-            # Completely undiscovered non-skerry zone
+        if discovered == 0:
             lines.append(f"  {display.DIM}??? (undiscovered zone){display.RESET}")
         else:
-            # Pick color based on zone type
-            if zone_id == "skerry":
-                color = display.GREEN
-            elif zone_id == current_zone:
+            if zone_id == current_zone:
                 color = display.BRIGHT_YELLOW
             else:
                 color = display.CYAN
-
             bar = "\u2588" * discovered + "\u2591" * (total - discovered)
-            lines.append(f"  {color}{layout['name']}{display.RESET} [{bar}] {discovered}/{total}{marker}")
+            lines.append(f"  {color}{layout['name']}{display.RESET} [{bar}] {discovered}/{total}{zone_marker}")
 
     lines.append("")
     lines.append(f"  Type {display.BOLD}MAP <zone>{display.RESET} for a detailed view.")
@@ -249,10 +321,7 @@ def render_all_zones_overview(zones_data, rooms, current_room_id):
 
 
 def resolve_zone_name(name):
-    """Resolve a user-typed zone name to a zone_id.
-
-    Accepts partial matches like 'debris', 'coral', 'wreck', 'skerry'.
-    """
+    """Resolve a user-typed zone name to a zone_id."""
     name = name.lower().strip()
     aliases = {
         "skerry": "skerry",

@@ -3582,14 +3582,21 @@ class Game:
         "north": "south", "south": "north",
         "east": "west", "west": "east",
         "up": "down", "down": "up",
+        "northwest": "southeast", "southeast": "northwest",
+        "northeast": "southwest", "southwest": "northeast",
     }
+
+    BUILD_DIRECTIONS = (
+        "north", "south", "east", "west",
+        "northwest", "northeast", "southwest", "southeast",
+    )
 
     def _get_build_sites(self):
         """Get available build sites — open directions on existing skerry rooms."""
         sites = []
         for room in self.skerry.get_all_rooms():
             used = set(room.exits.keys())
-            for direction in ("north", "south", "east", "west"):
+            for direction in self.BUILD_DIRECTIONS:
                 if direction not in used:
                     sites.append((room.id, room.name, direction))
         return sites

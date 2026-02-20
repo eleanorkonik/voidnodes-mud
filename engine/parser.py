@@ -5,8 +5,11 @@
 DIRECTION_ALIASES = {
     "n": "north", "s": "south", "e": "east", "w": "west",
     "u": "up", "d": "down",
+    "nw": "northwest", "ne": "northeast", "sw": "southwest", "se": "southeast",
     "north": "north", "south": "south", "east": "east", "west": "west",
     "up": "up", "down": "down",
+    "northwest": "northwest", "northeast": "northeast",
+    "southwest": "southwest", "southeast": "southeast",
 }
 
 # Command aliases
