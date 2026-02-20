@@ -19,6 +19,25 @@ from models.item import Item
 SKIP_WORDS = {"a", "an", "the", "of", "in", "is", "it", "that", "and", "but", "with", "for", "from", "to", "by"}
 
 
+import re
+
+_REPEAT_RE = re.compile(r'^x(\d+)\s+', re.IGNORECASE)
+_REPEAT_RE_SUFFIX = re.compile(r'^(\d+)x\s+', re.IGNORECASE)
+
+
+def _parse_repeat_prefix(raw):
+    """Strip xN or Nx prefix from input. Returns (count, remaining_input).
+
+    Max repeat is 20 to prevent accidents. Returns (1, raw) if no prefix.
+    """
+    stripped = raw.strip()
+    m = _REPEAT_RE.match(stripped) or _REPEAT_RE_SUFFIX.match(stripped)
+    if m:
+        count = min(int(m.group(1)), 20)
+        return max(count, 1), stripped[m.end():]
+    return 1, raw
+
+
 def _aspect_hint_words(aspect, count=2):
     """Pick the first few meaningful words from an aspect for a SEEK hint."""
     words = [w for w in aspect.split() if w.lower() not in SKIP_WORDS]
@@ -301,7 +320,10 @@ class Game:
                     self._handle_recruit_input(raw.strip())
                     continue
 
-                cmd, args = parser.parse(raw)
+                # Repeat prefix: "x5 scavenge" or "5x scavenge"
+                repeat, cmd_raw = _parse_repeat_prefix(raw)
+
+                cmd, args = parser.parse(cmd_raw)
 
                 if cmd is None:
                     continue
@@ -314,18 +336,29 @@ class Game:
                     display.error(f"'{cmd.upper()}' is not available during the {phase} phase.")
                     continue
 
-                # Stash location so tutorial can detect failed moves
-                if not self.state.get("tutorial_complete"):
-                    loc_key = {"prologue": "prologue_location", "explorer": "explorer_location", "steward": "steward_location"}.get(phase)
-                    if loc_key:
-                        self.state["_pre_cmd_location"] = self.state.get(loc_key)
+                for i in range(repeat):
+                    if not self.running:
+                        break
+                    # State-changing intercepts break the chain
+                    if self.in_combat or self.in_recruit or self.in_compel:
+                        break
 
-                self.handle_command(cmd, args)
+                    if repeat > 1 and i > 0:
+                        print()
+                        display.info(f"({i + 1}/{repeat})")
 
-                # Tutorial after-command hook — runs for ALL phases while active
-                if not self.state.get("tutorial_complete"):
-                    tutorial.after_command(cmd, args, self)
-                    self.state.pop("_pre_cmd_location", None)
+                    # Stash location so tutorial can detect failed moves
+                    if not self.state.get("tutorial_complete"):
+                        loc_key = {"prologue": "prologue_location", "explorer": "explorer_location", "steward": "steward_location"}.get(phase)
+                        if loc_key:
+                            self.state["_pre_cmd_location"] = self.state.get(loc_key)
+
+                    self.handle_command(cmd, args)
+
+                    # Tutorial after-command hook — runs for ALL phases while active
+                    if not self.state.get("tutorial_complete"):
+                        tutorial.after_command(cmd, args, self)
+                        self.state.pop("_pre_cmd_location", None)
 
             except EOFError:
                 print()
