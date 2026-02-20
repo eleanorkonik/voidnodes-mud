@@ -36,7 +36,7 @@ def list_saves():
     """List available save files. Returns list of (filename, metadata) tuples."""
     _migrate_save_filenames()
     saves = []
-    for f in sorted(SAVE_DIR.glob("*.json")):
+    for f in sorted(SAVE_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
         try:
             with open(f) as fh:
                 data = json.load(fh)
