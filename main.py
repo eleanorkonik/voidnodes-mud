@@ -3345,6 +3345,11 @@ class Game:
             npc_target = " ".join(words)
             room_target = None
 
+        # Only the steward can assign housing
+        if room_target and self.state.get("current_phase") != "steward":
+            display.error("Only the steward can assign housing. Use SETTLE <name> to bring them to the skerry.")
+            return
+
         npc_id, npc = self._find_in_db(npc_target, self.npcs_db)
         if not npc or not npc.get("recruited"):
             display.error(f"No recruited companion named '{npc_target}'.")
