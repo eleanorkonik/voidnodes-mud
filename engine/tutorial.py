@@ -242,12 +242,6 @@ def after_command(cmd, args, game):
     if step == "explorer_return" and cmd in ("seek", "enter"):
         room = game.current_room()
         if room and room.zone == "skerry":
-            # Move Miria to landing pad to greet Sevarik
-            miria_id = game.steward_name.lower()
-            if miria_id in game.agents_db:
-                game.agents_db[miria_id]["location"] = "skerry_landing"
-            print()
-            display.narrate(f"{game.steward_name} hurries out to the landing pad as you arrive.")
             print()
             # Check if player brought a recruited NPC home
             _has_follower = any(
