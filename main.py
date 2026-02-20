@@ -2094,8 +2094,12 @@ class Game:
                 display.info(f"  Skills: {skills_str}")
             return
 
-        # Check NPCs in room
-        npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
+        # Check NPCs in room + followers
+        npc_pool = list(room.npcs)
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following") and npc_id not in npc_pool:
+                npc_pool.append(npc_id)
+        npc_id, npc = self._find_entity(npc_pool, target, self.npcs_db)
         if npc:
             display.header(npc["name"])
             display.narrate(self.sub(npc.get("description", "You see nothing unusual.")))
