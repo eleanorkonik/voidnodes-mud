@@ -179,17 +179,26 @@ def get_quest_talk(npc_id, npc, game_state):
             return {"lines": [dialogue.get("quest_forceful_done", "...")]}
         return {"lines": [dialogue.get("quest_complete", "...")]}
 
-    # Quest not started — activate + show both options + reveal hidden exit
+    # Quest not started — ask tools question, don't start quest yet
     if quest.get("status") != "active":
-        return {
-            "lines": [
+        already_asked = game_state.get("lira_tools_asked")
+        if already_asked:
+            # Re-talk after walking away — just the question, no greeting
+            lines = [dialogue.get("quest_intro", "...")]
+        else:
+            # First time — greeting + question
+            lines = [
                 dialogue.get("greeting", "..."),
                 dialogue.get("quest_intro", "..."),
-                dialogue.get("quest_options", "..."),
-            ],
-            "quest_started": True,
-            "reveal_exit": ("vw_root_wall", "west", "vw_control"),
+            ]
+            game_state["lira_tools_asked"] = True
+        # Set pending question for SAY response
+        game_state["pending_npc_question"] = {
+            "npc_id": "lira",
+            "key": "tools_question",
+            "room_id": "vw_greenhouse",
         }
+        return {"lines": lines, "say_hint": True}
 
     # Quest active, roots cleared — show completion dialogue
     if quest.get("roots_cleared"):
@@ -197,6 +206,29 @@ def get_quest_talk(npc_id, npc, game_state):
 
     # Quest active, in progress — repeat options
     return {"lines": [dialogue.get("quest_options", "...")]}
+
+
+def handle_lira_say(answer, npc, game_state, rooms):
+    """Handle the player's SAY response to Lira's tools question.
+
+    Returns dict with lines + effects, or None if answer not recognized.
+    """
+    dialogue = npc.get("dialogue", {})
+    yes_words = {"yes", "y", "yeah", "yep", "yea", "sure", "aye"}
+    no_words = {"no", "n", "nope", "nah", "nay"}
+
+    if answer in yes_words:
+        line = dialogue.get("quest_reply_yes", "...")
+    elif answer in no_words:
+        line = dialogue.get("quest_reply_no", "...")
+    else:
+        return None  # unrecognized answer
+
+    return {
+        "lines": [line],
+        "quest_started": True,
+        "reveal_exit": ("vw_root_wall", "west", "vw_control"),
+    }
 
 
 def apply_quest_talk_effects(result, game_state, rooms, character):

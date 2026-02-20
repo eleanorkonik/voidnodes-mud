@@ -988,6 +988,9 @@ class Game:
             self.state[f"{phase}_location"] = target_id
         target_room.discover()
 
+        # Clear pending NPC question when leaving the room
+        self.state.pop("pending_npc_question", None)
+
         # Followers move with the explorer
         if phase == "explorer":
             self._move_followers(target_id)
@@ -1000,6 +1003,17 @@ class Game:
 
         # Contextual quest hints on room entry
         self._quest_room_hints(target_room)
+
+        # Seed senses a survivor — hint to TALK (fires once, first non-recruited NPC)
+        if not self.state.get("_npc_talk_hint_shown"):
+            for npc_id in target_room.npcs:
+                npc = self.npcs_db.get(npc_id)
+                if npc and not npc.get("recruited"):
+                    self.state["_npc_talk_hint_shown"] = True
+                    print()
+                    display.seed_speak("I sense a survivor here. Someone who knows this place.")
+                    display.seed_speak("TALK to them — they might know something useful.")
+                    break
 
         # Check for aggressive enemies
         if self.state["current_phase"] == "explorer":
@@ -1672,6 +1686,9 @@ class Game:
             if quest_result:
                 for line in quest_result["lines"]:
                     display.npc_speak(npc["name"], self._sub_dialogue(line))
+                if quest_result.get("say_hint"):
+                    print()
+                    display.info("  (SAY YES or SAY NO to answer her)")
                 if quest_result.get("quest_started"):
                     display.info("  [Quest started: The Verdant Heart]")
                 apply_quest_talk_effects(quest_result, self.state, self.rooms, self.current_character())
@@ -1703,6 +1720,57 @@ class Game:
             return
 
         display.narrate(f"There's nobody called '{target}' here to talk to.")
+
+    def cmd_say(self, args):
+        if not args:
+            display.error("Say what? (SAY <words> or \"<words>)")
+            return
+
+        char = self.current_character()
+        words = " ".join(args).lower()
+        pending = self.state.get("pending_npc_question")
+
+        if pending:
+            room = self.current_room()
+            # Player is in the right room for the pending question
+            if room and room.id == pending.get("room_id"):
+                if pending["key"] == "tools_question" and pending["npc_id"] == "lira":
+                    from engine.quest import handle_lira_say, apply_quest_talk_effects
+                    npc = self.npcs_db.get("lira")
+                    if npc:
+                        result = handle_lira_say(words, npc, self.state, self.rooms)
+                        if result:
+                            for line in result["lines"]:
+                                display.npc_speak(npc["name"], self._sub_dialogue(line))
+                            if result.get("quest_started"):
+                                print()
+                                display.info("  [Quest started: The Verdant Heart]")
+                            apply_quest_talk_effects(result, self.state, self.rooms, self.current_character())
+                            # Clear the pending question
+                            self.state.pop("pending_npc_question", None)
+                            # Seed RECRUIT hint
+                            self._seed_recruit_hint()
+                            return
+                        else:
+                            # Unrecognized answer
+                            display.info("  (SAY YES or SAY NO to answer her)")
+                            return
+            else:
+                # Wrong room — generic speech, pending question stays
+                display.narrate(f'{char.name} says: "{" ".join(args)}"')
+                return
+
+        # No pending question — generic speech
+        display.narrate(f'{char.name} says: "{" ".join(args)}"')
+
+    def _seed_recruit_hint(self):
+        """World seed hints about RECRUIT after Lira conversation."""
+        cap = self.skerry.population_cap()
+        current = 2 + len(self.state.get("recruited_npcs", []))
+        remaining = cap - current
+        print()
+        display.seed_speak(f"We have space for {remaining} more at the skerry.")
+        display.seed_speak("RECRUIT her, and I can bring her safely home with you.")
 
     def cmd_use(self, args):
         if not args:

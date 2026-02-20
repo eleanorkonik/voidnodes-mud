@@ -58,6 +58,7 @@ COMMANDS = {
     "map":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "quests":    {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "fix":       {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
+    "say":       {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "skip":      {"phases": ["prologue"], "args": "none"},
     "bond":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "give":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
@@ -116,6 +117,13 @@ def parse(raw_input):
     raw = raw_input.strip()
     if not raw:
         return None, []
+
+    # Quote prefix shortcut: "yes → say yes, 'hello → say hello
+    if raw[0] in ('"', "'"):
+        rest = raw[1:].strip()
+        if rest:
+            return "say", rest.lower().split()
+        return "say", []
 
     parts = raw.lower().split()
     verb = parts[0]
