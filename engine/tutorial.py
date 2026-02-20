@@ -308,8 +308,8 @@ def after_command(cmd, args, game):
     # ── Act 3: Miria Steward ──
 
     if step == "steward_build" and cmd == "build":
-        # Check if storehouse was built (look for it in skerry structures)
-        built = "storehouse" in game.skerry.structures
+        # Check if any new expandable room was built
+        built = len(game.skerry.built_rooms) > 0
         if built:
             print()
             recruited = game.state.get("recruited_npcs", [])
@@ -459,13 +459,31 @@ def _advance_to_stash(game):
 
 
 def _steward_arrive(game):
-    """Steward orientation — prompt to build storehouse."""
+    """Steward orientation — prompt to build whatever's affordable."""
+    build_name = _first_buildable_name(game)
     print()
-    display.seed_speak("We need somewhere proper to store everything Sevarik drags home.")
-    display.seed_speak("Head to the junkyard and BUILD STOREHOUSE.")
-    display.seed_speak("CHECK SKERRY if you want to see what's possible.")
-    _tutorial_prompt("GO WEST to the junkyard, then BUILD STOREHOUSE.")
+    display.seed_speak("We need to start building. The salvage won't organize itself.")
+    display.seed_speak(f"CHECK SKERRY to see what's possible, then BUILD {build_name.upper()}.")
+    _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()}.")
     game.state["tutorial_step"] = "steward_build"
+
+
+def _first_buildable_name(game):
+    """Return the name of the first structure the steward can afford, or a fallback."""
+    inv_counts = {}
+    junkyard = game.rooms.get("skerry_junkyard")
+    if junkyard:
+        for item_id in junkyard.items:
+            inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+    for item_id in game.steward.inventory:
+        inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+    npc_count = len(game.state.get("recruited_npcs", []))
+    for tmpl in game.skerry.expandable:
+        can, _ = game.skerry.can_build(tmpl, inv_counts, npc_count, game.seed.growth_stage)
+        if can:
+            return tmpl["name"]
+    # Fallback — shouldn't happen if handoff gate works, but safe
+    return game.skerry.expandable[0]["name"] if game.skerry.expandable else "something"
 
 
 def _explorer_free_hints(cmd, args, game):
@@ -708,10 +726,12 @@ def get_current_hint(step, game_state=None):
         display.seed_speak(f"Let {steward_name} take over.")
         _tutorial_prompt(f"SWITCH FOCUS TO {steward_name.upper()}.")
     elif step == "steward_arrive":
-        _tutorial_prompt("GO WEST to the junkyard, then BUILD STOREHOUSE.")
+        build_name = _first_buildable_name(game)
+        _tutorial_prompt(f"CHECK SKERRY, then BUILD {build_name.upper()}.")
     elif step == "steward_build":
-        display.seed_speak("Head to the junkyard and BUILD STOREHOUSE.")
-        _tutorial_prompt("GO WEST, then BUILD STOREHOUSE.")
+        build_name = _first_buildable_name(game)
+        display.seed_speak(f"CHECK SKERRY to see what you can build.")
+        _tutorial_prompt(f"BUILD {build_name.upper()}.")
     elif step == "steward_assign":
         recruited = gs.get("recruited_npcs", [])
         if recruited:
