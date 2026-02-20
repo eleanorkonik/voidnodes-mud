@@ -192,6 +192,25 @@ def after_command(cmd, args, game):
 
     # ── Act 2: Sevarik Explorer ──
 
+    # Catch-all: if player is on skerry with a follower, skip ahead to settle
+    # regardless of which explorer step they're technically on.
+    if step in ("explorer_navigate", "explorer_void_cross", "explorer_free", "explorer_return"):
+        room = game.current_room()
+        if room and room.zone == "skerry":
+            _has_follower = any(
+                npc.get("following") for npc in game.npcs_db.values()
+                if npc.get("recruited")
+            )
+            if _has_follower:
+                follower_name = next(
+                    npc["name"] for npc in game.npcs_db.values()
+                    if npc.get("following") and npc.get("recruited")
+                )
+                print()
+                display.seed_speak(f"You brought someone back. SETTLE {follower_name.upper()} so they have a place here.")
+                game.state["tutorial_step"] = "explorer_settle"
+                return False
+
     if step == "explorer_navigate" and cmd == "go":
         loc = game.state.get("explorer_location")
         if loc == "skerry_landing":
@@ -240,23 +259,10 @@ def after_command(cmd, args, game):
         return False
 
     if step == "explorer_return":
+        # Follower case handled by catch-all above; this handles no-follower return
         room = game.current_room()
         if room and room.zone == "skerry":
-            print()
-            # Check if player brought a recruited NPC home
-            _has_follower = any(
-                npc.get("following") for npc in game.npcs_db.values()
-                if npc.get("recruited")
-            )
-            if _has_follower:
-                follower_name = next(
-                    npc["name"] for npc in game.npcs_db.values()
-                    if npc.get("following") and npc.get("recruited")
-                )
-                display.seed_speak(f"You brought someone back. SETTLE {follower_name.upper()} so they have a place here.")
-                game.state["tutorial_step"] = "explorer_settle"
-            else:
-                _advance_to_artifact_or_stash(game)
+            _advance_to_artifact_or_stash(game)
         return False
 
     if step == "explorer_settle":
