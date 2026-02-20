@@ -1411,30 +1411,44 @@ class Game:
 
     def cmd_use(self, args):
         if not args:
-            display.error("Use what?")
+            display.error("Use what? (USE <item> or USE <item> ON <target>)")
             return
 
-        target = " ".join(args).lower()
+        raw = " ".join(args).lower()
         char = self.current_character()
         room = self.current_room()
 
-        # Check quest-contextual use first (resin at root wall, tools at control room, etc.)
+        # Parse USE <item> ON <target>
+        item_part, use_target = raw, None
+        if " on " in raw:
+            parts = raw.split(" on ", 1)
+            item_part, use_target = parts[0].strip(), parts[1].strip()
+
+        # Targeted use — quest interactions (USE RESIN ON ROOTS, etc.)
         from engine.quest import handle_quest_use
-        # Try matching against items in inventory
-        item_id_q, item_q = self._find_entity(char.inventory, target, self.items_db)
-        if item_id_q and room:
-            # Lira stops you from burning her biodome if she's still living here
-            if self._lira_blocks_torch(item_id_q, room):
-                return
-            biodome_was_burning = self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning")
-            handled, consumed = handle_quest_use(item_id_q, room.id, self.state, char, self.rooms)
-            if handled:
-                if consumed:
-                    char.remove_from_inventory(item_id_q)
-                # Lira reacts to watching her biodome burn
-                if not biodome_was_burning and self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning"):
-                    self._lira_fire_reaction()
-                return
+        if use_target and room:
+            item_id_q, item_q = self._find_entity(char.inventory, item_part, self.items_db)
+            if item_id_q:
+                # Lira stops you from burning her biodome if she's still living here
+                if self._lira_blocks_torch(item_id_q, room):
+                    return
+                biodome_was_burning = self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning")
+                handled, consumed = handle_quest_use(item_id_q, use_target, room.id, self.state, char, self.rooms)
+                if handled:
+                    if consumed:
+                        char.remove_from_inventory(item_id_q)
+                    # Lira reacts to watching her biodome burn
+                    if not biodome_was_burning and self.state.get("quests", {}).get("verdant_bloom", {}).get("biodome_burning"):
+                        self._lira_fire_reaction()
+                    return
+            if not item_id_q:
+                display.error(f"You don't have '{item_part}'.")
+            else:
+                display.narrate(f"Using {item_q['name']} on that doesn't do anything.")
+            return
+
+        # No target — untargeted item use (artifacts, food, etc.)
+        target = item_part
 
         # Check artifacts in inventory
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
@@ -3214,19 +3228,19 @@ class Game:
             if not quest.get("roots_weakened"):
                 if "resin" in inv:
                     print(f"  {display.npc_name('Lira')}: \"Those roots won't budge by hand. But resin")
-                    print(f"  eats through organic matter. USE RESIN here.\"")
+                    print(f"  eats through organic matter. USE RESIN ON ROOTS.\"")
                 elif "basic_tools" in inv:
                     print(f"  {display.npc_name('Lira')}: \"There's a Growth Controller west of here.")
-                    print(f"  Go WEST and USE BASIC TOOLS on the console.\"")
+                    print(f"  Go WEST and USE BASIC TOOLS ON CONSOLE.\"")
                 else:
                     print(f"  {display.npc_name('Lira')}: \"We need to get past these roots. The Growth")
-                    print(f"  Controller is west of here — GO WEST and USE BASIC TOOLS to fix it.")
-                    print(f"  Or find some resin and USE RESIN to weaken them enough to burn.\"")
+                    print(f"  Controller is west of here — GO WEST and USE BASIC TOOLS ON CONSOLE.")
+                    print(f"  Or find some resin and USE RESIN ON ROOTS to weaken them.\"")
             else:
                 # Roots weakened, need fire
                 if "torch" in inv:
                     print(f"  {display.npc_name('Lira')}: \"The roots are sagging — the resin did its work.")
-                    print(f"  USE TORCH to burn through.\" She hesitates.")
+                    print(f"  USE TORCH ON ROOTS to burn through.\" She hesitates.")
                     print(f"  {display.npc_name('Lira')}: \"Be ready to move fast.\"")
                 else:
                     print(f"  {display.npc_name('Lira')}: \"The resin weakened them, but they're still holding.")
@@ -3235,8 +3249,8 @@ class Game:
         elif room.id == "vw_control" and not quest.get("roots_cleared"):
             if "basic_tools" in inv:
                 print()
-                print(f"  {display.npc_name('Lira')}: \"This is the Growth Controller. USE BASIC TOOLS")
-                print(f"  on the console — the logic board might still work.\"")
+                print(f"  {display.npc_name('Lira')}: \"This is the Growth Controller. USE BASIC TOOLS ON CONSOLE")
+                print(f"  — the logic board might still work.\"")
 
     def _lira_blocks_torch(self, item_id, room):
         """Lira stops you from torching her biodome if she hasn't been recruited.

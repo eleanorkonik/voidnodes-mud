@@ -69,8 +69,8 @@ def is_quest_complete(quest_id, game_state):
 
 # ── Contextual USE ───────────────────────────────────────────
 
-def handle_quest_use(item_id, room_id, game_state, character, rooms=None):
-    """Handle location-specific item USE for quests.
+def handle_quest_use(item_id, target, room_id, game_state, character, rooms=None):
+    """Handle targeted item USE for quests (USE <item> ON <target>).
 
     Returns (handled: bool, consumed: bool) — caller handles inventory
     removal if consumed.
@@ -79,8 +79,8 @@ def handle_quest_use(item_id, room_id, game_state, character, rooms=None):
     if quest.get("status") != "active":
         return False, False
 
-    # PATH B (forceful) — resin + torch at root wall
-    if room_id == "vw_root_wall":
+    # PATH B (forceful) — resin + torch on roots at root wall
+    if room_id == "vw_root_wall" and target in ("roots", "root", "root wall"):
         if item_id == "resin" and not quest.get("roots_weakened"):
             display.narrate("You spread the resin across the thick roots. The organic")
             display.narrate("solvent soaks in, and you hear faint cracking as the outer")
@@ -108,8 +108,8 @@ def handle_quest_use(item_id, room_id, game_state, character, rooms=None):
             display.narrate("and damp to catch. The surface barely singes.")
             return True, False
 
-    # PATH A (careful) — basic_tools at control room
-    if room_id == "vw_control":
+    # PATH A (careful) — basic_tools on console at control room
+    if room_id == "vw_control" and target in ("console", "controller", "growth controller", "panel"):
         if item_id == "basic_tools" and not quest.get("roots_cleared"):
             display.narrate("You pry open the console panel and get to work. Corroded")
             display.narrate("connectors, frayed wiring — but the core logic board is intact.")
