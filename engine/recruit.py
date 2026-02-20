@@ -277,13 +277,14 @@ def apply_move(state, direction):
         if flavor:
             messages.append(flavor)
 
-    # Warnings for counters at 2
-    warn_lines = flavor_data.get("warn", _GENERIC_FLAVOR["warn"])
-    for color in counters:
-        if counters[color] == 2 and color not in newly_eliminated_colors:
-            messages.append(f"{display.BRIGHT_RED}{rng.choice(warn_lines)}{display.RESET}")
+    # Warnings for counters at 2 (skip if threshold already met — conversation is won)
+    if state["score"] < state["threshold"]:
+        warn_lines = flavor_data.get("warn", _GENERIC_FLAVOR["warn"])
+        for color in counters:
+            if counters[color] == 2 and color not in newly_eliminated_colors:
+                messages.append(f"{display.BRIGHT_RED}{rng.choice(warn_lines)}{display.RESET}")
 
-    # Eliminate colors that hit 0
+    # Eliminate colors that hit 0 (skip messaging if threshold met)
     elim_lines = flavor_data.get("eliminate", _GENERIC_FLAVOR["eliminate"])
     for color in newly_eliminated_colors:
         del counters[color]
@@ -292,7 +293,8 @@ def apply_move(state, direction):
             for ec in range(grid_size):
                 if state["board"][er][ec] == color and (er, ec) not in state["visited"]:
                     state["eliminated"].add((er, ec))
-        messages.append(f"{display.RED}{rng.choice(elim_lines)}{display.RESET}")
+        if state["score"] < state["threshold"]:
+            messages.append(f"{display.RED}{rng.choice(elim_lines)}{display.RESET}")
 
     return True, messages
 
