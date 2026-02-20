@@ -1532,10 +1532,13 @@ class Game:
         self.save_game(silent=True)
 
         if target_role == "steward":
-            # Explorer → Steward
+            # Explorer → Steward (day increment — time passes in the void)
+            self.state["day"] += 1
             self.state["current_phase"] = "steward"
             print()
-            display.narrate(f"{self.explorer_name} returns to the skerry, weary but alive.")
+            display.narrate(f"The void crossing takes its toll. By the time {self.explorer_name}")
+            display.narrate("reaches the skerry, it is morning.")
+            print()
             display.narrate(f"{self.seed_name}'s tendril around him dims — not gone, but")
             display.narrate("quieter, like a heartbeat fading into the background.")
             print()
@@ -1544,6 +1547,9 @@ class Game:
             self.explorer.clear_stress()
             self.in_combat = False
             self.combat_target = None
+
+            # Day transition events (food spoilage, NPC tasks, etc.)
+            self._day_transition()
 
             # Followers arrive at the skerry with the explorer
             self._followers_to_skerry()
@@ -1562,20 +1568,13 @@ class Game:
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         else:
-            # Steward → Explorer (day increment)
-            self.state["day"] += 1
+            # Steward → Explorer (same day — day ticks when explorer returns)
             self.state["current_phase"] = "explorer"
             self.steward.clear_stress()
             day = self.state["day"]
 
             print()
-            display.narrate("The day ends. Night falls on the skerry — or what")
-            display.narrate("passes for night in the void.")
-
-            self._day_transition()
-
-            print()
-            display.narrate(f"Morning. {self.seed_name}'s tendril around {self.steward_name} dims.")
+            display.narrate(f"{self.seed_name}'s tendril around {self.steward_name} dims.")
             display.narrate(f"The other tendril brightens — reaching toward {self.explorer_name}.")
             display.narrate("His eyes sharpen. The void sharpens into focus.")
 
