@@ -996,7 +996,14 @@ class Game:
                 print(f"\n  {display.BOLD}Buildable:{display.RESET}")
                 for tmpl in self.skerry.expandable:
                     reqs = tmpl.get("requires", {})
-                    mats = ", ".join(f"{v}x {k.replace('_', ' ')}" for k, v in reqs.get("materials", {}).items())
+                    mat_parts = []
+                    for k, v in reqs.get("materials", {}).items():
+                        label = f"{v}x {k.replace('_', ' ')}"
+                        if inv_counts.get(k, 0) >= v:
+                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                        else:
+                            mat_parts.append(label)
+                    mats = ", ".join(mat_parts)
                     can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
                     if can:
                         print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
