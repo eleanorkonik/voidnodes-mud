@@ -21,7 +21,7 @@ A living **World Seed** grows as you feed it motes (energy from materials/artifa
 ## Project Structure
 
 ```
-main.py              # Game controller (~750 lines). Core loop, init, dispatch.
+main.py              # Game controller. Core loop, init, dispatch.
 commands/            # cmd_* handlers split into mixin classes
   combat.py          # ATTACK, DEFEND, INVOKE, EXPLOIT, CONCEDE, RETREAT
   movement.py        # GO, SEEK, ENTER, MAP
