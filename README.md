@@ -1,6 +1,8 @@
 # Voidnodes MUD
 
-Single-player text-based survival/base-building game. Science fantasy setting — survivors stranded on floating islands ("skerries") in the void between collapsed worlds.
+Voidnodes is a text-based adventure game where you control two characters who each do different things. Sevarik is the explorer — you type commands like SEEK to launch into the void and discover new floating islands full of enemies, survivors, and magical artifacts. You decide how to handle what you find: fight or sneak past threats, recruit people you meet, and choose whether to keep artifacts for their power or offer them to your home base. Miria stays home on the skerry, where she manages the growing settlement — assigning NPCs to jobs, expanding into new areas, and taking care of the people Sevarik brings back.
+
+The game plays like a choose-your-own-adventure book where you type your choices instead of picking from a list, and when things get risky — combat, crafting, healing wounds, resolving conflicts, managing gardens, dealing with threats like void-storms — it rolls dice behind the scenes like a tabletop RPG. There's no single right path through the story. You can explore zones in any order, and switching between the two characters with the SWITCH command lets you bounce between Sevarik's dangerous expeditions and Miria's base-building whenever you want, so the adventure keeps moving on two fronts at once.
 
 ## How to Run
 
