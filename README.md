@@ -21,7 +21,18 @@ A living **World Seed** grows as you feed it motes (energy from materials/artifa
 ## Project Structure
 
 ```
-main.py              # Game controller (~3000 lines). All cmd_* handlers live here.
+main.py              # Game controller (~750 lines). Core loop, init, dispatch.
+commands/            # cmd_* handlers split into mixin classes
+  combat.py          # ATTACK, DEFEND, INVOKE, EXPLOIT, CONCEDE, RETREAT
+  movement.py        # GO, SEEK, ENTER, MAP
+  items.py           # TAKE, DROP, GIVE, USE, WEAR, REMOVE, FEED, INVENTORY
+  npcs.py            # RECRUIT, TALK, ASSIGN, TRADE
+  artifacts.py       # PROBE, KEEP, OFFER
+  examine.py         # LOOK, STATUS, CHECK, IH, HELP
+  building.py        # BUILD, CRAFT, RECIPES
+  skerry_mgmt.py     # ORGANIZE, skerry management
+  farming.py         # HARVEST, farming/garden systems
+  story.py           # SCAVENGE, SWITCH, DONE, story progression
 models/
   character.py       # Character/NPC stats, skills, inventory, aspects
   room.py            # Room locations, exits, contents
@@ -48,7 +59,7 @@ data/
   events.json        # Random steward-phase events
   tuft.json          # Starting world seed config
 saves/               # Player save files (JSON)
-systems/             # Empty (future expansion)
+systems/             # Unused (commands live in mixin files)
 proselytize.jsx      # React prototype for recruit minigame UI
 ```
 
@@ -102,6 +113,8 @@ Movement: `n/s/e/w/u/d`. Look: `l/x`. Inventory: `i/inv`. Take: `get/grab/pick`.
 ## Architecture Notes
 
 **Game loop:** `start() → _hydrate() → run() → parse → cmd_*() → tutorial.after_command()`. Save via `_dehydrate()`.
+
+**Mixin pattern:** `Game` class in `main.py` inherits from 10 mixin classes in `commands/`. Each mixin defines `cmd_*` handlers for a command group. All `self.*` state lives in `Game.__init__` — mixins don't define `__init__`. Command dispatch via `getattr(self, f"cmd_{cmd}")` resolves handlers across all mixins.
 
 **Phase system:** `prologue` (tutorial) → `explorer` / `steward` alternating. `DONE` advances day and switches.
 
