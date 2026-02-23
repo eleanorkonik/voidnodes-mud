@@ -67,6 +67,8 @@ class StoryMixin:
         if not quest.get("lira_warned"):
             # First attempt — she confronts you
             quest["lira_warned"] = True
+            self._log_event("lira_encounter", comic_weight=4,
+                            event="torch_warning")
             print()
             display.narrate("You raise the torch toward the resin-coated roots —")
             print()
@@ -116,6 +118,8 @@ class StoryMixin:
         """Handle Lira being defeated in combat — she can no longer be recruited."""
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
         quest["lira_defeated"] = True
+        self._log_event("lira_encounter", comic_weight=4,
+                        event="lira_defeated")
         lira = self.npcs_db.get("lira")
         if lira:
             # Remove her from her room
@@ -155,6 +159,9 @@ class StoryMixin:
         lira["loyalty"] = max(0, lira.get("loyalty", 0) - 1)
         quest = self.state.get("quests", {}).get("verdant_bloom", {})
         quest["lira_witnessed_fire"] = True
+        self._log_event("lira_encounter", comic_weight=4,
+                        event="witnessed_fire",
+                        mood="grim", loyalty=lira.get("loyalty", 0))
 
     def _day_transition(self):
         """Handle end-of-day events."""
@@ -169,8 +176,13 @@ class StoryMixin:
                 house = npc.get("house_level", 0)
                 if house == 0 and npc.get("mood") != "unhappy":
                     if random.random() < 0.3:
+                        old_mood = npc.get("mood", "content")
                         npc["mood"] = "restless"
                         display.info(f"  {npc['name']} is getting restless without proper shelter.")
+                        self._log_event("npc_mood_change", comic_weight=2,
+                                        npc_name=npc["name"], npc_id=npc_id,
+                                        old_mood=old_mood, new_mood="restless",
+                                        cause="no shelter")
 
         # Room-driven NPC production via subtask queues
         for room in self.skerry.get_all_rooms():
@@ -307,6 +319,9 @@ class StoryMixin:
                 for nid in departed:
                     npc = self.npcs_db[nid]
                     display.warning(f"  {npc['name']} has left the colony — too hungry to stay.")
+                    self._log_event("npc_departed", comic_weight=4,
+                                    npc_name=npc["name"], npc_id=nid,
+                                    cause="starvation")
                     npc["recruited"] = False
                     npc["assignment"] = "idle"
                     npc["settled_room"] = None
@@ -315,13 +330,17 @@ class StoryMixin:
                 self.steward.apply_damage(1)
                 self.explorer.apply_damage(1)
 
-        self.state["event_log"].append(f"Day {day}: The skerry endures.")
+        self._log_event("day_transition", comic_weight=1,
+                        day_number=day,
+                        population=2 + len(self.state.get("recruited_npcs", [])))
         display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
     def _transition_to_day1(self):
         """Transition from prologue to Day 1 Explorer Phase."""
         self.state["current_phase"] = "explorer"
         day = self.state["day"]
+        self._log_event("phase_change", comic_weight=3,
+                        from_phase="prologue", to_phase="explorer")
 
         # Sevarik starts where Miria found him (the prologue location)
         self.state["explorer_location"] = self.state.get("prologue_location", "skerry_central")

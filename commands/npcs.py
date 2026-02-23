@@ -43,8 +43,12 @@ class NpcsMixin:
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
                 # Talking to recruited NPCs boosts loyalty slightly
                 if npc.get("loyalty", 0) < 10:
-                    npc["loyalty"] = min(10, npc.get("loyalty", 0) + 1)
+                    old_loyalty = npc.get("loyalty", 0)
+                    npc["loyalty"] = min(10, old_loyalty + 1)
                     display.success(f"  {npc['name']}'s loyalty increases to {npc['loyalty']}.")
+                    self._log_event("npc_talked", comic_weight=1,
+                                    npc_name=npc["name"], npc_id=npc_id,
+                                    loyalty_change=f"{old_loyalty}->{npc['loyalty']}")
             else:
                 msg = dialogue.get("greeting", "They look at you warily.")
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
@@ -435,9 +439,11 @@ class NpcsMixin:
             npc["loyalty"] = base_loyalty
             display.info(f"  Score: {state['score']}/{state['threshold']} (+{over} over par, variant: {seed_hex})")
 
-            self.state["event_log"].append(
-                f"Day {self.state['day']}: Recruited {npc_name} (+{over} over par, variant: {seed_hex.lower()})"
-            )
+            self._log_event("recruit_success", comic_weight=5,
+                            npc_name=npc_name, npc_id=npc_id,
+                            loyalty=npc["loyalty"], score=state["score"],
+                            threshold=state["threshold"], over_par=over,
+                            variant=seed_hex.lower())
 
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_recruit_done"] = True
@@ -446,6 +452,10 @@ class NpcsMixin:
             display.narrate(self._sub_dialogue(npc["dialogue"].get("recruit_fail", f"{npc_name} isn't convinced yet.")))
             display.info(f"  Score: {state['score']}/{state['threshold']} (variant: {seed_hex})")
             display.info(f"  You can try again (costs 1 fate point).")
+            self._log_event("recruit_failed", comic_weight=3,
+                            npc_name=npc_name, npc_id=npc_id,
+                            score=state["score"], threshold=state["threshold"],
+                            variant=seed_hex.lower())
 
         self.in_recruit = False
         self.recruit_state = None
@@ -608,6 +618,9 @@ class NpcsMixin:
 
         if shifts >= 0:
             # Success
+            self._log_event("treatment_given", comic_weight=3,
+                            target=char.name, treater=treater_name,
+                            severity=sev, consequence=con, success=True)
             if sev == "severe":
                 # Downgrade to moderate
                 char.consequences["severe"] = None

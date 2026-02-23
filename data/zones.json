@@ -1,7 +1,7 @@
 {
     "debris_field": {
         "name": "The Debris Field",
-        "description": "A slowly tumbling mass of broken hull plating, cargo containers, and twisted metal. The remains of some great vessel, shattered and scattered across this pocket of void.",
+        "description": "A slowly tumbling mass of grey hull plating, olive-drab cargo containers, and twisted structural steel, spread across a pocket of void. The pieces rotate in silence, catching dull metallic light. The wreckage of a great vessel — shattered, scattered, and cold.",
         "aspect": "A Dead Ship Still Full of Secrets",
         "difficulty": "easy",
         "scavenge_pool": ["metal_scraps", "wire", "torn_fabric"],
@@ -9,7 +9,7 @@
             {
                 "id": "df_entrance",
                 "name": "Edge of the Debris Field",
-                "description": "Jagged metal fragments drift lazily at the boundary of the debris field. A faint hum resonates through the larger pieces, as if the wreckage still remembers being whole. The way back to the skerry is clear to the south.",
+                "description": "Jagged shards of grey hull plating drift lazily against the black void, spinning slow enough to catch dull reflections of distant light. The largest pieces — bent girders, crumpled bulkheads — hum faintly, as if the wreckage still remembers being whole. A clear path back to the skerry lies to the south.",
                 "zone": "debris_field",
                 "exits": {"south": "skerry_landing", "north": "df_cargo_bay", "east": "df_hull_breach"},
                 "aspects": ["Everything Drifts If You Let Go", "The Wreckage Hums With Memory"],
@@ -21,7 +21,7 @@
             {
                 "id": "df_cargo_bay",
                 "name": "Shattered Cargo Bay",
-                "description": "The remnants of a cargo hold, its walls peeled open like a tin can. Crates bob gently in the void, some still sealed. A young woman waves from atop one of the larger crates.",
+                "description": "The remnants of a cargo hold, its outer walls peeled back like a tin can to expose rust-brown internal plating. Crates of dull green and grey bob gently in the void, some still sealed with corroded latches. Emergency strip-lighting along the ceiling flickers orange in places, casting long shadows between the floating containers.",
                 "zone": "debris_field",
                 "exits": {"south": "df_entrance", "east": "df_control_room", "north": "df_engine_room"},
                 "aspects": ["Treasure Behind Sealed Doors", "Someone's Been Sorting Through This"],
@@ -33,7 +33,7 @@
             {
                 "id": "df_hull_breach",
                 "name": "Gaping Hull Breach",
-                "description": "A massive hole torn through the outer hull reveals layers of internal structure. The edges are sharp and corroded. A corroded automaton jerks erratically among the exposed girders, sparks flying from its joints.",
+                "description": "A massive hole torn through the outer hull, its ragged edges dark with corrosion. Layers of internal structure are exposed — insulation foam, conduit bundles, structural ribs — like looking into the cross-section of a body. Sparks flash intermittently from deeper in the wreckage, throwing harsh white light across the twisted metal.",
                 "zone": "debris_field",
                 "exits": {"west": "df_entrance", "north": "df_control_room"},
                 "aspects": ["One Wrong Move Draws Blood", "The Ship's Bones Laid Bare"],
@@ -45,7 +45,7 @@
             {
                 "id": "df_control_room",
                 "name": "Ruined Control Room",
-                "description": "Banks of dead consoles line the walls, their screens dark and cracked. Someone has cleared a workspace near the captain's chair, tools laid out in precise rows.",
+                "description": "A cramped room ringed with dead consoles, their dark screens cracked and frosted with corrosion. A single emergency light overhead bathes everything in dull amber. Someone has cleared a workspace near the listing captain's chair — tools laid out in precise rows on a sheet of fabric, oil rags folded neatly beside them.",
                 "zone": "debris_field",
                 "exits": {"south": "df_hull_breach", "west": "df_cargo_bay"},
                 "aspects": ["Everything Died Mid-Sentence", "Just Enough Power to Be Dangerous"],
@@ -57,7 +57,7 @@
             {
                 "id": "df_engine_room",
                 "name": "Engine Room Wreckage",
-                "description": "The heart of the ship, now still. Massive turbines lie split open, their cores dark. Among the wreckage, a faintly glowing device pulses with residual energy — the Stabilization Engine.",
+                "description": "A cavernous space dominated by massive turbines split open like cracked eggs, their dark cores exposed. Oil has pooled and frozen in black sheets across the deck. Among the wreckage, a cylindrical device the size of a person pulses with faint blue-white light — the Stabilization Engine, still drawing power from something.",
                 "zone": "debris_field",
                 "exits": {"south": "df_cargo_bay"},
                 "aspects": ["The Heart Stopped But It's Still Warm", "Something Down Here Has Juice"],
@@ -104,7 +104,7 @@
     },
     "coral_thicket": {
         "name": "The Coral Thicket",
-        "description": "A dense growth of crystallized organic matter, glowing with soft bioluminescence. The coral structures twist and branch in impossible patterns, creating a labyrinth of beauty and danger.",
+        "description": "A dense mass of crystallized organic matter in shades of blue, green, pink, and violet, glowing with soft bioluminescence against the void-dark. The coral structures twist and branch in impossible spiraling patterns, creating a labyrinth of sharp beauty. The air around it shimmers with warmth and drifting spores.",
         "aspect": "Everything Here Grows Toward Something Hungry",
         "difficulty": "medium",
         "scavenge_pool": ["coral_fragments", "luminous_moss", "reef_grain", "tangle_vine_cutting", "luminous_spore", "resin"],
@@ -112,7 +112,7 @@
             {
                 "id": "ct_entrance",
                 "name": "Coral Threshold",
-                "description": "The edge of the thicket glows with pale blue light. Crystalline tendrils reach outward like fingers, and the air tastes faintly sweet. The path back to the skerry lies to the west.",
+                "description": "The thicket begins as a wall of pale blue-green crystalline growths, branching outward like fingers against the void-dark. The formations are translucent, lit from within by slow bioluminescent pulses. The air here is warm and faintly sweet, with a mineral edge. Underfoot, the ground transitions from bare rock to a crust of tiny coral nubs.",
                 "zone": "coral_thicket",
                 "exits": {"west": "skerry_landing", "north": "ct_grove", "east": "ct_tunnel"},
                 "aspects": ["Beautiful Enough to Drop Your Guard", "The Sweetness Wants Something From You"],
@@ -124,7 +124,7 @@
             {
                 "id": "ct_grove",
                 "name": "Luminous Grove",
-                "description": "A clearing in the coral where enormous fan-shaped growths create a canopy of shifting light. Someone has been living here — there's a crude lean-to built against a coral wall.",
+                "description": "A clearing among the coral where enormous fan-shaped growths arch overhead, filtering light into shifting blue and green dapples across the ground. The space is roughly circular, ten paces wide. A crude lean-to of stacked coral slabs and fabric scraps leans against the largest formation, its entrance hung with a torn curtain.",
                 "zone": "coral_thicket",
                 "exits": {"south": "ct_entrance", "east": "ct_spore_chamber", "north": "ct_heart"},
                 "aspects": ["The Light Never Holds Still", "Someone Lived Here For a Reason"],
@@ -136,7 +136,7 @@
             {
                 "id": "ct_tunnel",
                 "name": "Narrow Coral Tunnel",
-                "description": "A tight passage between coral walls, barely wide enough to squeeze through. The walls pulse with internal light, and thorny protrusions scrape against anything that passes.",
+                "description": "A tight passage between walls of dense coral, barely shoulder-width. The formations press in from both sides, their surfaces studded with thorn-like protrusions that scrape fabric and skin. The coral pulses with slow internal light — pink and violet close up — and the air is close and humid.",
                 "zone": "coral_thicket",
                 "exits": {"west": "ct_entrance", "north": "ct_spore_chamber"},
                 "aspects": ["No Room to Swing a Sword", "Everything Here Has Thorns"],
@@ -148,7 +148,7 @@
             {
                 "id": "ct_spore_chamber",
                 "name": "Spore Chamber",
-                "description": "A vast hollow space filled with drifting clouds of luminous spores. They pulse in slow rhythms, beautiful but potentially toxic. The air is thick and warm.",
+                "description": "A vast hollow chamber, high-ceilinged and dark at its edges. Clouds of luminous spores drift through the space like slow-motion snow, each mote glowing soft yellow-green. They pulse in unison — bright, dim, bright — and the air is thick, warm, and sweet enough to taste. The ground is spongy with accumulated organic matter.",
                 "zone": "coral_thicket",
                 "exits": {"south": "ct_tunnel", "west": "ct_grove", "north": "ct_heart"},
                 "aspects": ["Breathe Wrong and You'll See Things", "The Warmth Makes You Want to Stay"],
@@ -160,7 +160,7 @@
             {
                 "id": "ct_heart",
                 "name": "Heart of the Thicket",
-                "description": "The deepest part of the coral growth, where the crystal structures are oldest and most complex. A woman tends a small garden of cultivated coral, humming to herself. Nestled among the roots, a lattice-work of living crystal pulses with green light.",
+                "description": "The deepest chamber of the thicket, where the coral formations are ancient and intricately branched — some as tall as trees, their surfaces encrusted with smaller growths in white, pink, and deep violet. A small garden of cultivated coral occupies the center, tended beds marked with careful borders. Among the oldest roots, a lattice of living crystal pulses with steady green light.",
                 "zone": "coral_thicket",
                 "exits": {"south": "ct_grove", "east": "ct_spore_chamber"},
                 "aspects": ["Old Enough to Have Secrets", "Someone's Been Tending This Place"],
@@ -207,7 +207,7 @@
     },
     "frozen_wreck": {
         "name": "The Frozen Wreck",
-        "description": "An ancient ship, petrified and encrusted with void-ice. It drifts in eerie silence, its surfaces glittering with frost. Whatever happened here happened long ago, and some things are best left undisturbed.",
+        "description": "An ancient ship of dark, seamless metal, encrusted in blue-white void-ice and glittering with frost. It drifts in eerie silence, its angular hull reflecting cold light. The ice is centuries thick in places, translucent enough to hint at shapes preserved within.",
         "aspect": "The Cold Preserves What Should Have Been Forgotten",
         "difficulty": "hard",
         "scavenge_pool": ["crystal_shards", "frozen_water", "ancient_alloys", "preserved_food", "cryo_pod_specimen"],
@@ -215,7 +215,7 @@
             {
                 "id": "fw_entrance",
                 "name": "Ice-Crusted Bow",
-                "description": "The prow of the ancient vessel juts from a mass of void-ice. The metal beneath is unlike anything you've seen — dark, dense, and covered in script that seems to shift when you're not looking directly at it. The way back is to the south.",
+                "description": "The prow of the ancient vessel juts from a mass of blue-white void-ice, its dark metal hull dense and seamless. Frost coats every surface in fine white crystals. The hull is covered in engraved script that catches the light differently depending on the angle — silver, then gold, then gone. The ice creaks and ticks in the silence.",
                 "zone": "frozen_wreck",
                 "exits": {"south": "skerry_landing", "north": "fw_corridor", "east": "fw_observation"},
                 "aspects": ["The Writing Changes When You Look Away", "Built By Hands That Knew More Than Ours"],
@@ -227,7 +227,7 @@
             {
                 "id": "fw_corridor",
                 "name": "Frost-Locked Corridor",
-                "description": "A long hallway sheathed in ice so thick the walls are barely visible. Your breath freezes in the air. Shadows move beneath the ice — whether preserved crew or something else, you can't tell.",
+                "description": "A long corridor sheathed in ice so thick the dark metal walls are barely visible beneath. Your breath crystallizes immediately, hanging in white clouds. The ice is milky blue in places, clear as glass in others — and in the clear patches, dark shapes are suspended mid-motion, their outlines too blurred to identify.",
                 "zone": "frozen_wreck",
                 "exits": {"south": "fw_entrance", "north": "fw_armory", "east": "fw_quarters"},
                 "aspects": ["Cold Enough to Steal Your Thoughts", "Something Watches From Beneath the Ice"],
@@ -239,7 +239,7 @@
             {
                 "id": "fw_observation",
                 "name": "Observation Deck",
-                "description": "A domed room with panels of translucent crystal, now frosted over. Through the ice you can see the void stretching in all directions. A figure sits at a desk covered in notes and rubbings of the ship's inscriptions.",
+                "description": "A domed room walled with panels of translucent crystal, now frosted into translucency. Pale void-light filters through, casting the room in cold blue-grey. The curved ceiling amplifies every sound. A desk near the center is buried under layers of notes, charcoal rubbings, and scraps of metal etched with copied inscriptions.",
                 "zone": "frozen_wreck",
                 "exits": {"west": "fw_entrance", "north": "fw_quarters"},
                 "aspects": ["The Void Stares Back Through Frosted Glass", "Every Surface Covered in Someone's Obsession"],
@@ -251,7 +251,7 @@
             {
                 "id": "fw_quarters",
                 "name": "Crew Quarters",
-                "description": "Rows of alcoves line the walls, each containing a frozen shape that might once have been a sleeping berth — or a coffin. The ice here is thinnest, and you can almost make out faces.",
+                "description": "Rows of alcoves line both walls, receding into dim blue shadow. Each alcove holds a frozen shape — some curled, some rigid, draped in ice that is thinnest here. In places, the outlines of faces and hands press against the translucent surface. The floor is slick and the silence is total.",
                 "zone": "frozen_wreck",
                 "exits": {"south": "fw_observation", "west": "fw_corridor", "north": "fw_vault"},
                 "aspects": ["The Dead Sleep Lightly Here", "One Crack and Everything Comes Through"],
@@ -263,7 +263,7 @@
             {
                 "id": "fw_armory",
                 "name": "Ancient Armory",
-                "description": "Weapon racks line the walls, but the weapons have long since fused with the ice. Only one corner remains accessible, where a warrior has set up camp amid the frozen arsenal.",
+                "description": "Weapon racks line the walls in orderly rows, but their contents have fused with centuries of ice — blades and hafts locked into crystalline sheaths. The room is long and low-ceilinged, lit by the ambient glow of the ice itself. One corner has been cleared of frost, a bedroll and small fire-pit set up among the frozen arsenal.",
                 "zone": "frozen_wreck",
                 "exits": {"south": "fw_corridor", "east": "fw_vault"},
                 "aspects": ["Weapons Just Out of Reach", "Someone Here Is Ready for a Fight"],
@@ -275,7 +275,7 @@
             {
                 "id": "fw_vault",
                 "name": "The Vault",
-                "description": "The deepest chamber of the ancient ship. The ice here is clear as glass, and through it you can see the walls are covered in intricate murals depicting a civilization of tree-like beings. At the center, encased in a pillar of crystal, rests a small structure — perfect, ornate, unmistakably a house built for beings no larger than your hand.",
+                "description": "The deepest chamber, perfectly circular and high-vaulted. The ice here is clear as glass, and through it the walls reveal intricate murals in faded gold and green — a civilization of tree-like beings, their branching limbs raised in gestures of ceremony or worship. At the center, encased in a pillar of flawless crystal, rests a small structure no larger than two cupped hands — perfect, ornate, unmistakably a house.",
                 "zone": "frozen_wreck",
                 "exits": {"south": "fw_quarters", "west": "fw_armory"},
                 "aspects": ["See Everything, Touch Nothing", "The Walls Tell a Dead People's Story", "Perfectly Preserved Means Perfectly Guarded"],
@@ -321,7 +321,7 @@
     },
     "verdant_wreck": {
         "name": "The Verdant Wreck",
-        "description": "A massive biodome ship fragment — the growing section of a colony ship. When it broke apart, the growth systems kept running, fueled by void energy. Now it's a small jungle floating in nothing.",
+        "description": "A massive biodome fragment — the growing section of a colony ship, its transparent dome panels fogged with condensation. When the ship broke apart, the growth systems kept running. Now it drifts in the void as a small jungle of dense green canopy and humid air, warm light leaking from every seam and crack in the hull.",
         "aspect": "Life That Outlasted Its Makers",
         "difficulty": "easy",
         "scavenge_pool": ["resin", "biodome_wheat", "feral_tuber", "moss_leaf", "torn_fabric"],
@@ -329,7 +329,7 @@
             {
                 "id": "vw_airlock",
                 "name": "Overgrown Airlock",
-                "description": "Roots crack through hull plates, splitting seams that were never meant to open. Warm, humid air rushes past you — the smell of soil and green things, impossibly alive in the void. The airlock frame is half-buried in moss.",
+                "description": "Thick brown roots crack through grey hull plates, splitting seams that were never meant to open. Warm, humid air rushes outward carrying the smell of wet soil and chlorophyll. The airlock frame is half-buried in bright green moss, and condensation beads on every metal surface. The light inside is diffuse and warm, filtered through vegetation.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "skerry_landing", "north": "vw_promenade"},
                 "aspects": ["Roots Through Steel"],
@@ -341,7 +341,7 @@
             {
                 "id": "vw_promenade",
                 "name": "The Promenade",
-                "description": "A wide corridor lined with vine-covered benches and faded directional signs. One points north to GREENHOUSE, another west to AQUAPONICS. The floor tiles have buckled under root pressure, and bioluminescent fungus traces the cracks like veins.",
+                "description": "A wide corridor with a vaulted ceiling, its white tile walls now draped in creeping vines. Faded directional signs in yellow and blue point north to GREENHOUSE and west to AQUAPONICS. The floor tiles have buckled under root pressure, and bioluminescent fungus fills the cracks with thin lines of pale blue-green light, branching like veins across the floor.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_airlock", "north": "vw_greenhouse", "west": "vw_tanks", "east": "vw_nursery"},
                 "aspects": ["Echoes of a Crew Long Gone"],
@@ -353,7 +353,7 @@
             {
                 "id": "vw_tanks",
                 "name": "Aquaponics Tanks",
-                "description": "Rows of cracked tanks line the walls, murky water still circulating through some ancient pump system. Bioluminescent eels dart between the tanks, and mushroom clusters sprout where water drips onto the deck.",
+                "description": "Rows of chest-high glass tanks line both walls, most cracked and clouded. Murky green water circulates through corroded pipe connections, driven by some ancient pump that still thumps rhythmically beneath the floor. Pale bioluminescent eels flicker between the intact tanks. Where water drips onto the deck, clusters of white and amber mushrooms sprout from the rust.",
                 "zone": "verdant_wreck",
                 "exits": {"east": "vw_promenade"},
                 "aspects": ["Still Water, Still Alive"],
@@ -365,7 +365,7 @@
             {
                 "id": "vw_nursery",
                 "name": "The Nursery",
-                "description": "Shattered seed trays cover every surface. Seedlings that were never meant to grow this large have pressed their canopies against the ceiling, cracking panels overhead. Thick pollen drifts in the air like snow. Someone left notes scattered across a workbench.",
+                "description": "Shattered seed trays of brown plastic cover every surface — the floor, the counters, stacked against the walls. Seedlings that were never meant to grow this large have pressed dark-leafed canopies against the ceiling, cracking white panels overhead to expose ductwork and wiring. Thick golden pollen drifts in the warm air like slow snow. A metal workbench near the door is buried under loose papers.",
                 "zone": "verdant_wreck",
                 "exits": {"west": "vw_promenade"},
                 "aspects": ["Seeds of a Dead World"],
@@ -377,7 +377,7 @@
             {
                 "id": "vw_greenhouse",
                 "name": "The Greenhouse",
-                "description": "The main growing dome — transparent panels overhead reveal raw void, stars scattered behind condensation. Below, a riot of green. Planter beds overflow with vegetation, and cleared paths between them suggest someone has been tending this place.",
+                "description": "The main growing dome, perhaps forty paces across. Transparent panels overhead reveal raw void — black sky and scattered stars behind rivulets of condensation. Below, a riot of green in every shade, from pale lime to deep forest. Chest-high planter beds overflow with vegetation, and narrow paths of swept tile wind between them, recently cleared.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_promenade", "north": "vw_root_wall", "east": "vw_canopy"},
                 "aspects": ["Wild Growth", "Someone Has Been Tending This"],
@@ -389,7 +389,7 @@
             {
                 "id": "vw_canopy",
                 "name": "The Canopy",
-                "description": "Trees have grown so tall here they form a dense canopy, vines hanging like curtains between the trunks. The light is dim and green-filtered. Something rustles above — thick tendrils shifting between the branches.",
+                "description": "Trees have grown tall enough to press against the dome panels, their dark trunks thick and closely spaced. Vines hang between them like heavy curtains, swaying slightly in air currents from the ventilation system. The light is dim and green-filtered, everything in deep shadow below the canopy. Occasional rustling sounds come from overhead.",
                 "zone": "verdant_wreck",
                 "exits": {"west": "vw_greenhouse"},
                 "aspects": ["Predators Adapt"],
@@ -401,7 +401,7 @@
             {
                 "id": "vw_root_wall",
                 "name": "Root Wall",
-                "description": "The corridor ends in a wall of interwoven roots, each as thick as a person's torso. They pulse with a slow green light, and something glows beyond them — deep and warm. The roots are too dense to push through.",
+                "description": "The corridor terminates in a wall of interwoven roots, each as thick as a person's torso, bark slick with moisture and dark with age. They pulse with slow green bioluminescence, and through the gaps between them, a deeper, warmer light glows gold. The roots are packed too tightly to squeeze through. The air smells of wet wood and ozone.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_greenhouse", "up": "vw_observation"},
                 "aspects": ["Impenetrable Roots"],
@@ -428,7 +428,7 @@
             {
                 "id": "vw_observation",
                 "name": "Observation Platform",
-                "description": "A metal platform jutting above the tree line. Through cracked dome panels, void stretches in every direction — the skerry a distant speck of light. From up here, you can see the entire root system threading through the biodome like a circulatory system, all converging on something to the north.",
+                "description": "A narrow metal platform jutting above the tree canopy, reached by a rusted ladder bolted to the wall. Up here, the dome panels are cracked and missing in places, and the void stretches in every direction — the skerry a faint warm speck of light. Below, the dark green canopy spreads wall to wall, and through it you can trace the root system converging northward like the veins of a leaf.",
                 "zone": "verdant_wreck",
                 "exits": {"down": "vw_root_wall"},
                 "aspects": ["The Whole Picture"],
@@ -440,7 +440,7 @@
             {
                 "id": "vw_control",
                 "name": "Growth Control Room",
-                "description": "A cramped room behind a maintenance hatch. Dead consoles line the walls, but one panel still flickers — the Growth Controller. Its screen shows a schematic of the biodome's root network, most of it pulsing red.",
+                "description": "A cramped utility room behind a heavy maintenance hatch, barely large enough for two people. Dead consoles of grey metal and dark glass line three walls. One panel still flickers — its green-on-black screen displaying a schematic of the biodome's root network, most nodes pulsing red. Cables snake across the floor in thick bundles.",
                 "zone": "verdant_wreck",
                 "exits": {"east": "vw_root_wall"},
                 "aspects": ["The Machine Still Remembers"],
@@ -460,7 +460,7 @@
             {
                 "id": "vw_heart",
                 "name": "The Verdant Heart",
-                "description": "The biodome's core. An enormous plant fills the chamber, crystallized mid-bloom — petals frozen in a spiral of green and gold light. Its roots thread through every wall, every floor, the entire ship. At its base, a single bud glows with concentrated life energy.",
+                "description": "A domed chamber at the biodome's core, every surface threaded with roots. An enormous plant fills the space, crystallized mid-bloom — its petals frozen in a tight spiral of translucent green and gold, refracting light in all directions. The roots radiate outward through the walls and floor like spokes of a wheel. At the base of the crystallized flower, a single living bud the size of a fist pulses with warm amber light.",
                 "zone": "verdant_wreck",
                 "exits": {"south": "vw_root_wall"},
                 "aspects": ["Crystallized Mid-Bloom", "The Last Garden"],

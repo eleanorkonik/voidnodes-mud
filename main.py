@@ -230,6 +230,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             if "sevarik" not in self.npcs_db:
                 self.npcs_db["sevarik"] = {
                     "name": self.explorer_name,
+                    "desc": "Tall and lean-muscled, with short dark hair and a faint scar across one cheek. Clean-shaven, with a square jaw and steady grey eyes. His hands are rough and oversized for his frame, the hands of someone used to holding a weapon.",
                     "location": "skerry_shelter",
                     "recruited": True,
                     "aspects": {
@@ -430,6 +431,26 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             "zones": self.state.get("zones", {}),
             "quests": self.state.get("quests", {}),
         }
+
+    # ── Event logging ──────────────────────────────────────────────
+
+    def _log_event(self, event_type, comic_weight=1, **kwargs):
+        """Log a structured event to the event_log.
+
+        Auto-includes day, phase, current actor, and location.
+        comic_weight (1-5) indicates narrative importance for the comic pipeline.
+        """
+        room = self.current_room()
+        entry = {
+            "day": self.state.get("day", 1),
+            "phase": self.state.get("current_phase", "unknown"),
+            "type": event_type,
+            "actor": self.current_character().name.lower() if self.current_character() else "unknown",
+            "location": room.id if room else "unknown",
+            "comic_weight": comic_weight,
+        }
+        entry.update(kwargs)
+        self.state.setdefault("event_log", []).append(entry)
 
     # ── Shared helpers ─────────────────────────────────────────────
 
@@ -676,6 +697,9 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
 
     def _switch_focus(self, target_role):
         """Switch active agent between explorer and steward."""
+        from_role = self.state["current_phase"]
+        self._log_event("character_switched", comic_weight=1,
+                        from_role=from_role, to_role=target_role)
         self.save_game(silent=True)
 
         if target_role == "steward":

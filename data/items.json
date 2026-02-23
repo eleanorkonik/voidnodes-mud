@@ -193,7 +193,7 @@
     "khaki_jumpsuit": {
         "id": "khaki_jumpsuit",
         "name": "Khaki Jumpsuit",
-        "description": "A sturdy khaki jumpsuit, the kind you'd wear for fieldwork. Scuffed at the knees and elbows but still holding together.",
+        "description": "A utilitarian khaki jumpsuit with reinforced seams, front-zip closure, and sleeves rolled to the forearm. Scuffed at the knees and elbows but still holding together.",
         "type": "clothing",
         "slot": "torso",
         "aspects": [],
@@ -205,7 +205,7 @@
     "work_boots": {
         "id": "work_boots",
         "name": "Work Boots",
-        "description": "Worn-in leather work boots. They've seen better days but they're broken in just right.",
+        "description": "Heavy-soled brown leather work boots, scuffed and creased, with thick laces and steel-capped toes. Broken in just right.",
         "type": "clothing",
         "slot": "feet",
         "aspects": [],
@@ -217,7 +217,7 @@
     "red_sundress": {
         "id": "red_sundress",
         "name": "Red Sundress",
-        "description": "A cheerful red sundress, incongruous against the void. It's the kind of thing you'd wear to a garden party, not the end of the world.",
+        "description": "A bright red cotton sundress with thin shoulder straps and a flared skirt falling to mid-calf. Incongruous against the void — the kind of thing you'd wear to a garden party, not the end of the world.",
         "type": "clothing",
         "slot": "torso",
         "aspects": [],
@@ -229,7 +229,7 @@
     "canvas_flats": {
         "id": "canvas_flats",
         "name": "Canvas Flats",
-        "description": "Simple canvas flats, slightly muddy. Comfortable enough for a long day on your feet.",
+        "description": "Off-white canvas slip-on flats with thin rubber soles, lightly mud-stained along the edges. Comfortable enough for a long day on your feet.",
         "type": "clothing",
         "slot": "feet",
         "aspects": [],

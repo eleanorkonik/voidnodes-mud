@@ -118,6 +118,9 @@ class SkerryMgmtMixin:
             else:
                 display.success(f"{npc['name']} settles into {target_room.name}.")
             display.info(f"  Master task: {master_task}")
+            self._log_event("npc_settled", comic_weight=3,
+                            npc_name=npc["name"], npc_id=npc_id,
+                            room=target_room.name, task=master_task)
             self.state["tutorial_settle_done"] = True
             return
 
@@ -133,6 +136,9 @@ class SkerryMgmtMixin:
             skerry_central.add_npc(npc_id)
         display.success(f"{npc['name']} settles in on the skerry.")
         display.narrate(f"{npc['name']} looks around, taking it in. For now, the clearing will do.")
+        self._log_event("npc_settled", comic_weight=3,
+                        npc_name=npc["name"], npc_id=npc_id,
+                        room="skerry_central")
         self.state["tutorial_settle_done"] = True
 
     def cmd_assign(self, args):
@@ -167,6 +173,9 @@ class SkerryMgmtMixin:
                 npc["assignment"] = master_task
                 npc["assigned_subtask"] = subtask_id
                 display.success(f"Assigned {npc['name']} to {subtask_def['name']} ({master_task}).")
+                self._log_event("npc_assigned", comic_weight=2,
+                                npc_name=npc["name"], npc_id=npc_id,
+                                task=master_task, subtask=subtask_id)
             else:
                 display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
             return
@@ -198,6 +207,8 @@ class SkerryMgmtMixin:
             npc["assignment"] = task
             npc["assigned_subtask"] = None  # master task, no specific subtask
             display.success(f"Assigned {npc['name']} to {task}.")
+            self._log_event("npc_assigned", comic_weight=2,
+                            npc_name=npc["name"], npc_id=npc_id, task=task)
         else:
             display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
 
@@ -259,6 +270,7 @@ class SkerryMgmtMixin:
 
     def cmd_rest(self, args):
         """Advance the day from steward phase. Time passes on the skerry."""
+        self._log_event("rest", comic_weight=1, day=self.state["day"])
         self.state["day"] += 1
         day = self.state["day"]
         print()
@@ -302,6 +314,8 @@ class SkerryMgmtMixin:
                 from engine import farming
                 farming.add_to_stores(self.skerry.food_stores, food_data, self.state["day"])
                 display.success(f"Stored {item['name']} in food stores.")
+                self._log_event("food_stored", comic_weight=1,
+                                item_id=item_id, item_name=item["name"])
                 return
 
         display.error(f"No storable food item '{target}' in your inventory.")

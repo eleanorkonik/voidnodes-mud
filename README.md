@@ -124,6 +124,10 @@ Movement: `n/s/e/w/u/d`. Look: `l/x`. Inventory: `i/inv`. Take: `get/grab/pick`.
 
 **Each command is its own handler** — `cmd_attack()`, `cmd_offer()`, etc. Do NOT alias new commands to existing ones; Eleanor wants them to diverge independently.
 
+## Comic Pipeline TODOs
+
+- [ ] Player character `desc` — add a description prompt during character creation (or allow `DESCRIBE SELF` command) so Sevarik and Miria have physical appearance data for comic rendering. Currently only NPCs have `desc` fields.
+
 ## Design Decisions
 
 - **OFFER is not FEED** — separate verbs, separate handlers, even if similar

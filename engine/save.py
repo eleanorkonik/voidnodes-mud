@@ -176,6 +176,19 @@ def _migrate_state(state):
         defaults = _room_defaults.get(rid, {})
         for key, val in defaults.items():
             tmpl.setdefault(key, val)
+    # Migrate event_log: convert old string entries to dicts
+    event_log = state.get("event_log", [])
+    for i, entry in enumerate(event_log):
+        if isinstance(entry, str):
+            event_log[i] = {
+                "day": state.get("day", 1),
+                "phase": "unknown",
+                "type": "legacy",
+                "actor": "unknown",
+                "location": "unknown",
+                "comic_weight": 1,
+                "details": entry,
+            }
     # Migrate artifact fields to location dict
     artifacts = state.get("artifacts", {})
     all_rooms = state.get("rooms", {})
@@ -267,7 +280,9 @@ def new_game_state():
         "events": events,
         "enemies_db": enemies_db,
         "artifacts_status": {},  # tracks discovered/kept/fed
-        "event_log": [f"Day 1: You arrived at the skerry, a tiny island of solid ground in the endless void."],
+        "event_log": [{"day": 1, "phase": "prologue", "type": "game_start", "actor": "miria",
+                       "location": "skerry_central", "comic_weight": 5,
+                       "details": "Arrived at the skerry, a tiny island of solid ground in the endless void."}],
         "extractions": 0,
         "explorer_location": "skerry_shelter",
         "steward_location": "skerry_central",

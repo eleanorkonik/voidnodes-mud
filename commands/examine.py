@@ -376,6 +376,9 @@ class ExamineMixin:
                     display.header(art["name"])
                     display.narrate(self.sub(art.get("discovery_text", art["description"])))
                     self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
+                    self._log_event("artifact_probed", comic_weight=3,
+                                    artifact_id=art_id, artifact_name=art["name"],
+                                    aspects=art.get("aspects", []))
                     display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
                     if art.get("stat_bonuses"):
                         bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
@@ -555,6 +558,10 @@ class ExamineMixin:
                 else:
                     display.success(f"  Excellent work! Also found: {bonus_info.get('name', bonus)}!")
 
+            self._log_event("scavenge_success", comic_weight=2,
+                            item_found=found,
+                            item_name=specimen_info["name"] if specimen_info else item_info.get("name", found),
+                            zone=zone_id)
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_scavenge_done"] = True
         else:

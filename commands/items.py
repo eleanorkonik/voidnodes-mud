@@ -54,6 +54,8 @@ class ItemsMixin:
                 self.current_character().add_to_inventory(art_id)
                 self._move_artifact(art_id, "inventory", char_role)
                 display.success(f"You pick up the {art.get('name', art_id)}.")
+                self._log_event("artifact_found", comic_weight=5,
+                                artifact_id=art_id, artifact_name=art.get("name", art_id))
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_found"] = True
                 # Mark quest complete when bloom_catalyst is found
@@ -81,6 +83,8 @@ class ItemsMixin:
             room.remove_item(item_id)
             self.current_character().add_to_inventory(item_id)
             display.success(f"You pick up {item.get('name', item_id)}.")
+            self._log_event("item_taken", comic_weight=1,
+                            item_id=item_id, item_name=item.get("name", item_id))
             return
 
         display.narrate(f"There's nothing called '{target}' here to take.")
@@ -122,6 +126,8 @@ class ItemsMixin:
             char.remove_from_inventory(item_id)
             room.add_item(item_id)
             display.success(f"You set down the {item['name']}.")
+            self._log_event("item_dropped", comic_weight=1,
+                            item_id=item_id, item_name=item["name"])
             return
 
         # Check artifacts too
@@ -161,6 +167,8 @@ class ItemsMixin:
                 return
             char.wear_item(art_id, slot)
             display.success(f"You put on the {art['name']}.")
+            self._log_event("item_worn", comic_weight=2,
+                            item_id=art_id, item_name=art["name"], slot=slot)
             return
 
         item_id, item = self._find_entity(char.inventory, target, self.items_db)
@@ -175,6 +183,8 @@ class ItemsMixin:
                 return
             char.wear_item(item_id, slot)
             display.success(f"You put on the {item['name']}.")
+            self._log_event("item_worn", comic_weight=2,
+                            item_id=item_id, item_name=item["name"], slot=slot)
             return
 
         display.narrate(f"You don't have '{target}'.")
@@ -307,6 +317,9 @@ class ItemsMixin:
                 char.clear_stress()
                 char.remove_from_inventory(item_id)
                 display.success(f"You eat the {item['name']}. All stress cleared.")
+                self._log_event("food_consumed", comic_weight=1,
+                                item_id=item_id, item_name=item["name"],
+                                effect="stress_cleared")
             elif item.get("type") == "crafted" and item.get("stat_bonuses"):
                 display.narrate(f"The {item['name']} is already providing its bonus passively.")
             else:
@@ -380,3 +393,6 @@ class ItemsMixin:
         char.remove_from_inventory(item_id)
         target_char.add_to_inventory(item_id)
         display.success(f"You give {item['name']} to {agent_data['name']}.")
+        self._log_event("item_given", comic_weight=2,
+                        item_id=item_id, item_name=item["name"],
+                        recipient=agent_data["name"])

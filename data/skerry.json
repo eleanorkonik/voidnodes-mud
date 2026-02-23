@@ -4,7 +4,7 @@
         {
             "id": "skerry_central",
             "name": "Central Clearing",
-            "description": "The heart of the skerry — a small patch of solid ground amid the void. A faint warmth radiates from the world seed's presence below. From here, paths lead to the other areas of your fragile home.",
+            "description": "A small clearing of packed grey earth, maybe thirty paces across, ringed by the absolute black of the void. Faint green-gold light pulses up through cracks in the ground where the world seed's roots run shallow. The air is warm and still. Paths of beaten dirt lead outward in four directions.",
             "zone": "skerry",
             "exits": {"north": "skerry_shelter", "east": "skerry_hollow", "south": "skerry_landing", "west": "skerry_junkyard"},
             "aspects": ["The Ground Hums With Something Alive"],
@@ -21,7 +21,7 @@
         {
             "id": "skerry_shelter",
             "name": "Basic Shelter",
-            "description": "A rough structure cobbled together from salvaged hull plating and fabric. It blocks the view of the void, barely. There's room for a few people to sleep, though comfort is a generous word for it.",
+            "description": "A low lean-to of dull grey hull plating lashed to bent girders, its seams stuffed with torn fabric. The interior is dim and cramped — room for a few bedrolls on packed earth. Gaps in the walls let in slivers of void-dark, and the ceiling is low enough to brush with an outstretched hand.",
             "zone": "skerry",
             "exits": {"south": "skerry_central"},
             "aspects": ["Keeps the Void Out (Barely)", "Better Than Nothing, Worse Than Home"],
@@ -39,7 +39,7 @@
         {
             "id": "skerry_hollow",
             "name": "The Hollow",
-            "description": "A natural depression in the skerry's surface where the world seed has taken root. Faint green light pulses from below, and you can feel its awareness pressing gently against your mind. This is where you commune with the seed and feed it motes.",
+            "description": "A bowl-shaped depression in the rock, a few meters deep, where the world seed has taken root. Pale green light pulses from a tangle of luminous roots at the bottom, casting shifting leaf-shadow patterns on the stone walls. The air here is warmer and faintly humid, and the light intensifies when you draw close.",
             "zone": "skerry",
             "exits": {"west": "skerry_central"},
             "aspects": ["Where the Seed Dreams", "The Light Reaches Into Your Mind"],
@@ -56,7 +56,7 @@
         {
             "id": "skerry_junkyard",
             "name": "The Junkyard",
-            "description": "A rough clearing where salvage gets piled. Metal scraps, wire coils, torn fabric — everything Sevarik drags back from the void ends up here, sorted by Miria into rough categories. It's not pretty, but it's organized enough to find what you need.",
+            "description": "A rough clearing heaped with salvage — dull metal scraps in one pile, tangles of copper wire in another, torn fabric bundled and weighted with stones. The ground is stained with rust and oil. Everything is sorted into rough categories, marked with scratched labels on flat pieces of hull plating.",
             "zone": "skerry",
             "exits": {"east": "skerry_central"},
             "aspects": ["One Person's Trash Is Another's Foundation", "It Smells Like Rust and Ambition"],
@@ -73,7 +73,7 @@
         {
             "id": "skerry_landing",
             "name": "Landing Pad",
-            "description": "The edge of the skerry where the void begins. From here, you can see the distant glimmer of the debris field to the south, the soft glow of the coral thicket to the east, the cold glitter of the frozen wreck to the west, and a warm green shimmer drifting above. Four nodes in the dark. This is where explorers depart and return.",
+            "description": "The skerry's edge, where grey rock crumbles into nothing. The void stretches in every direction — absolute black broken by four distant lights. South, the cold metallic glint of a debris field. East, soft blue-green bioluminescence. West, the icy glitter of a frozen hull. Above, a warm green shimmer. The ground here is worn smooth by departing and returning feet.",
             "zone": "skerry",
             "exits": {"north": "skerry_central", "east": "ct_entrance", "west": "fw_entrance", "south": "df_entrance", "up": "vw_airlock"},
             "aspects": ["One Step Further and You're in the Nothing", "Every Journey Starts With Leaving Safety"],
@@ -92,7 +92,7 @@
         {
             "id": "skerry_storehouse",
             "name": "Storehouse",
-            "description": "A solid structure of salvaged metal and lashed beams. Shelves line the walls, organized by material type. Everything has a place. Lira's influence is obvious — even the crates are labeled in her precise handwriting.",
+            "description": "A squat structure of riveted hull plating and lashed beams, its doorway hung with a fabric curtain. Inside, rough wooden shelves line every wall, loaded with crates and bundles sorted by type. Labels in precise handwriting mark each section. The air smells of resin and dry metal.",
             "zone": "skerry",
             "exits": {"south": "skerry_junkyard"},
             "connect_to": {"skerry_junkyard": "north"},
@@ -107,7 +107,7 @@
         {
             "id": "skerry_workshop",
             "name": "Workshop",
-            "description": "A proper workspace with a sturdy bench and basic tools mounted on the walls. Here, salvage becomes something useful.",
+            "description": "A roofed workspace built from angled hull plating, open on one side. A heavy workbench dominates the center, its surface scarred with tool marks and burn rings. Wrenches, pliers, and hammers hang from pegs on the back wall. Metal filings dust the ground.",
             "zone": "skerry",
             "exits": {"west": "skerry_central"},
             "connect_to": {"skerry_central": "east"},
@@ -123,7 +123,7 @@
         {
             "id": "skerry_garden",
             "name": "Garden",
-            "description": "A patch of cultivated ground tilled from the skerry's thin soil, enriched by the world seed's ambient energy. Four plots of worked earth await planting, each marked with a simple stone border.",
+            "description": "A patch of dark, turned earth divided into four raised plots, each bordered with flat stones. The soil is rich and damp, threaded with fine luminous root-hairs from the world seed below. Faint green-gold light seeps up between the furrows. A low fence of lashed sticks marks the garden's boundary.",
             "zone": "skerry",
             "exits": {"south": "skerry_central"},
             "connect_to": {"skerry_central": "north"},
@@ -147,7 +147,7 @@
         {
             "id": "skerry_water",
             "name": "Water Collection",
-            "description": "Crystal shards arranged in a precise pattern collect and purify moisture from the void-mist. The water tastes faintly of minerals but is clean and safe.",
+            "description": "A circular array of pale crystal shards, each the length of a forearm, angled to catch the void-mist that drifts across the skerry. Condensation trickles down their facets into a shallow stone basin. The crystals hum faintly and refract light into faint rainbows across the wet rock.",
             "zone": "skerry",
             "exits": {"east": "skerry_hollow"},
             "connect_to": {"skerry_hollow": "west"},
@@ -162,7 +162,7 @@
         {
             "id": "skerry_lookout",
             "name": "Lookout Post",
-            "description": "A raised platform built from ancient alloys, offering a clear view in all directions. From here, you can spot approaching threats — or opportunities — long before they arrive.",
+            "description": "A raised platform of dark ancient alloy, bolted together and braced with wire stays. It stands twice a person's height above the skerry, reached by a crude ladder. From the top, the void spreads in every direction — black and limitless, broken only by the distant glow of the four nodes.",
             "zone": "skerry",
             "exits": {"north": "skerry_landing"},
             "connect_to": {"skerry_landing": "south"},

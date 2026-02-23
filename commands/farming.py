@@ -65,6 +65,9 @@ class FarmingMixin:
             char.remove_from_inventory(found_id)
             spec = self.specimens_db.get(found_id, {})
             display.success(f"Planted {spec.get('name', found_id)} in plot {target_plot['id']}.")
+            self._log_event("specimen_planted", comic_weight=2,
+                            specimen=spec.get("name", found_id),
+                            plot=target_plot["id"])
         else:
             display.error("Couldn't plant that specimen.")
 
@@ -120,6 +123,9 @@ class FarmingMixin:
             food, utility = result
             farming.add_to_stores(self.skerry.food_stores, food, self.state["day"])
             display.success(f"Harvested {food['name']} x{food.get('quantity', 1)} → food stores")
+            self._log_event("harvest", comic_weight=2,
+                            plot=plot_id, food=food["name"],
+                            quantity=food.get("quantity", 1))
             if utility:
                 for _ in range(utility.get("quantity", 1)):
                     self.steward.add_to_inventory(utility["id"])
@@ -158,6 +164,8 @@ class FarmingMixin:
         plant_name = plot["plant"].get("name", "the plant")
         plot["plant"] = None
         display.narrate(f"Uprooted {plant_name} from plot {plot_id}.")
+        self._log_event("plant_uprooted", comic_weight=1,
+                        specimen=plant_name, plot=plot_id)
 
     def cmd_select(self, args):
         """Selective breeding: shift a trait on a planted specimen."""
@@ -202,6 +210,9 @@ class FarmingMixin:
             display.success(f"Selected {plant['name']} for {trait_name}.")
             display.info(f"  {pair[0]}: {new_val}  |  {pair[1]}: {opp_val}")
             display.info("  Effect applies at next harvest.")
+            self._log_event("selective_breed", comic_weight=2,
+                            specimen=plant["name"], trait=trait_name,
+                            plot=plot_id)
         else:
             display.error(f"Unknown trait '{trait_name}' or already maxed. Valid: yield, defense, speed, nutrition, specialist, generalist, uniformity, diversity, edible, utility")
 
@@ -293,6 +304,9 @@ class FarmingMixin:
 
         display.success(f"Cross-pollinated {plant_a['name']} with {plant_b['name']}.")
         display.narrate(f"  Both plants sacrificed. Produced {len(offspring)} new seed{'s' if len(offspring) != 1 else ''}.")
+        self._log_event("cross_pollinate", comic_weight=3,
+                        parent_a=plant_a["name"], parent_b=plant_b["name"],
+                        offspring_count=len(offspring))
 
         # Add offspring to seed vault or inventory
         for child in offspring:
@@ -326,6 +340,8 @@ class FarmingMixin:
         plant = plot["plant"]
         entry = farming.bank_specimen(self.skerry.seed_vault, plant)
         display.success(f"Banked {entry['name']} (Gen {entry['generation']}) in the seed vault.")
+        self._log_event("specimen_banked", comic_weight=1,
+                        specimen=entry["name"], generation=entry["generation"])
         display.info("  The plant remains in the plot. Use WITHDRAW to retrieve banked specimens.")
 
     def cmd_withdraw(self, args):
@@ -348,5 +364,7 @@ class FarmingMixin:
         if entry:
             self.steward.add_to_inventory(entry["specimen_id"])
             display.success(f"Withdrew {entry['name']} from the seed vault. Added to inventory.")
+            self._log_event("specimen_withdrawn", comic_weight=1,
+                            specimen=entry["name"])
         else:
             display.error("Invalid vault entry number. CHECK VAULT to see available specimens.")

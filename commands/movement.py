@@ -200,10 +200,18 @@ class MovementMixin:
         target_id = room.exits[direction]
         phase = self.state["current_phase"]
         self.state[f"{phase}_location"] = target_id
+        first_visit = not target_room.discovered
         target_room.discover()
 
         if phase == "explorer":
             self._move_followers(target_id)
+
+        # Log zone entry
+        zone_name = self.state.get("zones", {}).get(target_room.zone, {}).get("name", target_room.zone)
+        self._log_event("zone_entered", comic_weight=4 if first_visit else 2,
+                        zone=target_room.zone, zone_name=zone_name,
+                        from_zone=room.zone, first_visit=first_visit,
+                        motes_spent=1 if target_room.zone != "skerry" else 0)
 
         # Returning to the skerry from the void — a day passes
         if room.zone != "skerry" and target_room.zone == "skerry":
@@ -351,7 +359,16 @@ class MovementMixin:
             self.state["prologue_location"] = target_id
         else:
             self.state[f"{phase}_location"] = target_id
+        first_visit = not target_room.discovered
         target_room.discover()
+
+        if first_visit:
+            self._log_event("room_discovered", comic_weight=2,
+                            room_id=target_id, room_name=target_room.name,
+                            zone=target_room.zone)
+        else:
+            self._log_event("room_entered", comic_weight=1,
+                            room_id=target_id, room_name=target_room.name)
 
         # Clear pending NPC question when leaving the room
         self.state.pop("pending_npc_question", None)
@@ -416,6 +433,9 @@ class MovementMixin:
                 # Enemy wins initiative — gets a free strike
                 print()
                 display.warning(f"  {enemy_data['name']} lunges at you!")
+                self._log_event("ambush", comic_weight=3,
+                                enemy=enemy_data.get("name", enemy_id),
+                                enemy_id=enemy_id, initiative="enemy")
                 self._start_combat(enemy_id)
 
                 enemy_fight = enemy_data["skills"].get("Fight", 1)
@@ -439,6 +459,9 @@ class MovementMixin:
                             con_text = f"Ambushed by {enemy_data['name']}"
                             self.explorer.consequences[sev] = con_text
                             self._record_consequence("explorer", sev, con_text)
+                            self._log_event("consequence_taken", comic_weight=4,
+                                            severity=sev, description=con_text,
+                                            source=enemy_data.get("name", "unknown"))
                     stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
                     display.info(f"  Stress: {stress_str}")
                 else:

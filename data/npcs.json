@@ -1,6 +1,7 @@
 {
     "varis": {
         "name": "Varis",
+        "desc": "Lean and sharp-featured, with dark eyes set deep beneath a heavy brow. His black hair is cropped close to the skull, and his sun-darkened skin is pulled tight over prominent cheekbones. His hands are large-knuckled and callused, with long fingers that move with deliberate economy.",
         "location": null,
         "recruited": false,
         "aspects": {
@@ -79,6 +80,7 @@
     },
     "emmy": {
         "name": "Emmy",
+        "desc": "A young woman, barely out of adolescence, with a round face and enormous brown eyes. Her curly light-brown hair is chopped short and uneven — self-cut. Freckles scatter across her nose and cheeks, and her small frame is wiry rather than thin, built for scrambling through tight spaces.",
         "location": "df_cargo_bay",
         "recruited": false,
         "aspects": {
@@ -156,6 +158,7 @@
     },
     "dax": {
         "name": "Dax",
+        "desc": "Stocky and broad-shouldered, with rough, oil-stained hands and close-cropped dark hair. Her face is square-jawed, with a blunt nose and deep-set eyes that narrow when she is thinking. Grease is permanently worked into the creases of her knuckles.",
         "location": "df_control_room",
         "recruited": false,
         "aspects": {
@@ -232,6 +235,7 @@
     },
     "chris": {
         "name": "Chris",
+        "desc": "A gangly teenager, all elbows and knees, not yet grown into his frame. His ash-blond hair hangs limp over wide, watchful eyes. His face is gaunt — cheekbones too prominent, jaw too sharp — the face of someone who has not eaten well in a long time.",
         "location": "ct_grove",
         "recruited": false,
         "aspects": {
@@ -308,6 +312,7 @@
     },
     "tilly": {
         "name": "Tilly",
+        "desc": "A weathered woman in her fifties, with deep brown skin lined by years of sun and wind. Her silver-streaked black hair is pulled back in a practical knot. Her hands are thick-fingered and earth-stained, the nails permanently dark. She is compact and sturdy, built low to the ground.",
         "location": "ct_heart",
         "recruited": false,
         "aspects": {
@@ -384,6 +389,7 @@
     },
     "callum": {
         "name": "Callum",
+        "desc": "Tall and painfully thin, with hollow cheeks and sharp collarbones visible beneath pale skin. His dark hair is unkempt, and he peers through makeshift spectacles of crystal shards wired together. Ink stains his fingers, and the bags under his eyes speak to weeks of insufficient sleep.",
         "location": "fw_observation",
         "recruited": false,
         "aspects": {
@@ -460,6 +466,7 @@
     },
     "lira": {
         "name": "Lira",
+        "desc": "A woman in her early thirties with olive skin and steady dark eyes. Her brown hair is sun-bleached at the tips and tied back loosely. Her fingers are stained green at the nails from years of working with plants. She has a strong jaw and a calm, observant face.",
         "location": "vw_greenhouse",
         "recruited": false,
         "aspects": {
@@ -545,6 +552,7 @@
     },
     "angya": {
         "name": "Angya",
+        "desc": "Tall and broad-shouldered, with the powerful build of a lifelong fighter. Her thick black hair is worn in two heavy braids. A long scar cuts diagonally across her left cheek. Her dark brown eyes are hard and assessing, set in a wide, weather-beaten face.",
         "location": "fw_armory",
         "recruited": false,
         "aspects": {

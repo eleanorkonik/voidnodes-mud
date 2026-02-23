@@ -98,17 +98,25 @@ class BuildingMixin:
             result_info = self.items_db.get(result_id, {})
             display.success(f"Crafted: {result_info.get('name', result_id)}!")
 
-            if shifts >= 3:
+            masterwork = shifts >= 3
+            if masterwork:
                 display.success("Masterwork! You crafted it with exceptional quality.")
                 # Bonus: extra item or better version
                 char.add_to_inventory(result_id)
                 display.success(f"  Bonus: crafted a second {result_info.get('name', result_id)}!")
+            self._log_event("item_crafted", comic_weight=3,
+                            recipe=recipe.get("name", target),
+                            result=result_info.get("name", result_id),
+                            masterwork=masterwork)
         else:
             # Fail — lose some materials
             lost_mat = list(recipe["materials"].keys())[0]
             char.remove_from_inventory(lost_mat)
             lost_name = self.items_db.get(lost_mat, {}).get("name", lost_mat)
             display.warning(f"Crafting failed! Lost 1x {lost_name} in the attempt.")
+            self._log_event("item_crafted", comic_weight=2,
+                            recipe=recipe.get("name", target),
+                            result=None, success=False, material_lost=lost_name)
 
     def cmd_recipes(self, args):
         display.header("Known Recipes")
@@ -239,6 +247,9 @@ class BuildingMixin:
             self.skerry.build_npc_house(npc_id)
             npc["house_level"] = self.skerry.get_house_level(npc_id)
             display.success(f"Built a {label} for {npc['name']}!")
+            self._log_event("house_built", comic_weight=3,
+                            npc_name=npc["name"], npc_id=npc_id,
+                            level=npc["house_level"], label=label)
             if npc.get("mood") == "restless":
                 npc["mood"] = "content"
                 display.success(f"  {npc['name']}'s mood improves to content.")
@@ -345,6 +356,9 @@ class BuildingMixin:
 
         display.success(f"Built: {new_room.name}! ({direction} of {anchor_room.name})")
         display.narrate(f"  {new_room.description}")
+        self._log_event("structure_built", comic_weight=3,
+                        room_name=new_room.name, room_id=new_room.id,
+                        direction=direction, anchor=anchor_room.name)
 
         # Garden walkthrough on first build
         if "garden" in tmpl.get("structures", []):

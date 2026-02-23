@@ -231,6 +231,8 @@ class CombatMixin:
             self.state["tutorial_invoke_done"] = True
 
         display.success(f"You invoke {display.aspect_text(found)} — +2 on your next action.")
+        self._log_event("aspect_invoked", comic_weight=2,
+                        aspect=found, effect="general", context="exploration")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
     def _combat_invoke(self, args):
@@ -293,6 +295,8 @@ class CombatMixin:
 
         display.success(f"You invoke {display.aspect_text(found)} — {aspects.COMBAT_EFFECTS[effect]['desc']}!")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
+        self._log_event("aspect_invoked", comic_weight=2,
+                        aspect=found, effect=effect, context="combat")
 
         # Branch on effect
         if effect == "ATTACK":
@@ -426,6 +430,9 @@ class CombatMixin:
         display.narrate(f"You concede the fight against {enemy.get('name', 'the enemy')}.")
         display.narrate("You back away carefully, ceding ground.")
         display.success(f"+{fp_gain} Fate Point{'s' if fp_gain > 1 else ''} for conceding.")
+        self._log_event("combat_concede", comic_weight=3,
+                        target=enemy.get("name", "unknown"),
+                        fp_gained=fp_gain)
         if cons_taken > 0:
             display.info(f"  (1 base + {cons_taken} for consequences taken)")
         display.narrate("The enemy lets you go — for now.")
@@ -457,6 +464,10 @@ class CombatMixin:
         self.compel_triggered = False
         self.in_compel = False
         self.compel_data = None
+        enemy_data = self.enemies_db.get(enemy_id, {})
+        self._log_event("combat_start", comic_weight=2,
+                        target=enemy_data.get("name", enemy_id),
+                        target_id=enemy_id)
 
     def _end_combat(self):
         """Clean up after combat ends (victory, concede, or extraction)."""
@@ -506,6 +517,9 @@ class CombatMixin:
             if taken_out:
                 display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
                 display.narrate(f"  {self.seed_name} reaches across the void...")
+                self._log_event("combat_defeat", comic_weight=4,
+                                target=enemy_data.get("name", "unknown"),
+                                details="Taken out by enemy attack")
                 self._seed_extraction()
                 return
             # Track consequences for concede calculation
@@ -516,6 +530,9 @@ class CombatMixin:
                     con_text = f"Wounded by {enemy_data['name']}"
                     self.explorer.consequences[sev] = con_text
                     self._record_consequence("explorer", sev, con_text)
+                    self._log_event("consequence_taken", comic_weight=4,
+                                    severity=sev, description=con_text,
+                                    source=enemy_data.get("name", "unknown"))
             # Show current stress
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
             display.info(f"  Stress: {stress_str}")
@@ -668,6 +685,7 @@ class CombatMixin:
 
             display.success(f"\n  {enemy_data['name']} is defeated!")
             loot = enemy_data.get("loot", [])
+            dropped = None
             if loot:
                 dropped = random.choice(loot)
                 room.add_item(dropped)
@@ -675,6 +693,10 @@ class CombatMixin:
                 display.success(f"  It drops: {item_info.get('name', dropped)}")
             self.explorer.gain_fate_point()
             display.info(f"  (+1 Fate Point for victory)")
+            self._log_event("combat_victory", comic_weight=3,
+                            target=enemy_data.get("name", enemy_id),
+                            target_id=enemy_id,
+                            loot=dropped)
             if not self.state.get("tutorial_complete"):
                 self.state["tutorial_combat_done"] = True
             return True
@@ -700,6 +722,8 @@ class CombatMixin:
 
             display.warning(f"\n  {self.seed_name} spends {cost} motes to yank you back to the skerry!")
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
+            self._log_event("seed_extraction", comic_weight=4,
+                            motes_spent=cost, motes_remaining=self.seed.motes)
 
             if not self.seed.alive:
                 display.error(f"\n  ═══ {self.seed_name.upper()}'S MOTES ARE DEPLETED ═══")

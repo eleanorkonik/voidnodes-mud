@@ -43,7 +43,13 @@ class ArtifactsMixin:
             if stage_changed:
                 display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
                 display.seed_speak(self.seed.communicate(self.seed_name))
+                self._log_event("seed_growth", comic_weight=5,
+                                new_stage=self.seed.growth_stage,
+                                total_motes=new_total)
 
+            self._log_event("artifact_fed", comic_weight=5,
+                            artifact_id=art_id, artifact_name=art["name"],
+                            motes_gained=motes, total_motes=new_total)
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
             return
 
@@ -55,7 +61,13 @@ class ArtifactsMixin:
             char.remove_from_inventory(item_id)
 
             display.success(f"You feed {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
+            self._log_event("item_fed", comic_weight=2,
+                            item_id=item_id, item_name=item.get("name", item_id),
+                            motes_gained=motes, total_motes=new_total)
             if stage_changed:
+                self._log_event("seed_growth", comic_weight=5,
+                                new_stage=self.seed.growth_stage,
+                                total_motes=new_total)
                 display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
                 display.seed_speak(self.seed.communicate(self.seed_name))
 
@@ -94,6 +106,9 @@ class ArtifactsMixin:
                     self.state["tutorial_artifact_resolved"] = True
 
                 display.success(f"You keep the {art['name']}.")
+                self._log_event("artifact_kept", comic_weight=5,
+                                artifact_id=art_id, artifact_name=art["name"],
+                                bonuses=art.get("stat_bonuses", {}))
                 if art.get("stat_bonuses"):
                     for skill, bonus in art["stat_bonuses"].items():
                         display.success(f"  +{bonus} {skill} while carried!")
@@ -154,7 +169,13 @@ class ArtifactsMixin:
                 if stage_changed:
                     display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
                     display.seed_speak(self.seed.communicate(self.seed_name))
+                    self._log_event("seed_growth", comic_weight=5,
+                                    new_stage=self.seed.growth_stage,
+                                    total_motes=new_total)
 
+                self._log_event("artifact_fed", comic_weight=5,
+                                artifact_id=art_id, artifact_name=art["name"],
+                                motes_gained=motes, total_motes=new_total)
                 display.display_seed(self.seed.to_dict(), name=self.seed_name)
                 return
 
@@ -172,6 +193,9 @@ class ArtifactsMixin:
                 char.remove_from_inventory(item_id)
 
                 display.success(f"You offer {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
+                self._log_event("item_fed", comic_weight=2,
+                                item_id=item_id, item_name=item.get("name", item_id),
+                                motes_gained=motes, total_motes=new_total)
                 if stage_changed:
                     display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
                     display.seed_speak(self.seed.communicate(self.seed_name))
