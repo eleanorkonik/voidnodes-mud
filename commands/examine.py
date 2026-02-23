@@ -486,7 +486,8 @@ class ExamineMixin:
 
         # Check NPCs in room + followers
         npc_pool = list(room.npcs)
-        for npc_id, npc in self.npcs_db.items():
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
             if npc.get("following") and npc_id not in npc_pool:
                 npc_pool.append(npc_id)
         npc_id, npc = self._find_entity(npc_pool, target, self.npcs_db)

@@ -1,0 +1,235 @@
+{
+    "id": "frozen_wreck",
+    "name": "The Frozen Wreck",
+    "description": "An ancient ship of dark, seamless metal, encrusted in blue-white void-ice and glittering with frost. It drifts in eerie silence, its angular hull reflecting cold light. The ice is centuries thick in places, translucent enough to hint at shapes preserved within.",
+    "aspect": "The Cold Preserves What Should Have Been Forgotten",
+    "difficulty": "hard",
+    "scavenge_pool": [
+        "crystal_shards",
+        "frozen_water",
+        "ancient_alloys",
+        "preserved_food",
+        "cryo_pod_specimen"
+    ],
+    "entry_room": "fw_entrance",
+    "rooms": [
+        {
+            "id": "fw_entrance",
+            "name": "Ice-Crusted Bow",
+            "description": "The prow of the ancient vessel juts from a mass of blue-white void-ice, its dark metal hull dense and seamless. Frost coats every surface in fine white crystals. The hull is covered in engraved script that catches the light differently depending on the angle \u2014 silver, then gold, then gone. The ice creaks and ticks in the silence.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "south": "skerry_landing",
+                "north": "fw_corridor",
+                "east": "fw_observation"
+            },
+            "aspects": [
+                "The Writing Changes When You Look Away",
+                "Built By Hands That Knew More Than Ours"
+            ],
+            "items": [
+                "ancient_alloys"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "fw_corridor",
+            "name": "Frost-Locked Corridor",
+            "description": "A long corridor sheathed in ice so thick the dark metal walls are barely visible beneath. Your breath crystallizes immediately, hanging in white clouds. The ice is milky blue in places, clear as glass in others \u2014 and in the clear patches, dark shapes are suspended mid-motion, their outlines too blurred to identify.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "south": "fw_entrance",
+                "north": "fw_armory",
+                "east": "fw_quarters"
+            },
+            "aspects": [
+                "Cold Enough to Steal Your Thoughts",
+                "Something Watches From Beneath the Ice"
+            ],
+            "items": [
+                "frozen_water"
+            ],
+            "npcs": [],
+            "enemies": [
+                "frost_shade"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "fw_observation",
+            "name": "Observation Deck",
+            "description": "A domed room walled with panels of translucent crystal, now frosted into translucency. Pale void-light filters through, casting the room in cold blue-grey. The curved ceiling amplifies every sound. A desk near the center is buried under layers of notes, charcoal rubbings, and scraps of metal etched with copied inscriptions.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "west": "fw_entrance",
+                "north": "fw_quarters"
+            },
+            "aspects": [
+                "The Void Stares Back Through Frosted Glass",
+                "Every Surface Covered in Someone's Obsession"
+            ],
+            "items": [
+                "crystal_shards"
+            ],
+            "npcs": [
+                "callum"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "fw_quarters",
+            "name": "Crew Quarters",
+            "description": "Rows of alcoves line both walls, receding into dim blue shadow. Each alcove holds a frozen shape \u2014 some curled, some rigid, draped in ice that is thinnest here. In places, the outlines of faces and hands press against the translucent surface. The floor is slick and the silence is total.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "south": "fw_observation",
+                "west": "fw_corridor",
+                "north": "fw_vault"
+            },
+            "aspects": [
+                "The Dead Sleep Lightly Here",
+                "One Crack and Everything Comes Through"
+            ],
+            "items": [
+                "preserved_food",
+                "ancient_alloys"
+            ],
+            "npcs": [],
+            "enemies": [
+                "swarm_mites"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "fw_armory",
+            "name": "Ancient Armory",
+            "description": "Weapon racks line the walls in orderly rows, but their contents have fused with centuries of ice \u2014 blades and hafts locked into crystalline sheaths. The room is long and low-ceilinged, lit by the ambient glow of the ice itself. One corner has been cleared of frost, a bedroll and small fire-pit set up among the frozen arsenal.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "south": "fw_corridor",
+                "east": "fw_vault"
+            },
+            "aspects": [
+                "Weapons Just Out of Reach",
+                "Someone Here Is Ready for a Fight"
+            ],
+            "items": [
+                "ancient_alloys",
+                "crystal_shards"
+            ],
+            "npcs": [
+                "angya"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "fw_vault",
+            "name": "The Vault",
+            "description": "The deepest chamber, perfectly circular and high-vaulted. The ice here is clear as glass, and through it the walls reveal intricate murals in faded gold and green \u2014 a civilization of tree-like beings, their branching limbs raised in gestures of ceremony or worship. At the center, encased in a pillar of flawless crystal, rests a small structure no larger than two cupped hands \u2014 perfect, ornate, unmistakably a house.",
+            "zone": "frozen_wreck",
+            "exits": {
+                "south": "fw_quarters",
+                "west": "fw_armory"
+            },
+            "aspects": [
+                "See Everything, Touch Nothing",
+                "The Walls Tell a Dead People's Story",
+                "Perfectly Preserved Means Perfectly Guarded"
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [
+                "frost_shade_elder"
+            ],
+            "discovered": false
+        }
+    ],
+    "enemies_data": [
+        {
+            "id": "frost_shade",
+            "name": "Frost Shade",
+            "description": "A shadow that moves beneath the ice, reaching through with freezing tendrils. It was something once \u2014 crew, passenger, prisoner. Now it's just cold and hunger.",
+            "aspects": [
+                "Its Touch Burns Cold",
+                "Reaches Through What Should Be Solid"
+            ],
+            "skills": {
+                "Fight": 3,
+                "Will": 3,
+                "Endure": 2
+            },
+            "stress": [
+                false,
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null,
+                "moderate": null
+            },
+            "loot": [
+                "frozen_water",
+                "crystal_shards"
+            ]
+        },
+        {
+            "id": "swarm_mites",
+            "name": "Swarm Mites",
+            "description": "Tiny crystalline insects that swarm in vast numbers. Each one is fragile, but together they can strip metal to the bone.",
+            "aspects": [
+                "Fragile as Spun Glass",
+                "Tiny Jaws That Strip Metal Bare"
+            ],
+            "skills": {
+                "Fight": 2,
+                "Notice": 1
+            },
+            "stress": [
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "crystal_shards"
+            ]
+        },
+        {
+            "id": "frost_shade_elder",
+            "name": "Frost Shade Elder",
+            "description": "The captain of the frozen wreck, preserved in void-ice for centuries. Its form is massive, translucent, and filled with a terrible cold intelligence. It guards the vault and the Eliok House within.",
+            "aspects": [
+                "Still Thinks This Ship Is Its Command",
+                "Centuries of Cold Made It Patient",
+                "Nothing Leaves the Vault Without Permission"
+            ],
+            "skills": {
+                "Fight": 4,
+                "Will": 4,
+                "Endure": 3,
+                "Notice": 2
+            },
+            "stress": [
+                false,
+                false,
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null,
+                "moderate": null,
+                "severe": null
+            },
+            "loot": [
+                "ancient_alloys",
+                "crystal_shards",
+                "frozen_water"
+            ]
+        }
+    ]
+}

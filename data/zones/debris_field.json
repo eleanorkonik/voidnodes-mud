@@ -1,0 +1,203 @@
+{
+    "id": "debris_field",
+    "name": "The Debris Field",
+    "description": "A slowly tumbling mass of grey hull plating, olive-drab cargo containers, and twisted structural steel, spread across a pocket of void. The pieces rotate in silence, catching dull metallic light. The wreckage of a great vessel \u2014 shattered, scattered, and cold.",
+    "aspect": "A Dead Ship Still Full of Secrets",
+    "difficulty": "easy",
+    "scavenge_pool": [
+        "metal_scraps",
+        "wire",
+        "torn_fabric"
+    ],
+    "entry_room": "df_entrance",
+    "rooms": [
+        {
+            "id": "df_entrance",
+            "name": "Edge of the Debris Field",
+            "description": "Jagged shards of grey hull plating drift lazily against the black void, spinning slow enough to catch dull reflections of distant light. The largest pieces \u2014 bent girders, crumpled bulkheads \u2014 hum faintly, as if the wreckage still remembers being whole. A clear path back to the skerry lies to the south.",
+            "zone": "debris_field",
+            "exits": {
+                "south": "skerry_landing",
+                "north": "df_cargo_bay",
+                "east": "df_hull_breach"
+            },
+            "aspects": [
+                "Everything Drifts If You Let Go",
+                "The Wreckage Hums With Memory"
+            ],
+            "items": [
+                "metal_scraps"
+            ],
+            "npcs": [],
+            "enemies": [
+                "rat_swarm"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "df_cargo_bay",
+            "name": "Shattered Cargo Bay",
+            "description": "The remnants of a cargo hold, its outer walls peeled back like a tin can to expose rust-brown internal plating. Crates of dull green and grey bob gently in the void, some still sealed with corroded latches. Emergency strip-lighting along the ceiling flickers orange in places, casting long shadows between the floating containers.",
+            "zone": "debris_field",
+            "exits": {
+                "south": "df_entrance",
+                "east": "df_control_room",
+                "north": "df_engine_room"
+            },
+            "aspects": [
+                "Treasure Behind Sealed Doors",
+                "Someone's Been Sorting Through This"
+            ],
+            "items": [
+                "wire",
+                "torn_fabric"
+            ],
+            "npcs": [
+                "emmy"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "df_hull_breach",
+            "name": "Gaping Hull Breach",
+            "description": "A massive hole torn through the outer hull, its ragged edges dark with corrosion. Layers of internal structure are exposed \u2014 insulation foam, conduit bundles, structural ribs \u2014 like looking into the cross-section of a body. Sparks flash intermittently from deeper in the wreckage, throwing harsh white light across the twisted metal.",
+            "zone": "debris_field",
+            "exits": {
+                "west": "df_entrance",
+                "north": "df_control_room"
+            },
+            "aspects": [
+                "One Wrong Move Draws Blood",
+                "The Ship's Bones Laid Bare"
+            ],
+            "items": [
+                "metal_scraps",
+                "wire"
+            ],
+            "npcs": [],
+            "enemies": [
+                "corroded_automaton"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "df_control_room",
+            "name": "Ruined Control Room",
+            "description": "A cramped room ringed with dead consoles, their dark screens cracked and frosted with corrosion. A single emergency light overhead bathes everything in dull amber. Someone has cleared a workspace near the listing captain's chair \u2014 tools laid out in precise rows on a sheet of fabric, oil rags folded neatly beside them.",
+            "zone": "debris_field",
+            "exits": {
+                "south": "df_hull_breach",
+                "west": "df_cargo_bay"
+            },
+            "aspects": [
+                "Everything Died Mid-Sentence",
+                "Just Enough Power to Be Dangerous"
+            ],
+            "items": [
+                "basic_tools"
+            ],
+            "npcs": [
+                "dax"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "df_engine_room",
+            "name": "Engine Room Wreckage",
+            "description": "A cavernous space dominated by massive turbines split open like cracked eggs, their dark cores exposed. Oil has pooled and frozen in black sheets across the deck. Among the wreckage, a cylindrical device the size of a person pulses with faint blue-white light \u2014 the Stabilization Engine, still drawing power from something.",
+            "zone": "debris_field",
+            "exits": {
+                "south": "df_cargo_bay"
+            },
+            "aspects": [
+                "The Heart Stopped But It's Still Warm",
+                "Something Down Here Has Juice"
+            ],
+            "items": [
+                "metal_scraps",
+                "torn_fabric"
+            ],
+            "npcs": [],
+            "enemies": [
+                "hound_of_annwn"
+            ],
+            "discovered": false
+        }
+    ],
+    "enemies_data": [
+        {
+            "id": "rat_swarm",
+            "name": "Rat Swarm",
+            "description": "A chittering mass of pale, eyeless rats with translucent skin stretched tight over visible bones. They pour from cracks in the bulkhead like liquid, each one small but the whole swarm a gnawing tide.",
+            "aspects": [
+                "Eyeless and Hunting by Sound",
+                "Each One Fragile Alone"
+            ],
+            "skills": {
+                "Fight": 2,
+                "Notice": 1
+            },
+            "stress": [
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "metal_scraps"
+            ]
+        },
+        {
+            "id": "hound_of_annwn",
+            "name": "Hound of Annwn",
+            "description": "A spectral hound with white fur and red-tipped ears, its form flickering between solid and translucent. It watches you with ancient, knowing eyes, and its growl resonates in your chest.",
+            "aspects": [
+                "Between This World and the Next",
+                "Those Jaws Cut Through Metal"
+            ],
+            "skills": {
+                "Fight": 1,
+                "Notice": 2
+            },
+            "stress": [
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "torn_fabric"
+            ],
+            "aggressive": true
+        },
+        {
+            "id": "corroded_automaton",
+            "name": "Corroded Automaton",
+            "description": "A maintenance robot gone wrong. Its corroded frame jerks with erratic, dangerous movements. Sparks fly from exposed wiring.",
+            "aspects": [
+                "Doesn't Know What It's Doing Anymore",
+                "One Spark From a Short Circuit"
+            ],
+            "skills": {
+                "Fight": 3,
+                "Endure": 2
+            },
+            "stress": [
+                false,
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null,
+                "moderate": null
+            },
+            "loot": [
+                "wire",
+                "metal_scraps"
+            ]
+        }
+    ]
+}

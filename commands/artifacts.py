@@ -17,6 +17,45 @@ class ArtifactsMixin:
                 char_name = self.state.get(f"{char_key}_name", char_key.title())
                 display.success(f"  {char_name}'s mild injury ({consequence_text}) has healed with time.")
 
+            # Unload the cleared zone's rooms and enemies from runtime
+            zone_id = None
+            for zid, aid in MovementMixin._ZONE_ARTIFACTS.items():
+                if aid == art_id:
+                    zone_id = zid
+                    break
+            if zone_id:
+                self._unload_zone(zone_id)
+
+    def _unload_zone(self, zone_id):
+        """Remove a cleared zone's rooms and enemies from runtime dicts.
+
+        Keeps the entry room so the landing pad can still show the zone
+        as a (depleted) destination. NPCs stay in npcs_db (their source
+        of truth). Zone data stays in state["zones"] for save/load.
+        """
+        zone = self.state.get("zones", {}).get(zone_id)
+        if not zone:
+            return
+        entry_room = zone.get("entry_room")
+        # Remove zone rooms from self.rooms (except entry room)
+        for room_data in zone.get("rooms", []):
+            room_id = room_data["id"]
+            if room_id == entry_room:
+                continue
+            # Don't unload the room if a player character is currently in it
+            if self.state.get("explorer_location") == room_id:
+                continue
+            if self.state.get("steward_location") == room_id:
+                continue
+            self.rooms.pop(room_id, None)
+        # Remove zone enemies from self.enemies_db
+        for enemy in zone.get("enemies_data", []):
+            self.enemies_db.pop(enemy["id"], None)
+        # Track which zones have been unloaded
+        self.state.setdefault("unloaded_zones", [])
+        if zone_id not in self.state["unloaded_zones"]:
+            self.state["unloaded_zones"].append(zone_id)
+
     def cmd_feed(self, args):
         if not args:
             display.error(f"Feed what to {self.seed_name}?")

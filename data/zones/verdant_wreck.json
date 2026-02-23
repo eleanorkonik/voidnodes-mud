@@ -1,0 +1,279 @@
+{
+    "id": "verdant_wreck",
+    "name": "The Verdant Wreck",
+    "description": "A massive biodome fragment \u2014 the growing section of a colony ship, its transparent dome panels fogged with condensation. When the ship broke apart, the growth systems kept running. Now it drifts in the void as a small jungle of dense green canopy and humid air, warm light leaking from every seam and crack in the hull.",
+    "aspect": "Life That Outlasted Its Makers",
+    "difficulty": "easy",
+    "scavenge_pool": [
+        "resin",
+        "biodome_wheat",
+        "feral_tuber",
+        "moss_leaf",
+        "torn_fabric"
+    ],
+    "entry_room": "vw_airlock",
+    "rooms": [
+        {
+            "id": "vw_airlock",
+            "name": "Overgrown Airlock",
+            "description": "Thick brown roots crack through grey hull plates, splitting seams that were never meant to open. Warm, humid air rushes outward carrying the smell of wet soil and chlorophyll. The airlock frame is half-buried in bright green moss, and condensation beads on every metal surface. The light inside is diffuse and warm, filtered through vegetation.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "south": "skerry_landing",
+                "north": "vw_promenade"
+            },
+            "aspects": [
+                "Roots Through Steel"
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_promenade",
+            "name": "The Promenade",
+            "description": "A wide corridor with a vaulted ceiling, its white tile walls now draped in creeping vines. Faded directional signs in yellow and blue point north to GREENHOUSE and west to AQUAPONICS. The floor tiles have buckled under root pressure, and bioluminescent fungus fills the cracks with thin lines of pale blue-green light, branching like veins across the floor.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "south": "vw_airlock",
+                "north": "vw_greenhouse",
+                "west": "vw_tanks",
+                "east": "vw_nursery"
+            },
+            "aspects": [
+                "Echoes of a Crew Long Gone"
+            ],
+            "items": [
+                "luminous_moss"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_tanks",
+            "name": "Aquaponics Tanks",
+            "description": "Rows of chest-high glass tanks line both walls, most cracked and clouded. Murky green water circulates through corroded pipe connections, driven by some ancient pump that still thumps rhythmically beneath the floor. Pale bioluminescent eels flicker between the intact tanks. Where water drips onto the deck, clusters of white and amber mushrooms sprout from the rust.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "east": "vw_promenade"
+            },
+            "aspects": [
+                "Still Water, Still Alive"
+            ],
+            "items": [
+                "coral_fragments",
+                "luminous_moss"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_nursery",
+            "name": "The Nursery",
+            "description": "Shattered seed trays of brown plastic cover every surface \u2014 the floor, the counters, stacked against the walls. Seedlings that were never meant to grow this large have pressed dark-leafed canopies against the ceiling, cracking white panels overhead to expose ductwork and wiring. Thick golden pollen drifts in the warm air like slow snow. A metal workbench near the door is buried under loose papers.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "west": "vw_promenade"
+            },
+            "aspects": [
+                "Seeds of a Dead World"
+            ],
+            "items": [
+                "biodome_wheat",
+                "resin",
+                "scattered_notes"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_greenhouse",
+            "name": "The Greenhouse",
+            "description": "The main growing dome, perhaps forty paces across. Transparent panels overhead reveal raw void \u2014 black sky and scattered stars behind rivulets of condensation. Below, a riot of green in every shade, from pale lime to deep forest. Chest-high planter beds overflow with vegetation, and narrow paths of swept tile wind between them, recently cleared.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "south": "vw_promenade",
+                "north": "vw_root_wall",
+                "east": "vw_canopy"
+            },
+            "aspects": [
+                "Wild Growth",
+                "Someone Has Been Tending This"
+            ],
+            "items": [],
+            "npcs": [
+                "lira"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_canopy",
+            "name": "The Canopy",
+            "description": "Trees have grown tall enough to press against the dome panels, their dark trunks thick and closely spaced. Vines hang between them like heavy curtains, swaying slightly in air currents from the ventilation system. The light is dim and green-filtered, everything in deep shadow below the canopy. Occasional rustling sounds come from overhead.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "west": "vw_greenhouse"
+            },
+            "aspects": [
+                "Predators Adapt"
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [
+                "tangle_vine"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "vw_root_wall",
+            "name": "Root Wall",
+            "description": "The corridor terminates in a wall of interwoven roots, each as thick as a person's torso, bark slick with moisture and dark with age. They pulse with slow green bioluminescence, and through the gaps between them, a deeper, warmer light glows gold. The roots are packed too tightly to squeeze through. The air smells of wet wood and ozone.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "south": "vw_greenhouse",
+                "up": "vw_observation"
+            },
+            "aspects": [
+                "Impenetrable Roots"
+            ],
+            "features": [
+                {
+                    "id": "roots",
+                    "name": "Roots",
+                    "keywords": [
+                        "roots",
+                        "root",
+                        "root wall",
+                        "wall"
+                    ],
+                    "description": "Massive interwoven roots, each thicker than your arm, pulsing with slow green bioluminescence. The bark is tough and slick with moisture \u2014 too damp to burn. You'd need to coat them with something flammable first."
+                }
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false,
+            "locked_exits": {
+                "north": {
+                    "target": "vw_heart",
+                    "condition": "quest_roots_cleared",
+                    "locked_desc": "Massive roots block the passage north. They're alive and pulsing with green energy \u2014 too thick and damp to cut, too dense to squeeze through."
+                }
+            }
+        },
+        {
+            "id": "vw_observation",
+            "name": "Observation Platform",
+            "description": "A narrow metal platform jutting above the tree canopy, reached by a rusted ladder bolted to the wall. Up here, the dome panels are cracked and missing in places, and the void stretches in every direction \u2014 the skerry a faint warm speck of light. Below, the dark green canopy spreads wall to wall, and through it you can trace the root system converging northward like the veins of a leaf.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "down": "vw_root_wall"
+            },
+            "aspects": [
+                "The Whole Picture"
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_control",
+            "name": "Growth Control Room",
+            "description": "A cramped utility room behind a heavy maintenance hatch, barely large enough for two people. Dead consoles of grey metal and dark glass line three walls. One panel still flickers \u2014 its green-on-black screen displaying a schematic of the biodome's root network, most nodes pulsing red. Cables snake across the floor in thick bundles.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "east": "vw_root_wall"
+            },
+            "aspects": [
+                "The Machine Still Remembers"
+            ],
+            "features": [
+                {
+                    "id": "console",
+                    "name": "Growth Controller Console",
+                    "keywords": [
+                        "console",
+                        "controller",
+                        "growth controller",
+                        "panel",
+                        "screen"
+                    ],
+                    "description": "A flickering console showing a schematic of the biodome's root network. Most nodes pulse red \u2014 overgrown, unresponsive. The panel below is dented but not sealed. With the right tools, you could get inside and repair the circuits."
+                }
+            ],
+            "items": [
+                "growth_console",
+                "wire"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "vw_heart",
+            "name": "The Verdant Heart",
+            "description": "A domed chamber at the biodome's core, every surface threaded with roots. An enormous plant fills the space, crystallized mid-bloom \u2014 its petals frozen in a tight spiral of translucent green and gold, refracting light in all directions. The roots radiate outward through the walls and floor like spokes of a wheel. At the base of the crystallized flower, a single living bud the size of a fist pulses with warm amber light.",
+            "zone": "verdant_wreck",
+            "exits": {
+                "south": "vw_root_wall"
+            },
+            "aspects": [
+                "Crystallized Mid-Bloom",
+                "The Last Garden"
+            ],
+            "features": [
+                {
+                    "id": "bloom",
+                    "name": "Crystallized Bloom",
+                    "keywords": [
+                        "bloom",
+                        "bud",
+                        "crystal",
+                        "plant",
+                        "flower"
+                    ],
+                    "description": "An enormous flower frozen mid-bloom, petals spiraling outward in crystallized green and gold. It hums faintly. At its base, a single living bud pulses with concentrated energy \u2014 small enough to carry, if you could detach it."
+                }
+            ],
+            "items": [],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        }
+    ],
+    "enemies_data": [
+        {
+            "id": "tangle_vine",
+            "name": "Tangle-Vine",
+            "description": "Thick tendrils lash out from the canopy above \u2014 a plant that's learned to hunt.",
+            "aspects": [
+                "Rooted But Reaching",
+                "Slow to React"
+            ],
+            "skills": {
+                "Fight": 1,
+                "Athletics": 2
+            },
+            "stress": [
+                false,
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "resin",
+                "feral_tuber",
+                "luminous_moss"
+            ],
+            "aggressive": false
+        }
+    ]
+}

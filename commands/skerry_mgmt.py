@@ -215,8 +215,9 @@ class SkerryMgmtMixin:
     def cmd_organize(self, args):
         display.header("NPC Assignments")
         has_npcs = False
-        for npc_id, npc in self.npcs_db.items():
-            if npc.get("recruited"):
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
+            if npc:
                 has_npcs = True
                 mood_colors = {"content": display.GREEN, "happy": display.BRIGHT_GREEN,
                               "restless": display.YELLOW, "grim": display.YELLOW,
@@ -241,8 +242,8 @@ class SkerryMgmtMixin:
                 continue
 
             task_name = self._role_to_task(room.role)
-            workers = [n for n in self.npcs_db.values()
-                       if n.get("recruited") and n.get("assignment") == task_name]
+            workers = [self.npcs_db[nid] for nid in self.state.get("recruited_npcs", [])
+                       if self.npcs_db.get(nid, {}).get("assignment") == task_name]
 
             print(f"\n  {display.BRIGHT_WHITE}{room.name}{display.RESET} ({room.role})")
             for st in st_defs:

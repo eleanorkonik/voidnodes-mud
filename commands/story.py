@@ -171,8 +171,9 @@ class StoryMixin:
         display.seed_speak(self.seed.communicate(self.seed_name))
 
         # NPC mood updates
-        for npc_id, npc in self.npcs_db.items():
-            if npc.get("recruited"):
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
+            if npc:
                 house = npc.get("house_level", 0)
                 if house == 0 and npc.get("mood") != "unhappy":
                     if random.random() < 0.3:
@@ -189,8 +190,8 @@ class StoryMixin:
             if not room.role:
                 continue
             task_name = self._role_to_task(room.role)
-            workers = [n for n in self.npcs_db.values()
-                       if n.get("recruited") and n.get("assignment") == task_name]
+            workers = [self.npcs_db[nid] for nid in self.state.get("recruited_npcs", [])
+                       if self.npcs_db.get(nid, {}).get("assignment") == task_name]
             if not workers:
                 continue
 
@@ -242,17 +243,18 @@ class StoryMixin:
                                 item = random.choice(["metal_scraps", "wire", "torn_fabric"])
                                 self.steward.add_to_inventory(item)
                             if effect.get("loyalty_bonus"):
-                                for nid, n in self.npcs_db.items():
-                                    if n.get("recruited"):
-                                        n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
+                                for nid in self.state.get("recruited_npcs", []):
+                                    n = self.npcs_db.get(nid, {})
+                                    n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
                         else:
                             display.warning(f"  {self.sub(event['failure'])}")
                             effect = event.get("failure_effect", {})
                             if effect.get("stress"):
                                 self.steward.apply_damage(effect["stress"])
                             if effect.get("mood_penalty"):
-                                for nid, n in self.npcs_db.items():
-                                    if n.get("recruited") and n.get("mood") == "content":
+                                for nid in self.state.get("recruited_npcs", []):
+                                    n = self.npcs_db.get(nid, {})
+                                    if n.get("mood") == "content":
                                         n["mood"] = "restless"
                     else:
                         display.success(f"  {self.sub(event['success'])}")
@@ -260,9 +262,9 @@ class StoryMixin:
                         if effect.get("mote_bonus"):
                             self.seed.feed(effect["mote_bonus"])
                         if effect.get("mood_bonus"):
-                            for nid, n in self.npcs_db.items():
-                                if n.get("recruited"):
-                                    n["mood"] = "content"
+                            for nid in self.state.get("recruited_npcs", []):
+                                n = self.npcs_db.get(nid, {})
+                                n["mood"] = "content"
 
         # ── Food consumption + spoilage ──
         if self.skerry.has_structure("storehouse") and self.skerry.food_stores:
@@ -305,16 +307,17 @@ class StoryMixin:
 
             # Starvation effects on NPCs
             if tier["aspect"] == "Hunger Gnaws at Everyone":
-                for nid, n in self.npcs_db.items():
-                    if n.get("recruited"):
-                        n["loyalty"] = max(0, n.get("loyalty", 5) - 1)
+                for nid in self.state.get("recruited_npcs", []):
+                    n = self.npcs_db.get(nid, {})
+                    n["loyalty"] = max(0, n.get("loyalty", 5) - 1)
                 self.steward.apply_damage(1)
                 self.explorer.apply_damage(1)
                 display.warning("  Hunger takes its toll. Everyone suffers.")
             elif tier["aspect"] == "People Are Starving":
                 departed = []
-                for nid, n in self.npcs_db.items():
-                    if n.get("recruited") and n.get("loyalty", 5) < 3:
+                for nid in list(self.state.get("recruited_npcs", [])):
+                    n = self.npcs_db.get(nid, {})
+                    if n.get("loyalty", 5) < 3:
                         departed.append(nid)
                 for nid in departed:
                     npc = self.npcs_db[nid]

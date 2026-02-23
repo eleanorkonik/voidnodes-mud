@@ -1,0 +1,211 @@
+{
+    "id": "coral_thicket",
+    "name": "The Coral Thicket",
+    "description": "A dense mass of crystallized organic matter in shades of blue, green, pink, and violet, glowing with soft bioluminescence against the void-dark. The coral structures twist and branch in impossible spiraling patterns, creating a labyrinth of sharp beauty. The air around it shimmers with warmth and drifting spores.",
+    "aspect": "Everything Here Grows Toward Something Hungry",
+    "difficulty": "medium",
+    "scavenge_pool": [
+        "coral_fragments",
+        "luminous_moss",
+        "reef_grain",
+        "tangle_vine_cutting",
+        "luminous_spore",
+        "resin"
+    ],
+    "entry_room": "ct_entrance",
+    "rooms": [
+        {
+            "id": "ct_entrance",
+            "name": "Coral Threshold",
+            "description": "The thicket begins as a wall of pale blue-green crystalline growths, branching outward like fingers against the void-dark. The formations are translucent, lit from within by slow bioluminescent pulses. The air here is warm and faintly sweet, with a mineral edge. Underfoot, the ground transitions from bare rock to a crust of tiny coral nubs.",
+            "zone": "coral_thicket",
+            "exits": {
+                "west": "skerry_landing",
+                "north": "ct_grove",
+                "east": "ct_tunnel"
+            },
+            "aspects": [
+                "Beautiful Enough to Drop Your Guard",
+                "The Sweetness Wants Something From You"
+            ],
+            "items": [
+                "luminous_moss"
+            ],
+            "npcs": [],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "ct_grove",
+            "name": "Luminous Grove",
+            "description": "A clearing among the coral where enormous fan-shaped growths arch overhead, filtering light into shifting blue and green dapples across the ground. The space is roughly circular, ten paces wide. A crude lean-to of stacked coral slabs and fabric scraps leans against the largest formation, its entrance hung with a torn curtain.",
+            "zone": "coral_thicket",
+            "exits": {
+                "south": "ct_entrance",
+                "east": "ct_spore_chamber",
+                "north": "ct_heart"
+            },
+            "aspects": [
+                "The Light Never Holds Still",
+                "Someone Lived Here For a Reason"
+            ],
+            "items": [
+                "resin",
+                "reef_grain"
+            ],
+            "npcs": [
+                "chris"
+            ],
+            "enemies": [],
+            "discovered": false
+        },
+        {
+            "id": "ct_tunnel",
+            "name": "Narrow Coral Tunnel",
+            "description": "A tight passage between walls of dense coral, barely shoulder-width. The formations press in from both sides, their surfaces studded with thorn-like protrusions that scrape fabric and skin. The coral pulses with slow internal light \u2014 pink and violet close up \u2014 and the air is close and humid.",
+            "zone": "coral_thicket",
+            "exits": {
+                "west": "ct_entrance",
+                "north": "ct_spore_chamber"
+            },
+            "aspects": [
+                "No Room to Swing a Sword",
+                "Everything Here Has Thorns"
+            ],
+            "items": [
+                "coral_fragments"
+            ],
+            "npcs": [],
+            "enemies": [
+                "thorn_crawler"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "ct_spore_chamber",
+            "name": "Spore Chamber",
+            "description": "A vast hollow chamber, high-ceilinged and dark at its edges. Clouds of luminous spores drift through the space like slow-motion snow, each mote glowing soft yellow-green. They pulse in unison \u2014 bright, dim, bright \u2014 and the air is thick, warm, and sweet enough to taste. The ground is spongy with accumulated organic matter.",
+            "zone": "coral_thicket",
+            "exits": {
+                "south": "ct_tunnel",
+                "west": "ct_grove",
+                "north": "ct_heart"
+            },
+            "aspects": [
+                "Breathe Wrong and You'll See Things",
+                "The Warmth Makes You Want to Stay"
+            ],
+            "items": [
+                "luminous_moss",
+                "resin"
+            ],
+            "npcs": [],
+            "enemies": [
+                "spore_cloud"
+            ],
+            "discovered": false
+        },
+        {
+            "id": "ct_heart",
+            "name": "Heart of the Thicket",
+            "description": "The deepest chamber of the thicket, where the coral formations are ancient and intricately branched \u2014 some as tall as trees, their surfaces encrusted with smaller growths in white, pink, and deep violet. A small garden of cultivated coral occupies the center, tended beds marked with careful borders. Among the oldest roots, a lattice of living crystal pulses with steady green light.",
+            "zone": "coral_thicket",
+            "exits": {
+                "south": "ct_grove",
+                "east": "ct_spore_chamber"
+            },
+            "aspects": [
+                "Old Enough to Have Secrets",
+                "Someone's Been Tending This Place"
+            ],
+            "items": [
+                "luminous_spore",
+                "coral_fragments"
+            ],
+            "npcs": [
+                "tilly"
+            ],
+            "enemies": [
+                "thorn_crawler_alpha"
+            ],
+            "discovered": false
+        }
+    ],
+    "enemies_data": [
+        {
+            "id": "thorn_crawler",
+            "name": "Thorn Crawler",
+            "description": "A coral-armored predator that blends with the thicket walls. It strikes from ambush, its barbed limbs lashing out with surprising speed.",
+            "aspects": [
+                "Strikes Before You Know It's There",
+                "Part of the Wall Until It Isn't"
+            ],
+            "skills": {
+                "Fight": 3,
+                "Notice": 2
+            },
+            "stress": [
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "coral_fragments",
+                "resin"
+            ],
+            "aggressive": true
+        },
+        {
+            "id": "thorn_crawler_alpha",
+            "name": "Thorn Crawler Alpha",
+            "description": "The largest of its kind, this crawler has grown thick coral plating and developed a cunning patience. It waits until prey is committed before striking.",
+            "aspects": [
+                "Armored in Living Stone",
+                "It Can Wait Longer Than You Can"
+            ],
+            "skills": {
+                "Fight": 4,
+                "Endure": 3,
+                "Notice": 2
+            },
+            "stress": [
+                false,
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null,
+                "moderate": null
+            },
+            "loot": [
+                "coral_fragments",
+                "tangle_vine_cutting"
+            ]
+        },
+        {
+            "id": "spore_cloud",
+            "name": "Spore Cloud",
+            "description": "Not a creature exactly \u2014 a living cloud of luminous spores that drifts with purpose. Inhaling them causes disorientation and hallucinations.",
+            "aspects": [
+                "One Breath and the World Goes Sideways",
+                "It Goes Where the Air Goes"
+            ],
+            "skills": {
+                "Fight": 2,
+                "Will": 3
+            },
+            "stress": [
+                false,
+                false
+            ],
+            "consequences": {
+                "mild": null
+            },
+            "loot": [
+                "luminous_moss"
+            ]
+        }
+    ]
+}

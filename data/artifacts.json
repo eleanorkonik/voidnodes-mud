@@ -2,53 +2,81 @@
     "stabilization_engine": {
         "id": "stabilization_engine",
         "name": "Stabilization Engine",
-        "description": "A compact device that hums with residual power. It was designed to keep something steady — a ship, a platform, a world. In your hands, it steadies your own work.",
+        "description": "A compact device that hums with residual power. It was designed to keep something steady \u2014 a ship, a platform, a world. In your hands, it steadies your own work.",
         "type": "artifact",
-        "aspects": ["Steady As She Goes", "Still Running After All This Time"],
+        "aspects": [
+            "Steady As She Goes",
+            "Still Running After All This Time"
+        ],
         "mote_value": 8,
-        "stat_bonuses": {"Craft": 1},
+        "stat_bonuses": {
+            "Craft": 1
+        },
         "stackable": false,
         "special": null,
-        "location": {"type": "room", "id": "df_engine_room"},
-        "discovery_text": "Among the wreckage of the turbines, you spot a device that's still intact — still humming. The Stabilization Engine. It pulses faintly, as if waiting to be useful again.",
-        "hint_sensory": "something humming through the walls — mechanical, steady, like it never stopped running"
+        "location": {
+            "type": "room",
+            "id": "df_engine_room"
+        },
+        "discovery_text": "Among the wreckage of the turbines, you spot a device that's still intact \u2014 still humming. The Stabilization Engine. It pulses faintly, as if waiting to be useful again.",
+        "hint_sensory": "something humming through the walls \u2014 mechanical, steady, like it never stopped running",
+        "originZone": "debris_field"
     },
     "growth_lattice": {
         "id": "growth_lattice",
         "name": "Growth Lattice",
         "description": "A living framework of crystallized coral that pulses with green light. It resonates with organic growth, amplifying the connection between living things and the void.",
         "type": "artifact",
-        "aspects": ["The Crystal Has Plans of Its Own", "Everything Near It Grows — Everything"],
+        "aspects": [
+            "The Crystal Has Plans of Its Own",
+            "Everything Near It Grows \u2014 Everything"
+        ],
         "mote_value": 12,
-        "stat_bonuses": {"Commune": 1},
+        "stat_bonuses": {
+            "Commune": 1
+        },
         "stackable": false,
         "special": null,
-        "location": {"type": "room", "id": "ct_heart"},
-        "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness — it can feel this thing, and it wants it.",
-        "hint_sensory": "a green glow — not bioluminescence, something crystalline, threaded through everything around it"
+        "location": {
+            "type": "room",
+            "id": "ct_heart"
+        },
+        "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness \u2014 it can feel this thing, and it wants it.",
+        "hint_sensory": "a green glow \u2014 not bioluminescence, something crystalline, threaded through everything around it",
+        "originZone": "coral_thicket"
     },
     "eliok_house": {
         "id": "eliok_house",
         "name": "Eliok House",
         "description": "A miniature house of impossible craftsmanship, built for beings no larger than your hand. Every surface is carved with scenes of a great tree sheltering a civilization. It radiates warmth and a sense of home so powerful it makes your eyes sting.",
         "type": "artifact",
-        "aspects": ["Echo of a Lost Civilization", "Home Made Manifest", "The Biggest Decision"],
+        "aspects": [
+            "Echo of a Lost Civilization",
+            "Home Made Manifest",
+            "The Biggest Decision"
+        ],
         "mote_value": 25,
         "stat_bonuses": {},
         "stackable": false,
         "special": "eliok_house",
-        "location": {"type": "room", "id": "fw_vault"},
-        "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House — a home that remembers what home means.\n\nFeed it to {seed_name} for 25 motes — the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
-        "hint_sensory": "warmth — real warmth, radiating from behind a seal. Something alive in there, or remembering being alive",
-        "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges — a remnant of the Eliok civilization — and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
-        "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees — a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers."
+        "location": {
+            "type": "room",
+            "id": "fw_vault"
+        },
+        "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House \u2014 a home that remembers what home means.\n\nFeed it to {seed_name} for 25 motes \u2014 the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
+        "hint_sensory": "warmth \u2014 real warmth, radiating from behind a seal. Something alive in there, or remembering being alive",
+        "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges \u2014 a remnant of the Eliok civilization \u2014 and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
+        "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees \u2014 a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers.",
+        "originZone": "frozen_wreck"
     },
     "silver_slippers": {
         "id": "silver_slippers",
         "name": "Silver Slippers",
         "description": "A pair of delicate silver slippers, impossibly light, threaded with filaments that shimmer like starlight. They hum faintly when you hold them, as if remembering a road that no longer exists.",
         "type": "artifact",
-        "aspects": ["There's No Place Like Home"],
+        "aspects": [
+            "There's No Place Like Home"
+        ],
         "mote_value": 5,
         "stat_bonuses": {},
         "stackable": false,
@@ -56,29 +84,39 @@
         "slot": "feet",
         "location": null,
         "discovery_text": "Silver slippers, barely tarnished, sitting on the bare ground as if someone set them down and walked away. They catch the light in ways the light shouldn't bend.",
-        "hint_sensory": "a faint shimmer — like starlight caught in something solid, humming with a road that isn't there"
+        "hint_sensory": "a faint shimmer \u2014 like starlight caught in something solid, humming with a road that isn't there",
+        "originZone": null
     },
     "bloom_catalyst": {
         "id": "bloom_catalyst",
         "name": "Bloom Catalyst",
-        "description": "A crystallized flower bud that pulses with deep green energy. When held near dormant plants, they erupt into instant growth — flowers, fruit, seeds, all at once. The crystal dims slightly each time it's used.",
+        "description": "A crystallized flower bud that pulses with deep green energy. When held near dormant plants, they erupt into instant growth \u2014 flowers, fruit, seeds, all at once. The crystal dims slightly each time it's used.",
         "type": "artifact",
-        "aspects": ["Instant Harvest", "Five Blooms Remain"],
+        "aspects": [
+            "Instant Harvest",
+            "Five Blooms Remain"
+        ],
         "mote_value": 5,
         "stat_bonuses": {},
         "stackable": false,
         "special": "bloom_catalyst",
         "uses_remaining": 5,
-        "location": {"type": "room", "id": "vw_heart"},
+        "location": {
+            "type": "room",
+            "id": "vw_heart"
+        },
         "discovery_text": "At the base of the crystallized plant, a single bud glows with concentrated life. The Bloom Catalyst. When you pick it up, every plant in the chamber shivers.",
-        "hint_sensory": "concentrated life — a green pulse, like a heartbeat, deep inside the overgrowth"
+        "hint_sensory": "concentrated life \u2014 a green pulse, like a heartbeat, deep inside the overgrowth",
+        "originZone": "verdant_wreck"
     },
     "red_clown_nose": {
         "id": "red_clown_nose",
         "name": "Red Clown Nose",
-        "description": "A round, squishy red nose. It looks absurd. It feels absurd. But when you hold it, something about it makes you feel less conspicuous, less threatening — less worth envying.",
+        "description": "A round, squishy red nose. It looks absurd. It feels absurd. But when you hold it, something about it makes you feel less conspicuous, less threatening \u2014 less worth envying.",
         "type": "artifact",
-        "aspects": ["Uglier Than I Am"],
+        "aspects": [
+            "Uglier Than I Am"
+        ],
         "mote_value": 5,
         "stat_bonuses": {},
         "stackable": false,
@@ -86,6 +124,7 @@
         "slot": "head",
         "location": null,
         "discovery_text": "A red clown nose, sitting on the ground like a joke with no punchline. It's perfectly round, impossibly vivid against the dull soil.",
-        "hint_sensory": "something impossibly vivid — bright red, round, completely out of place"
+        "hint_sensory": "something impossibly vivid \u2014 bright red, round, completely out of place",
+        "originZone": null
     }
 }

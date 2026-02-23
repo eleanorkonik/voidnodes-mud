@@ -136,9 +136,10 @@ def display_room(room, game_state):
             else:
                 print(f"  {npc_name(npc_id.replace('_', ' ').title())} is here.")
 
-    # Show followers at this location
+    # Show followers at this location (only scan recruited NPCs)
     npcs_db = game_state.get("npcs_db", {})
-    for fid, fdata in npcs_db.items():
+    for fid in game_state.get("recruited_npcs", []):
+        fdata = npcs_db.get(fid, {})
         if fdata.get("following") and fdata.get("location") == room.id and fid not in (room.npcs or []):
             print(f"  {npc_name(fdata['name'])} is following you.")
 

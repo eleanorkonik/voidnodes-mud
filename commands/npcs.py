@@ -462,13 +462,15 @@ class NpcsMixin:
 
     def _move_followers(self, target_room_id):
         """Move all following NPCs to the explorer's new location."""
-        for npc_id, npc in self.npcs_db.items():
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
             if npc.get("following"):
                 npc["location"] = target_room_id
 
     def _followers_to_skerry(self):
         """Move all followers to the skerry when the explorer comes home."""
-        for npc_id, npc in self.npcs_db.items():
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
             if npc.get("following"):
                 npc["following"] = False
                 npc["location"] = "skerry_central"
@@ -480,20 +482,22 @@ class NpcsMixin:
         """Followers leave the skerry and rejoin the explorer.
         Settled NPCs and NPCs with a work assignment stay on the skerry."""
         explorer_loc = self.state.get("explorer_location", "skerry_central")
-        for npc_id, npc in self.npcs_db.items():
-            if npc.get("recruited") and npc_id != "sevarik":
-                # Settled NPCs have a home — they stay
-                if npc.get("settled_room"):
-                    continue
-                # NPCs with a job stay working on the skerry
-                if npc.get("assignment", "idle") != "idle":
-                    continue
-                npc["following"] = True
-                npc["location"] = explorer_loc
-                # Remove from skerry room
-                skerry_central = self.rooms.get("skerry_central")
-                if skerry_central and npc_id in skerry_central.npcs:
-                    skerry_central.remove_npc(npc_id)
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
+            if npc_id == "sevarik":
+                continue
+            # Settled NPCs have a home — they stay
+            if npc.get("settled_room"):
+                continue
+            # NPCs with a job stay working on the skerry
+            if npc.get("assignment", "idle") != "idle":
+                continue
+            npc["following"] = True
+            npc["location"] = explorer_loc
+            # Remove from skerry room
+            skerry_central = self.rooms.get("skerry_central")
+            if skerry_central and npc_id in skerry_central.npcs:
+                skerry_central.remove_npc(npc_id)
 
     def cmd_request(self, args):
         """REQUEST TREATMENT [FROM <name>] — treat a consequence with Lore + cure item."""

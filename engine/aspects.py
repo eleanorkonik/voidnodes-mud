@@ -138,7 +138,8 @@ def collect_invokable_aspects(game, context="combat"):
 
         # Following NPC aspects (recruited NPCs at same location)
         explorer_loc = game.state.get("explorer_location")
-        for npc_id, npc in game.npcs_db.items():
+        for npc_id in game.state.get("recruited_npcs", []):
+            npc = game.npcs_db.get(npc_id, {})
             if npc.get("following") and npc.get("location") == explorer_loc:
                 for a in _flatten_npc_aspects(npc):
                     aspects.append((a, npc.get("name", npc_id)))
@@ -243,7 +244,8 @@ COMPELS = {
 def _get_follower_name(game):
     """Get the name of a follower at the explorer's current location, or None."""
     explorer_loc = game.state.get("explorer_location")
-    for npc_id, npc in game.npcs_db.items():
+    for npc_id in game.state.get("recruited_npcs", []):
+        npc = game.npcs_db.get(npc_id, {})
         if npc.get("following") and npc.get("location") == explorer_loc:
             return npc.get("name", npc_id)
     return None

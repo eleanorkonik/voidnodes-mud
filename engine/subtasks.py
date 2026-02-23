@@ -294,8 +294,9 @@ def _handler_maintain_post(game, room, npc, shifts):
 
 def _handler_tidy_up(game, room, npc, shifts):
     """Clean the shelter for morale."""
-    for nid, n in game.npcs_db.items():
-        if n.get("recruited") and n.get("mood") == "restless":
+    for nid in game.state.get("recruited_npcs", []):
+        n = game.npcs_db.get(nid, {})
+        if n.get("mood") == "restless":
             n["mood"] = "content"
     return ["Tidied up the shelter. Everyone feels a bit better."]
 
@@ -303,11 +304,11 @@ def _handler_tidy_up(game, room, npc, shifts):
 def _handler_create_art(game, room, npc, shifts):
     """Create art for bigger morale boost."""
     boosted = 0
-    for nid, n in game.npcs_db.items():
-        if n.get("recruited"):
-            if n.get("mood") in ("restless", "content"):
-                n["mood"] = "happy"
-                boosted += 1
+    for nid in game.state.get("recruited_npcs", []):
+        n = game.npcs_db.get(nid, {})
+        if n.get("mood") in ("restless", "content"):
+            n["mood"] = "happy"
+            boosted += 1
     if boosted:
         return [f"Created something beautiful. {boosted} NPC{'s' if boosted != 1 else ''} feel happier."]
     return ["Created something beautiful, but everyone was already in good spirits."]
@@ -316,10 +317,10 @@ def _handler_create_art(game, room, npc, shifts):
 def _handler_tend_shelves(game, room, npc, shifts):
     """Organize shared items for loyalty boost."""
     boosted = 0
-    for nid, n in game.npcs_db.items():
-        if n.get("recruited"):
-            n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
-            boosted += 1
+    for nid in game.state.get("recruited_npcs", []):
+        n = game.npcs_db.get(nid, {})
+        n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
+        boosted += 1
     if boosted:
         return [f"Organized the communal shelves. +1 loyalty for {boosted} NPC{'s' if boosted != 1 else ''}."]
     return []

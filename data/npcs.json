@@ -7,7 +7,9 @@
         "aspects": {
             "high_concept": "Mysterious Wanderer Who Knows the Void",
             "trouble": "Secrets That Could Help or Harm",
-            "other": ["Knows More Than They Say"]
+            "other": [
+                "Knows More Than They Say"
+            ]
         },
         "skills": {
             "Navigate": 3,
@@ -15,15 +17,21 @@
             "Commune": 2,
             "Will": 2
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
         "house_level": 0,
         "dialogue": {
             "greeting": "A lean figure steps out from behind a cargo crate, watchful but not hostile. 'Another survivor. I was starting to think I was the last one.'",
-            "idle": "'There's work to be done. The skerry won't grow itself — well, {seed_name} will, but it needs help.'",
+            "idle": "'There's work to be done. The skerry won't grow itself \u2014 well, {seed_name} will, but it needs help.'",
             "happy": "'This place is starting to feel like it could be something. Keep at it.'",
             "quest": "'The frozen wreck to the west... I've seen lights there that shouldn't exist. Be careful if you go.'",
             "recruit_success": "Varis considers for a moment, then nods. 'A world seed. Haven't seen one of those in a long time. Alright, I'll come. You'll want someone who knows the void.'",
@@ -76,17 +84,20 @@
                 "His jaw tightens. You talked too long without substance and lost him there.",
                 "A flat look. That argument died and he's not going to resurrect it for you."
             ]
-        }
+        },
+        "originZone": "tutorial"
     },
     "emmy": {
         "name": "Emmy",
-        "desc": "A young woman, barely out of adolescence, with a round face and enormous brown eyes. Her curly light-brown hair is chopped short and uneven — self-cut. Freckles scatter across her nose and cheeks, and her small frame is wiry rather than thin, built for scrambling through tight spaces.",
+        "desc": "A young woman, barely out of adolescence, with a round face and enormous brown eyes. Her curly light-brown hair is chopped short and uneven \u2014 self-cut. Freckles scatter across her nose and cheeks, and her small frame is wiry rather than thin, built for scrambling through tight spaces.",
         "location": "df_cargo_bay",
         "recruited": false,
         "aspects": {
             "high_concept": "Enthusiastic Scavenger With an Eye for Value",
             "trouble": "Too Trusting for the Void",
-            "other": ["Quick Hands, Quicker Smile"]
+            "other": [
+                "Quick Hands, Quicker Smile"
+            ]
         },
         "skills": {
             "Scavenge": 3,
@@ -94,8 +105,14 @@
             "Craft": 2,
             "Rapport": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
@@ -120,7 +137,7 @@
             "step_mid": [
                 "'Real food? Not salvage paste?' She actually gasps.",
                 "'Other people. Who are they? What are they like? Tell me everything.'",
-                "She starts pacing. A good sign — she's thinking it through.",
+                "She starts pacing. A good sign \u2014 she's thinking it through.",
                 "'I know where all the good scrap is around here. I could be useful!'",
                 "'You're serious, aren't you?' She searches your face. 'You're really serious.'"
             ],
@@ -128,7 +145,7 @@
                 "She's already mentally packing. You can see it in her eyes.",
                 "'When do we leave? Can we leave now? I could leave now.'",
                 "'I have a stash. Supplies I've been hoarding. I'll bring everything.'",
-                "She laughs — sudden, surprised, like she forgot she could. 'I'm in.'",
+                "She laughs \u2014 sudden, surprised, like she forgot she could. 'I'm in.'",
                 "'Tell me about the others again. I want to know their names.'"
             ],
             "color": {
@@ -145,7 +162,7 @@
                 "Emmy looks like she might burst if you don't finish soon."
             ],
             "warn": [
-                "Emmy's attention is drifting — you're losing a thread...",
+                "Emmy's attention is drifting \u2014 you're losing a thread...",
                 "She glances away. Something you were saying is going stale...",
                 "'Hm?' Emmy blinks. You've been neglecting something important..."
             ],
@@ -154,7 +171,8 @@
                 "Emmy shakes her head. That argument went cold while you weren't looking.",
                 "The excitement dims in her eyes. You let that thread go too long."
             ]
-        }
+        },
+        "originZone": "debris_field"
     },
     "dax": {
         "name": "Dax",
@@ -164,7 +182,9 @@
         "aspects": {
             "high_concept": "Cautious Mechanic Who's Seen Too Much Go Wrong",
             "trouble": "Trust Issues (Well-Founded)",
-            "other": ["Steady Hands Under Pressure"]
+            "other": [
+                "Steady Hands Under Pressure"
+            ]
         },
         "skills": {
             "Craft": 3,
@@ -172,8 +192,14 @@
             "Notice": 2,
             "Fight": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "restless",
@@ -206,7 +232,7 @@
                 "She kicks the console. 'This place is falling apart anyway.'",
                 "'You need an engineer. Don't pretend you don't.' She's already packing tools.",
                 "'I'm not coming because of your speech. I'm coming because this junk heap is dying.'",
-                "She sighs — long, theatrical, defeated. 'Lead the way. Don't make me regret it.'"
+                "She sighs \u2014 long, theatrical, defeated. 'Lead the way. Don't make me regret it.'"
             ],
             "color": {
                 "R": "'Structural integrity?' She raps a knuckle on the wall. 'Better than this?'",
@@ -231,17 +257,20 @@
                 "She snorts derisively. Whatever you were building there just fell apart.",
                 "'You lost me.' Back to the console. That thread is welded shut."
             ]
-        }
+        },
+        "originZone": "debris_field"
     },
     "chris": {
         "name": "Chris",
-        "desc": "A gangly teenager, all elbows and knees, not yet grown into his frame. His ash-blond hair hangs limp over wide, watchful eyes. His face is gaunt — cheekbones too prominent, jaw too sharp — the face of someone who has not eaten well in a long time.",
+        "desc": "A gangly teenager, all elbows and knees, not yet grown into his frame. His ash-blond hair hangs limp over wide, watchful eyes. His face is gaunt \u2014 cheekbones too prominent, jaw too sharp \u2014 the face of someone who has not eaten well in a long time.",
         "location": "ct_grove",
         "recruited": false,
         "aspects": {
             "high_concept": "Scared Teenager Trying to Be Brave",
             "trouble": "Jumps at Every Shadow",
-            "other": ["Surprisingly Observant"]
+            "other": [
+                "Surprisingly Observant"
+            ]
         },
         "skills": {
             "Notice": 3,
@@ -249,8 +278,14 @@
             "Commune": 1,
             "Rapport": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
@@ -258,7 +293,7 @@
             "greeting": "A teenager peers out from behind a lean-to, eyes wide. 'Are... are you friendly? Please be friendly.'",
             "idle": "'I'm trying to help. Just tell me what to do and I'll do it. Promise.'",
             "happy": "'I feel safe here. For the first time in... I don't even know how long.'",
-            "recruit_success": "'You want me to come with you? Really? Yes! I mean — yes. Definitely. Let's go.'",
+            "recruit_success": "'You want me to come with you? Really? Yes! I mean \u2014 yes. Definitely. Let's go.'",
             "recruit_fail": "'I want to, but... what if it's not safe? What if we get lost on the way?'"
         },
         "recruit_dc": 0,
@@ -268,13 +303,13 @@
                 "Chris peeks out from behind the lean-to. 'You're... not going to hurt me, right?'",
                 "You mention shelter. He swallows hard. 'Real shelter?'",
                 "'I haven't eaten real food in... I don't know how long.'",
-                "He's shaking slightly. Not cold — just afraid. Of everything.",
+                "He's shaking slightly. Not cold \u2014 just afraid. Of everything.",
                 "You keep your voice gentle. He looks like he might bolt."
             ],
             "step_mid": [
                 "'There are other people there?' His voice is very small. 'Nice people?'",
                 "He uncurls slightly. Still wary, but listening.",
-                "'I can work. I'm not useless. I can carry things and — and stuff.'",
+                "'I can work. I'm not useless. I can carry things and \u2014 and stuff.'",
                 "He takes a half-step closer. Progress.",
                 "'Nobody's been nice to me since... before.' He trails off."
             ],
@@ -299,7 +334,7 @@
                 "Chris is standing right in front of you, hope warring with terror."
             ],
             "warn": [
-                "Chris is shrinking back — you're losing him on something...",
+                "Chris is shrinking back \u2014 you're losing him on something...",
                 "His eyes go distant. A thread of the conversation is fraying...",
                 "He wraps his arms around himself. Something you dropped is fading..."
             ],
@@ -308,7 +343,8 @@
                 "'Oh.' His voice goes flat. That line of argument is dead.",
                 "He takes a step back. You let something important go cold."
             ]
-        }
+        },
+        "originZone": "coral_thicket"
     },
     "tilly": {
         "name": "Tilly",
@@ -318,7 +354,9 @@
         "aspects": {
             "high_concept": "Practical Farmer Who Makes Things Grow",
             "trouble": "Won't Move Without Proof",
-            "other": ["Green Thumb in Any Soil"]
+            "other": [
+                "Green Thumb in Any Soil"
+            ]
         },
         "skills": {
             "Craft": 3,
@@ -326,8 +364,14 @@
             "Endure": 2,
             "Commune": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
@@ -350,7 +394,7 @@
             ],
             "step_mid": [
                 "'What's the soil like? Rocky? Sandy?' She actually looks at you now.",
-                "'How much sunlight — or whatever passes for it — does the seed get?'",
+                "'How much sunlight \u2014 or whatever passes for it \u2014 does the seed get?'",
                 "She plucks a weed with practiced fingers. 'I'm listening.'",
                 "'Rain? Wind patterns? Don't tell me you haven't checked.'",
                 "'If the seed can grow real food, that changes things.' Her tone is careful, guarded."
@@ -367,7 +411,7 @@
                 "G": "Her head snaps up. 'Describe the growth rate. Exactly.'",
                 "B": "'More hands for harvest?' She approves. 'Growing food is labor.'",
                 "Y": "'A garden needs a gardener. That's purpose enough for me.'",
-                "O": "'Things that last. That's what growing is — building something that outlives you.'"
+                "O": "'Things that last. That's what growing is \u2014 building something that outlives you.'"
             },
             "atmosphere": [
                 "Tilly tends her garden, occasionally glancing your way.",
@@ -385,7 +429,8 @@
                 "'Not convincing.' She pulls a weed. That line of reasoning is done.",
                 "Her expression closes off. You let that one wither on the vine."
             ]
-        }
+        },
+        "originZone": "coral_thicket"
     },
     "callum": {
         "name": "Callum",
@@ -395,7 +440,9 @@
         "aspects": {
             "high_concept": "Obsessive Scholar Deciphering Ancient Script",
             "trouble": "Knowledge Above Self-Preservation",
-            "other": ["Reads Dead Languages"]
+            "other": [
+                "Reads Dead Languages"
+            ]
         },
         "skills": {
             "Notice": 3,
@@ -403,13 +450,19 @@
             "Will": 2,
             "Navigate": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
         "dialogue": {
-            "greeting": "A thin man adjusts spectacles made from crystal shards. 'Fascinating — another living being. Tell me, can you read Eliok script?'",
+            "greeting": "A thin man adjusts spectacles made from crystal shards. 'Fascinating \u2014 another living being. Tell me, can you read Eliok script?'",
             "idle": "'The inscriptions on this ship... they tell a story. A world that grew from a single seed. Sound familiar?'",
             "happy": "'Access to {seed_name} changes everything. If I could study the world seed directly...'",
             "recruit_success": "'A world seed? An actual living world seed? I need to study it. Take me to it immediately.'",
@@ -422,7 +475,7 @@
                 "Callum adjusts his crystal spectacles. 'Interesting. Go on.'",
                 "'A world seed. Fascinating.' He says it the way people say 'fascinating' when they mean 'prove it.'",
                 "He traces an inscription on the wall while you talk. Only half-listening.",
-                "'The Eliok texts describe world seeds as — but you wouldn't know that. Continue.'",
+                "'The Eliok texts describe world seeds as \u2014 but you wouldn't know that. Continue.'",
                 "You mention the skerry. He makes a small note on a scrap of metal."
             ],
             "step_mid": [
@@ -437,7 +490,7 @@
                 "He's already rolling up his notes. 'The inscriptions can wait. The seed cannot.'",
                 "'A living specimen. In the current stage of development. This is unprecedented.'",
                 "'Take me there. Immediately. Every hour of data lost is irreplaceable.'",
-                "'I'll bring my translation work. The seed and the inscriptions — they're connected. I know it.'"
+                "'I'll bring my translation work. The seed and the inscriptions \u2014 they're connected. I know it.'"
             ],
             "color": {
                 "R": "'Safety. Yes, obviously. A controlled research environment. Essential.'",
@@ -454,15 +507,16 @@
             ],
             "warn": [
                 "Callum returns to his inscriptions. You're losing his academic interest...",
-                "He polishes his spectacles. Not a good sign — he's disengaging from a thread...",
-                "'Yes, yes, but—' He's losing patience with something you haven't followed up on..."
+                "He polishes his spectacles. Not a good sign \u2014 he's disengaging from a thread...",
+                "'Yes, yes, but\u2014' He's losing patience with something you haven't followed up on..."
             ],
             "eliminate": [
                 "'Insufficient evidence.' He waves dismissively. That angle is closed.",
                 "He returns to his inscriptions. That line of argument bored him to death.",
                 "'You had something there, but you didn't develop it.' An academic's disappointment."
             ]
-        }
+        },
+        "originZone": "frozen_wreck"
     },
     "lira": {
         "name": "Lira",
@@ -472,7 +526,9 @@
         "aspects": {
             "high_concept": "Botanist Without a Ship",
             "trouble": "Patient Observer",
-            "other": ["Knows Every Root by Name"]
+            "other": [
+                "Knows Every Root by Name"
+            ]
         },
         "skills": {
             "Commune": 3,
@@ -480,26 +536,32 @@
             "Lore": 2,
             "Rapport": 1
         },
-        "stress": [false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "content",
         "house_level": 0,
         "dialogue": {
-            "greeting": "Another person. And — what is that tendril on your arm? The vines near you are reaching toward it. I've never seen the biodome react to anything like that.",
+            "greeting": "Another person. And \u2014 what is that tendril on your arm? The vines near you are reaching toward it. I've never seen the biodome react to anything like that.",
             "idle": "'Have you tried composting the coral fragments? The mineral content would be extraordinary.'",
-            "happy": "'The soil on your skerry — it responds to {seed_name} like nothing I've ever studied. I could spend years here.'",
-            "quest_intro": "I've been studying this biodome for weeks. There's something incredible at the heart of it — a crystallized bloom that pulses with raw growth energy. But massive roots block the way north. I would have tried the Growth Controller west of the root wall, but I don't have any tools. Do you?",
-            "quest_reply_yes": "You do? Good. The Growth Control room is west of the root wall. USE your tools ON the CONSOLE — if the logic board is intact, the roots should retract on their own.",
-            "quest_reply_no": "Well, if you have any way to CRAFT some, the Growth Controller is west of the root wall — that's the clean option. Otherwise... coat the roots with resin and burn through. It would work. But these roots are the only thing keeping the biodome alive. I won't let you torch them unless you take me somewhere safe first.",
-            "quest_options": "If you have tools, the Growth Control room is west of the root wall — the console might still work if you can repair it. The roots would retract cleanly. Otherwise... coat the roots with resin and burn through. It would work, but these roots are the biodome's lifeline.",
-            "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here — take these. And if you ever want a botanist on your skerry... I might come visit.",
-            "quest_forceful_done": "You got through. That crystal — it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
+            "happy": "'The soil on your skerry \u2014 it responds to {seed_name} like nothing I've ever studied. I could spend years here.'",
+            "quest_intro": "I've been studying this biodome for weeks. There's something incredible at the heart of it \u2014 a crystallized bloom that pulses with raw growth energy. But massive roots block the way north. I would have tried the Growth Controller west of the root wall, but I don't have any tools. Do you?",
+            "quest_reply_yes": "You do? Good. The Growth Control room is west of the root wall. USE your tools ON the CONSOLE \u2014 if the logic board is intact, the roots should retract on their own.",
+            "quest_reply_no": "Well, if you have any way to CRAFT some, the Growth Controller is west of the root wall \u2014 that's the clean option. Otherwise... coat the roots with resin and burn through. It would work. But these roots are the only thing keeping the biodome alive. I won't let you torch them unless you take me somewhere safe first.",
+            "quest_options": "If you have tools, the Growth Control room is west of the root wall \u2014 the console might still work if you can repair it. The roots would retract cleanly. Otherwise... coat the roots with resin and burn through. It would work, but these roots are the biodome's lifeline.",
+            "quest_careful_done": "You preserved the root system! This biodome might survive after all. Here \u2014 take these. And if you ever want a botanist on your skerry... I might come visit.",
+            "quest_forceful_done": "You got through. That crystal \u2014 it accelerates plant growth. Five uses, maybe. But the root system... you've damaged something irreplaceable.",
             "quest_forceful_done_witnessed": "I knew what I was suggesting. I just didn't think it would smell like that. ...The crystal has five charges. Let's make them count.",
-            "quest_complete": "That crystal — I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
-            "recruit_success": "Lira brushes soil from her hands and stands. 'That tendril — whatever it is — it's a living growth source. I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
-            "recruit_fail": "'I can't leave yet. There's too much data in this biodome — growth patterns, root networks, the crystallization process. Come back when I've finished my survey.'"
+            "quest_complete": "That crystal \u2014 I've been studying it from this side. It accelerates plant growth. Five uses, maybe, before the energy dissipates.",
+            "recruit_success": "Lira brushes soil from her hands and stands. 'That tendril \u2014 whatever it is \u2014 it's a living growth source. I've been cataloguing dead biodome fragments for months. This is a chance to study something actually growing.' She's already collecting samples. 'When do we leave?'",
+            "recruit_fail": "'I can't leave yet. There's too much data in this biodome \u2014 growth patterns, root networks, the crystallization process. Come back when I've finished my survey.'"
         },
         "recruit_dc": 2,
         "recruit_condition": null,
@@ -521,7 +583,7 @@
             "step_late": [
                 "'I could bring cuttings from the biodome. Cross-reference them with your seed's growth patterns.'",
                 "She's packing samples into glass vials with practiced speed. Thinking ahead.",
-                "'The biodome isn't going anywhere. But that growth organism on your arm — that's a limited window.'",
+                "'The biodome isn't going anywhere. But that growth organism on your arm \u2014 that's a limited window.'",
                 "'I need proper lab conditions. Your skerry has soil. It has water. It has a growth source.'",
                 "'Fine. Science follows the data, and the data just walked in here and asked me to come.'"
             ],
@@ -548,7 +610,8 @@
                 "She returns to her journal. Whatever you were building there didn't survive peer review.",
                 "A flat look over her spectacles. You let that hypothesis die untested."
             ]
-        }
+        },
+        "originZone": "verdant_wreck"
     },
     "angya": {
         "name": "Angya",
@@ -558,7 +621,9 @@
         "aspects": {
             "high_concept": "Battle-Hardened Warrior of the Old Ships",
             "trouble": "Respects Only Strength",
-            "other": ["Ice in Her Veins"]
+            "other": [
+                "Ice in Her Veins"
+            ]
         },
         "skills": {
             "Fight": 3,
@@ -566,8 +631,15 @@
             "Will": 2,
             "Notice": 1
         },
-        "stress": [false, false, false],
-        "consequences": {"mild": null, "moderate": null},
+        "stress": [
+            false,
+            false,
+            false
+        ],
+        "consequences": {
+            "mild": null,
+            "moderate": null
+        },
         "loyalty": 0,
         "assignment": "idle",
         "mood": "restless",
@@ -586,7 +658,7 @@
                 "'Words.' She says it like a curse. 'Everyone has words.'",
                 "You press on. She watches with the patience of someone used to waiting for an opening.",
                 "'I don't need a speech. I need a reason.' Her eyes are flint.",
-                "She shifts her weight. Fighter's habit — always ready to move."
+                "She shifts her weight. Fighter's habit \u2014 always ready to move."
             ],
             "step_mid": [
                 "'How many hostiles have you dealt with?' A real question. She's engaging.",
@@ -625,6 +697,7 @@
                 "Her lip curls. You let that argument die and she's not sorry to see it go.",
                 "A disgusted headshake. Words wasted. That door is shut."
             ]
-        }
+        },
+        "originZone": "frozen_wreck"
     }
 }

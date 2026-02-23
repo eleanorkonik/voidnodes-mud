@@ -178,9 +178,19 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.agents_db = self.state.get("agents", {})
         self.specimens_db = farming.load_specimens()
 
-        # Build rooms dict
+        # Build rooms dict — skip zones that were previously unloaded
+        # (but keep entry rooms so the landing pad still shows them)
         self.rooms = {}
+        unloaded = set(self.state.get("unloaded_zones", []))
         for zone_id, zone in self.state.get("zones", {}).items():
+            if zone_id in unloaded:
+                # Only load the entry room for depleted zones
+                entry_id = zone.get("entry_room")
+                for room_data in zone.get("rooms", []):
+                    if room_data["id"] == entry_id:
+                        self.rooms[room_data["id"]] = Room(room_data)
+                        break
+                continue
             for room_data in zone.get("rooms", []):
                 self.rooms[room_data["id"]] = Room(room_data)
             for enemy in zone.get("enemies_data", []):
@@ -425,6 +435,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             "npcs_db": self.npcs_db,
             "enemies_db": self.enemies_db,
             "agents_db": self.agents_db,
+            "recruited_npcs": self.state.get("recruited_npcs", []),
             "bonded_with_seed": self.state.get("bonded_with_seed", False),
             "artifacts_status": self.state.get("artifacts_status", {}),
             "skerry": self.state.get("skerry", {}),
@@ -485,8 +496,12 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         return None, None
 
     def _find_follower(self, target, room_id):
-        """Find a following NPC at the given location by name. Returns (id, data) or (None, None)."""
-        for npc_id, npc in self.npcs_db.items():
+        """Find a following NPC at the given location by name. Returns (id, data) or (None, None).
+
+        Only scans recruited NPCs — unrecruited zone NPCs can't be followers.
+        """
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
             if npc.get("following") and npc.get("location") == room_id:
                 if target in npc.get("name", "").lower() or target == npc_id:
                     return npc_id, npc

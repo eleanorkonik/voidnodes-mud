@@ -124,6 +124,8 @@ def _migrate_state(state):
     # Healing system fields
     state.setdefault("zones_cleared", 0)
     state.setdefault("consequence_meta", {})
+    # Zone unloading
+    state.setdefault("unloaded_zones", [])
     # Ensure basic_tools and bandages recipes are known
     for recipe_id in ("basic_tools", "bandages"):
         if recipe_id not in state.get("discovered_recipes", []):
@@ -235,10 +237,22 @@ def load_data_file(filename):
         return json.load(f)
 
 
+def _load_zones():
+    """Load all zone files from data/zones/ directory. Returns dict keyed by zone id."""
+    zones_dir = DATA_DIR / "zones"
+    zones = {}
+    for zone_file in sorted(zones_dir.glob("*.json")):
+        with open(zone_file) as f:
+            zone_data = json.load(f)
+        zone_id = zone_data["id"]
+        zones[zone_id] = zone_data
+    return zones
+
+
 def new_game_state():
     """Create a fresh game state from data files."""
     characters = load_data_file("characters.json")
-    zones = load_data_file("zones.json")
+    zones = _load_zones()
     skerry = load_data_file("skerry.json")
     npcs = load_data_file("npcs.json")
     items = load_data_file("items.json")
