@@ -538,24 +538,32 @@ class ExamineMixin:
             possible_loot = zone.get("scavenge_pool", ["metal_scraps", "torn_fabric", "wire"])
 
             found = random.choice(possible_loot)
-            self.explorer.add_to_inventory(found)
             # Look up name from items_db OR specimens_db
             item_info = self.items_db.get(found, {})
             specimen_info = self.specimens_db.get(found)
-            if specimen_info:
-                display.success(f"  Found: {specimen_info['name']}! (specimen)")
+            found_name = specimen_info["name"] if specimen_info else item_info.get("name", found)
+            found_suffix = " (specimen)" if specimen_info else ""
+
+            if self._can_take_item(self.explorer, found, allow_overflow=False):
+                self.explorer.add_to_inventory(found)
+                display.success(f"  Found: {found_name}!{found_suffix}")
             else:
-                display.success(f"  Found: {item_info.get('name', found)}!")
+                display.success(f"  Spotted: {found_name}{found_suffix}")
+                display.narrate("  But your pack is full. You leave it behind.")
 
             if shifts >= 3:  # Succeed with style
                 bonus = random.choice(possible_loot)
-                self.explorer.add_to_inventory(bonus)
                 bonus_info = self.items_db.get(bonus, {})
                 bonus_spec = self.specimens_db.get(bonus)
-                if bonus_spec:
-                    display.success(f"  Excellent work! Also found: {bonus_spec['name']}! (specimen)")
+                bonus_name = bonus_spec["name"] if bonus_spec else bonus_info.get("name", bonus)
+                bonus_suffix = " (specimen)" if bonus_spec else ""
+
+                if self._can_take_item(self.explorer, bonus, allow_overflow=False):
+                    self.explorer.add_to_inventory(bonus)
+                    display.success(f"  Excellent work! Also found: {bonus_name}!{bonus_suffix}")
                 else:
-                    display.success(f"  Excellent work! Also found: {bonus_info.get('name', bonus)}!")
+                    display.success(f"  Excellent work! Also spotted: {bonus_name}{bonus_suffix}")
+                    display.narrate("  But you can't carry any more.")
 
             self._log_event("scavenge_success", comic_weight=2,
                             item_found=found,

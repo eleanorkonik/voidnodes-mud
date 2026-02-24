@@ -4,6 +4,7 @@
         "name": "Stabilization Engine",
         "description": "A compact device that hums with residual power. It was designed to keep something steady \u2014 a ship, a platform, a world. In your hands, it steadies your own work.",
         "type": "artifact",
+        "size": "medium",
         "aspects": [
             "Steady As She Goes",
             "Still Running After All This Time"
@@ -27,6 +28,7 @@
         "name": "Growth Lattice",
         "description": "A living framework of crystallized coral that pulses with green light. It resonates with organic growth, amplifying the connection between living things and the void.",
         "type": "artifact",
+        "size": "medium",
         "aspects": [
             "The Crystal Has Plans of Its Own",
             "Everything Near It Grows \u2014 Everything"
@@ -50,6 +52,7 @@
         "name": "Eliok House",
         "description": "A miniature house of impossible craftsmanship, built for beings no larger than your hand. Every surface is carved with scenes of a great tree sheltering a civilization. It radiates warmth and a sense of home so powerful it makes your eyes sting.",
         "type": "artifact",
+        "size": "large",
         "aspects": [
             "Echo of a Lost Civilization",
             "Home Made Manifest",

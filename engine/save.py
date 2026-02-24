@@ -106,10 +106,11 @@ def _migrate_state(state):
     state.setdefault("explorer_name", "Sevarik")
     state.setdefault("steward_name", "Miria")
     state.setdefault("agents", {})
-    # Add worn dict for old saves
+    # Add worn dict and slot capacity for old saves
     for char_key in ("explorer", "steward"):
         if char_key in state:
             state[char_key].setdefault("worn", {})
+            state[char_key].setdefault("slot_capacity", {"large": 1, "medium": 2, "small": 20})
     # Tutorial state fields
     state.setdefault("tutorial_combat_done", False)
     state.setdefault("tutorial_invoke_done", False)

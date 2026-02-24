@@ -14,6 +14,7 @@ class Character:
         self.refresh = data["refresh"]
         self.inventory = list(data.get("inventory", []))
         self.worn = dict(data.get("worn", {}))
+        self.slot_capacity = dict(data.get("slot_capacity", {"large": 1, "medium": 2, "small": 20}))
 
     def get_skill(self, skill_name):
         """Get skill value by name (case-insensitive). Returns 0 if not found."""
@@ -192,4 +193,5 @@ class Character:
             "refresh": self.refresh,
             "inventory": self.inventory,
             "worn": self.worn,
+            "slot_capacity": self.slot_capacity,
         }

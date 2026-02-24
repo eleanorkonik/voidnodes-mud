@@ -650,6 +650,22 @@ def display_probe_specimen(specimen):
     print(f"  Growth time: {specimen['growth_time']} days | Base yield: {specimen['base_yield']}")
 
 
+def display_slot_usage(used, capacity):
+    """Display inventory slot usage: [Large: 1/1] [Medium: 0/2] [Small: 8/20]"""
+    parts = []
+    for size in ("large", "medium", "small"):
+        u = used.get(size, 0)
+        c = capacity.get(size, 0)
+        label = f"{size.capitalize()}: {u}/{c}"
+        if u > c:
+            parts.append(f"{BRIGHT_RED}{label}{RESET}")
+        elif u == c:
+            parts.append(f"{BRIGHT_YELLOW}{label}{RESET}")
+        else:
+            parts.append(label)
+    print(f"\n  [{'] ['.join(parts)}]")
+
+
 def display_seed_vault(seed_vault):
     """Display the contents of the seed vault."""
     header("SEED VAULT")

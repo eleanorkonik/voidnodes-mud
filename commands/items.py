@@ -1,14 +1,21 @@
 """Items domain — take, drop, wear, remove, use, give, inventory."""
 
-from engine import display
+from engine import display, dice
 from models.character import BODY_SLOTS
+
+STACK_SIZE = 5
+SKERRY_CAPACITY = {"large": 5, "medium": 10, "small": 100}
 
 
 class ItemsMixin:
     """Mixin providing item manipulation commands for the Game class."""
 
     def cmd_inventory(self, args):
-        display.display_inventory(self.current_character(), self.items_db, self.artifacts_db, self.specimens_db)
+        char = self.current_character()
+        display.display_inventory(char, self.items_db, self.artifacts_db, self.specimens_db)
+        used = self._count_slots_used(char)
+        capacity = self._get_effective_capacity(char)
+        display.display_slot_usage(used, capacity)
 
     def cmd_take(self, args):
         if not args:
@@ -23,16 +30,24 @@ class ItemsMixin:
             if not room.items:
                 display.narrate("There's nothing here to pick up.")
                 return
+            char = self.current_character()
             picked = []
+            skipped = []
             for item_id in list(room.items):
                 is_fixture = self.items_db.get(item_id, {}).get("type") == "fixture"
                 is_takeable = item_id in self.items_db or item_id in self.specimens_db
                 if is_takeable and not is_fixture:
-                    room.remove_item(item_id)
-                    self.current_character().add_to_inventory(item_id)
-                    picked.append(item_id)
+                    if self._can_take_item(char, item_id, allow_overflow=False):
+                        room.remove_item(item_id)
+                        char.add_to_inventory(item_id)
+                        picked.append(item_id)
+                    else:
+                        skipped.append(item_id)
             if not picked:
-                display.narrate("There's nothing here to pick up.")
+                if skipped:
+                    display.narrate("Your inventory is too full to carry anything else.")
+                else:
+                    display.narrate("There's nothing here to pick up.")
                 return
             counts = {}
             for mid in picked:
@@ -44,14 +59,19 @@ class ItemsMixin:
                     display.success(f"  {display.item_name(name)} x{count}")
                 else:
                     display.success(f"  {display.item_name(name)}")
+            if skipped:
+                display.info(f"  Left behind {len(skipped)} item{'s' if len(skipped) != 1 else ''} (no room).")
             return
 
         # Check artifacts at this location
         for art_id, art in self._artifacts_in_room(room.id):
             if target in art.get("name", "").lower() or target == art_id:
+                char = self.current_character()
+                if not self._can_take_item(char, art_id):
+                    return
                 phase = self.state.get("current_phase", "explorer")
                 char_role = "explorer" if phase == "explorer" else "steward"
-                self.current_character().add_to_inventory(art_id)
+                char.add_to_inventory(art_id)
                 self._move_artifact(art_id, "inventory", char_role)
                 display.success(f"You pick up the {art.get('name', art_id)}.")
                 self._log_event("artifact_found", comic_weight=5,
@@ -70,8 +90,11 @@ class ItemsMixin:
         for rid in list(room.items):
             spec = self.specimens_db.get(rid)
             if spec and (target in spec["name"].lower() or target == rid):
+                char = self.current_character()
+                if not self._can_take_item(char, rid):
+                    return
                 room.remove_item(rid)
-                self.current_character().add_to_inventory(rid)
+                char.add_to_inventory(rid)
                 display.success(f"You pick up {spec['name']}. (specimen)")
                 return
 
@@ -80,8 +103,11 @@ class ItemsMixin:
             if item.get("type") == "fixture":
                 display.narrate(f"The {item.get('name', item_id)} is built into the room. Try PROBE to examine it, or USE an item on it.")
                 return
+            char = self.current_character()
+            if not self._can_take_item(char, item_id):
+                return
             room.remove_item(item_id)
-            self.current_character().add_to_inventory(item_id)
+            char.add_to_inventory(item_id)
             display.success(f"You pick up {item.get('name', item_id)}.")
             self._log_event("item_taken", comic_weight=1,
                             item_id=item_id, item_name=item.get("name", item_id))
@@ -396,3 +422,104 @@ class ItemsMixin:
         self._log_event("item_given", comic_weight=2,
                         item_id=item_id, item_name=item["name"],
                         recipient=agent_data["name"])
+
+    # ── Inventory Capacity ─────────────────────────────────────────
+
+    def _get_item_size(self, item_id):
+        """Get the size of an item ('small', 'medium', or 'large'). Default 'small'."""
+        item = self.items_db.get(item_id) or self.artifacts_db.get(item_id) or self.specimens_db.get(item_id) or {}
+        return item.get("size", "small")
+
+    def _is_item_stackable(self, item_id):
+        """Check if an item is stackable."""
+        item = self.items_db.get(item_id) or self.artifacts_db.get(item_id) or self.specimens_db.get(item_id) or {}
+        return item.get("stackable", False)
+
+    def _count_slots_used(self, char):
+        """Count inventory slots used by size. Stacks of STACK_SIZE count as 1 slot."""
+        used = {"large": 0, "medium": 0, "small": 0}
+        stacks = {}
+
+        for item_id in char.inventory:
+            if self._is_item_stackable(item_id):
+                stacks[item_id] = stacks.get(item_id, 0) + 1
+            else:
+                size = self._get_item_size(item_id)
+                used[size] += 1
+
+        for item_id, count in stacks.items():
+            size = self._get_item_size(item_id)
+            slots = (count + STACK_SIZE - 1) // STACK_SIZE
+            used[size] += slots
+
+        return used
+
+    def _get_effective_capacity(self, char):
+        """Get carrying capacity: generous on skerry, character limits in zones."""
+        room = self.current_room()
+        if room and room.zone == "skerry":
+            return dict(SKERRY_CAPACITY)
+        return dict(char.slot_capacity)
+
+    def _can_take_item(self, char, item_id, allow_overflow=True):
+        """Check if character can carry an item. May attempt overflow skill check.
+
+        Returns True if the item can be carried.
+        allow_overflow=False skips the FP/skill check (used by TAKE ALL, SCAVENGE).
+        """
+        size = self._get_item_size(item_id)
+        used = self._count_slots_used(char)
+        capacity = self._get_effective_capacity(char)
+
+        # Stackable: fits in existing partial stack
+        if self._is_item_stackable(item_id):
+            current_count = sum(1 for iid in char.inventory if iid == item_id)
+            if current_count > 0 and current_count % STACK_SIZE != 0:
+                return True
+
+        # Under capacity
+        if used[size] < capacity[size]:
+            return True
+
+        if not allow_overflow:
+            return False
+
+        # On skerry — no overflow, just blocked
+        room = self.current_room()
+        if room and room.zone == "skerry":
+            display.narrate(f"No room for more {size} items. Drop something first.")
+            return False
+
+        # Zone overflow: skill check + 1 FP
+        overflow_count = used[size] - capacity[size]
+        dc = 2 + 2 * overflow_count
+
+        if size == "large":
+            skill_name = "Endure"
+        elif size == "small":
+            skill_name = "Navigate"
+        else:
+            endure_val = char.get_skill("Endure")
+            nav_val = char.get_skill("Navigate")
+            skill_name = "Endure" if endure_val >= nav_val else "Navigate"
+
+        if char.fate_points < 1:
+            display.narrate(f"Your {size} slots are full ({used[size]}/{capacity[size]}) and you're out of fate points.")
+            display.info("  Drop something to make room.")
+            return False
+
+        char.spend_fate_point()
+        invoke_bonus = self._consume_invoke_bonus()
+        skill_val = char.get_skill(skill_name) + invoke_bonus
+        total, shifts, dice_result = dice.skill_check(skill_val, dc)
+
+        label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
+        display.info(f"  {size.capitalize()} slots full ({used[size]}/{capacity[size]}). Pushing through... (1 FP spent)")
+        print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)} vs DC {dc}")
+
+        if shifts >= 0:
+            display.success("  You manage to carry it.")
+            return True
+        else:
+            display.narrate("  Too much to carry. It slips from your grip.")
+            return False
