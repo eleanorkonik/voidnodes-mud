@@ -74,6 +74,10 @@ class MovementMixin:
         """Show available void destinations from the landing pad."""
         if self.state["current_phase"] != "explorer":
             return
+        # Guard against showing twice in the same turn
+        if getattr(self, "_destinations_shown_this_turn", False):
+            return
+        self._destinations_shown_this_turn = True
         crossings = self._get_void_crossings(room)
         if not crossings:
             return

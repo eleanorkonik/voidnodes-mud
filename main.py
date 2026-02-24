@@ -266,6 +266,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
 
             step = self.state.get("tutorial_step", "awakening")
             current_room = self.rooms.get(self.state.get("prologue_location", "skerry_central"))
+            self._destinations_shown_this_turn = False
 
             if step == "awakening":
                 # Player is in the void — don't discover or show the room yet.
@@ -380,6 +381,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                         if loc_key:
                             self.state["_pre_cmd_location"] = self.state.get(loc_key)
 
+                    self._destinations_shown_this_turn = False
                     self.handle_command(cmd, args)
 
                     # Tutorial after-command hook — runs for ALL phases while active
