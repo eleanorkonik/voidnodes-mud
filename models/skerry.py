@@ -29,8 +29,10 @@ class Skerry:
         return len(self.rooms) + barracks
 
     def has_structure(self, structure_name):
-        """Check if a structure has been built on the skerry."""
-        return structure_name in self.structures
+        """Check if a structure exists — built via build_room() or part of starting rooms."""
+        if structure_name in self.structures:
+            return True
+        return any(structure_name in r.structures for r in self.rooms.values())
 
     def can_build(self, room_template, inventory_counts, npc_count, seed_stage):
         """Check if an expandable room can be built."""

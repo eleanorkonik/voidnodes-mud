@@ -169,6 +169,10 @@ class StoryMixin:
 
         day = self.state["day"]
 
+        # Refresh fate points for both characters
+        self.explorer.refresh_fate_points()
+        self.steward.refresh_fate_points()
+
         # World seed growth check
         display.seed_speak(self.seed.communicate(self.seed_name))
 

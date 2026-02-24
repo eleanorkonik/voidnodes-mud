@@ -115,16 +115,29 @@ def display_room(room, game_state):
 
     if room.items:
         items = game_state.get("items_db", {})
+        artifacts = game_state.get("artifacts_db", {})
         from engine.farming import load_specimens
         specimens = load_specimens()
+        from collections import Counter
+        # Count items by ID for stacking
+        item_counts = Counter(room.items)
         item_strs = []
-        for item_id in room.items:
-            if item_id in items:
-                item_strs.append(item_name(items[item_id]["name"]))
+        for item_id, count in item_counts.items():
+            if item_id in artifacts:
+                name = artifacts[item_id]["name"]
+                item_strs.append(f"{BRIGHT_WHITE}{BOLD}{name}{RESET} {DIM}(artifact){RESET}")
+            elif item_id in items:
+                name = items[item_id]["name"]
+                label = item_name(name)
+                item_strs.append(f"{label} x{count}" if count > 1 else label)
             elif item_id in specimens:
-                item_strs.append(f"{BRIGHT_GREEN}{specimens[item_id]['name']}{RESET} {DIM}(specimen){RESET}")
+                name = specimens[item_id]["name"]
+                label = f"{BRIGHT_GREEN}{name}{RESET} {DIM}(specimen){RESET}"
+                item_strs.append(f"{label} x{count}" if count > 1 else label)
             else:
-                item_strs.append(item_name(item_id.replace("_", " ").title()))
+                name = item_id.replace("_", " ").title()
+                label = item_name(name)
+                item_strs.append(f"{label} x{count}" if count > 1 else label)
         print(f"  You see: {', '.join(item_strs)}")
 
     if room.npcs:
@@ -311,7 +324,7 @@ def display_character_sheet(character):
     print(f"  {BOLD}Stress:{RESET} {stress_str}")
     print(f"  {BOLD}Consequences:{RESET}")
     for severity, aspect in character.consequences.items():
-        status = aspect if aspect else "(open)"
+        status = aspect if aspect else "(none)"
         print(f"    {severity.capitalize()}: {status}")
     print(f"  {BOLD}Fate Points:{RESET} {character.fate_points} (Refresh: {character.refresh})")
 

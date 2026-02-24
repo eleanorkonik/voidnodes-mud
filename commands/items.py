@@ -161,6 +161,14 @@ class ItemsMixin:
                             item_id=item_id, item_name=item["name"])
             return
 
+        # Check specimens
+        spec_id, spec = self._find_entity(char.inventory, target, self.specimens_db)
+        if spec:
+            char.remove_from_inventory(spec_id)
+            room.add_item(spec_id)
+            display.success(f"You set down the {spec['name']}.")
+            return
+
         # Check artifacts too
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
         if art:

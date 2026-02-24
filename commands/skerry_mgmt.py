@@ -44,6 +44,16 @@ class SkerryMgmtMixin:
         """Map a room role to the corresponding NPC task name."""
         return self._ROLE_TO_TASK.get(role, role)
 
+    def _move_npc_to_task_room(self, npc, task):
+        """Move an NPC to the room that matches their assigned task."""
+        required_structure = self._TASK_REQUIRES_ROOM.get(task)
+        if not required_structure:
+            return
+        for r in self.skerry.get_all_rooms():
+            if required_structure in r.structures:
+                npc["location"] = r.id
+                return
+
     def _count_settled_in_room(self, room_id):
         """Count how many NPCs are settled (housed) in a room."""
         return sum(1 for n in self.npcs_db.values()
@@ -178,6 +188,8 @@ class SkerryMgmtMixin:
             if shifts >= 0:
                 npc["assignment"] = master_task
                 npc["assigned_subtask"] = subtask_id
+                # Move NPC to the task's facility room
+                self._move_npc_to_task_room(npc, master_task)
                 display.success(f"Assigned {npc['name']} to {subtask_def['name']} ({master_task}).")
                 self._log_event("npc_assigned", comic_weight=2,
                                 npc_name=npc["name"], npc_id=npc_id,
@@ -213,6 +225,8 @@ class SkerryMgmtMixin:
         if shifts >= 0:
             npc["assignment"] = task
             npc["assigned_subtask"] = None  # master task, no specific subtask
+            # Move NPC to the task's facility room
+            self._move_npc_to_task_room(npc, task)
             display.success(f"Assigned {npc['name']} to {task}.")
             self._log_event("npc_assigned", comic_weight=2,
                             npc_name=npc["name"], npc_id=npc_id, task=task)
