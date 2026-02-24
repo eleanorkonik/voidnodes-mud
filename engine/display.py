@@ -347,7 +347,8 @@ def display_help(phase, seed_name="Tuft"):
         ("DEFEND", "Take a defensive stance (+2 to defense)"),
         ("CONCEDE", "Surrender combat (gain fate points)"),
         ("SCAVENGE", "Search the room for materials"),
-        ("PROBE <thing>", "Examine an item or artifact closely"),
+        ("INVESTIGATE", "Search the room for hidden artifacts (Notice check)"),
+        ("PROBE <thing>", "Examine a discovered artifact or item closely"),
         ("KEEP <item>", "Keep an artifact for its stat bonus"),
         ("TAKE <item>", "Pick up an item"),
         ("RECRUIT <npc>", "Try to recruit an NPC"),
@@ -355,6 +356,7 @@ def display_help(phase, seed_name="Tuft"):
         ("RETREAT", f"Emergency retreat (costs {seed_name} motes)"),
     ]
     steward_cmds = [
+        ("INVESTIGATE", "Search the room for hidden artifacts (Notice check)"),
         ("CRAFT <recipe>", "Craft an item from materials"),
         ("RECIPES", "List known recipes"),
         ("BUILD <structure>", "Build a skerry structure"),

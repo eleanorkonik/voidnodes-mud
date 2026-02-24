@@ -1,4 +1,4 @@
-"""Examine domain — look, ih, status, check, probe, scavenge, map, quests."""
+"""Examine domain — look, ih, status, check, probe, investigate, scavenge, map, quests."""
 
 import random
 
@@ -381,18 +381,8 @@ class ExamineMixin:
         for art_id, art in self._artifacts_in_room(room.id):
             if target in art.get("name", "").lower() or target == art_id or target in art.get("hint_sensory", "").lower():
                 if art_id not in self.state.get("artifacts_status", {}):
-                    display.header(art["name"])
-                    display.narrate(self.sub(art.get("discovery_text", art["description"])))
-                    self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
-                    self._log_event("artifact_probed", comic_weight=3,
-                                    artifact_id=art_id, artifact_name=art["name"],
-                                    aspects=art.get("aspects", []))
-                    display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
-                    if art.get("stat_bonuses"):
-                        bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
-                        display.info(f"  Keep for: {bonuses}")
-                    if art.get("keep_effect"):
-                        display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
+                    # Undiscovered — can't PROBE what you haven't noticed
+                    display.narrate("You sense something here, but you'd need to INVESTIGATE the room to find it.")
                 else:
                     display.header(art["name"])
                     display.narrate(self.sub(art["description"]))
@@ -585,6 +575,48 @@ class ExamineMixin:
                 self.state["tutorial_scavenge_done"] = True
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
+
+    def cmd_investigate(self, args):
+        """INVESTIGATE — active Notice check to discover artifacts in the room."""
+        room = self.current_room()
+        if not room:
+            return
+
+        # Find undiscovered artifacts in this room
+        undiscovered = []
+        for art_id, art in self._artifacts_in_room(room.id):
+            if art_id not in self.state.get("artifacts_status", {}):
+                undiscovered.append((art_id, art))
+
+        if not undiscovered:
+            display.narrate("You search the room carefully but find nothing hidden.")
+            return
+
+        char = self.current_character()
+        invoke_bonus = self._consume_invoke_bonus()
+        notice_val = char.get_skill("Notice") + invoke_bonus
+        label = f"Notice+{invoke_bonus}" if invoke_bonus else "Notice"
+
+        for art_id, art in undiscovered:
+            dc = art.get("notice_dc", 2)
+            total, shifts, dice_result = dice.skill_check(notice_val, dc)
+            print(f"  {label}: {dice.roll_description(dice_result, notice_val, label)} vs DC {dc}")
+
+            if shifts >= 0:
+                print()
+                display.header(art["name"])
+                display.narrate(self.sub(art.get("discovery_text", art["description"])))
+                self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
+                display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
+                if art.get("stat_bonuses"):
+                    bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
+                    display.info(f"  Keep for: {bonuses}")
+                if art.get("keep_effect"):
+                    display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
+                self._log_event("artifact_investigated", comic_weight=3,
+                                artifact_id=art_id, artifact_name=art["name"])
+            else:
+                display.narrate("You search carefully but don't find the source of what you sensed.")
 
     def cmd_map(self, args):
         current = self.current_room()
