@@ -25,12 +25,6 @@ Skerry Status
 
 Emmy should be 1/1 beds for the junkyard, and sevarik and miria are 2/2 beds for the shelter.
 
-### BUG: SCAVENGE task in SKERRY ungrounded
-
-  Emmy (Sort Salvage): Processed: Wire
-
-  She should have processed the remnant (spectral hound remains) into a useful component (or several, if she did well on her skill checks)
-
 ### BUG: MAP WRONG
 
   The Verdant Wreck
@@ -125,3 +119,7 @@ Fixed via `unicodedata.east_asian_width()` per LEARNINGS.md.
 ### FIXED: Skerry-wide aspect not showing
 
 Code already shows zone aspects in room display — was working correctly.
+
+### FIXED: Sort Salvage ignores remnants, produces random scrap
+
+`_handler_sort_salvage` now processes remnants first (using their `process_yields` and `process_dc` with NPC Crafts skill check), only falls back to random scrap when no remnants are in the room.

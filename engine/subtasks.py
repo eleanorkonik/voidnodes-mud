@@ -188,7 +188,35 @@ def _handler_plant_seeds(game, room, npc, shifts):
 
 
 def _handler_sort_salvage(game, room, npc, shifts):
-    """Yield random materials from salvage."""
+    """Process remnants in the room first; fall back to random scrap generation."""
+    # Check for remnants to process
+    for item_id in list(room.items):
+        item = game.items_db.get(item_id, {})
+        if item.get("type") == "remnants":
+            process_dc = item.get("process_dc", 1)
+            skill_val = _npc_skill(npc, "Crafts")
+            total, proc_shifts, dice_result = dice.skill_check(skill_val, process_dc)
+            room.remove_item(item_id)
+            remnant_name = item.get("name", item_id)
+            verb = item.get("process_verb", "processed")
+            if proc_shifts >= 0:
+                messages = [f"{verb.capitalize()} {remnant_name}:"]
+                for yield_id, yield_count in item.get("process_yields", []):
+                    for _ in range(yield_count):
+                        room.add_item(yield_id)
+                    yield_name = game.items_db.get(yield_id, {}).get("name", yield_id)
+                    messages.append(f"  +{yield_count}x {yield_name}")
+                return messages
+            else:
+                # Failed — salvage first yield only
+                process_yields = item.get("process_yields", [])
+                if process_yields:
+                    salvage_id = process_yields[0][0]
+                    room.add_item(salvage_id)
+                    salvage_name = game.items_db.get(salvage_id, {}).get("name", salvage_id)
+                    return [f"Botched {verb} on {remnant_name} — salvaged 1x {salvage_name}"]
+                return [f"Botched {verb} on {remnant_name} — nothing salvaged."]
+    # No remnants — generate random scrap
     loot = random.choice(["metal_scraps", "wire", "torn_fabric", "coral_fragments"])
     room.add_item(loot)
     loot_name = game.items_db.get(loot, {}).get("name", loot)
