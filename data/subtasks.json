@@ -61,6 +61,16 @@
             "dc": 1,
             "handler": "strip_components",
             "description": "Break salvage down into rarer parts."
+        },
+        {
+            "id": "haul_materials",
+            "name": "Haul Materials",
+            "order": 3,
+            "condition": "has_delivery_targets",
+            "skill": "Athletics",
+            "dc": 0,
+            "handler": "haul_materials",
+            "description": "Move processed materials to the rooms that need them."
         }
     ],
     "craft": [

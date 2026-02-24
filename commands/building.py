@@ -369,5 +369,87 @@ class BuildingMixin:
         if "garden" in tmpl.get("structures", []):
             tutorial.garden_walkthrough(self)
 
+        # Workshop walkthrough on first build
+        if "workshop" in tmpl.get("structures", []):
+            # Auto-discover workshop-only recipes
+            discovered = self.state.setdefault("discovered_recipes", [])
+            for recipe_id, recipe in self.recipes_db.items():
+                if recipe.get("requires_room") == "skerry_workshop" and recipe_id not in discovered:
+                    discovered.append(recipe_id)
+            print()
+            display.seed_speak("A proper workspace. Your people can CRAFT here — recipes that need")
+            display.seed_speak("precision tools. Assign someone to salvage in the junkyard and")
+            display.seed_speak("they'll haul materials here automatically.")
+            display.seed_speak("Type RECIPES to see what you can make, and QUEUE to set priorities.")
+
         # Update skerry state
         self.state["skerry"] = self.skerry.to_dict()
+
+    def cmd_queue(self, args):
+        """QUEUE [recipe] — Add a recipe to the workshop craft queue, or show current queue."""
+        room = self.current_room()
+        if not room or room.id != "skerry_workshop":
+            display.error("You need to be in the workshop to manage the craft queue.")
+            return
+
+        queue = self.state.setdefault("workshop_queue", [])
+
+        if not args:
+            # Show current queue
+            display.header("Workshop Craft Queue")
+            if not queue:
+                print("  Queue is empty. QUEUE <recipe> to add one.")
+                return
+            for i, recipe_id in enumerate(queue, 1):
+                recipe = self.recipes_db.get(recipe_id, {})
+                name = recipe.get("name", recipe_id)
+                mats = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
+                               for k, v in recipe.get("materials", {}).items())
+                print(f"  {i}. {name} ({mats})")
+            return
+
+        target = " ".join(args).lower()
+        _, recipe = self._find_in_db(target, self.recipes_db)
+        if not recipe:
+            display.error(f"Unknown recipe: '{target}'. Type RECIPES to see options.")
+            return
+
+        if recipe["id"] not in self.state.get("discovered_recipes", []):
+            display.error(f"You haven't learned the {recipe['name']} recipe yet.")
+            return
+
+        if recipe["id"] in queue:
+            display.info(f"{recipe['name']} is already in the queue.")
+            return
+
+        queue.append(recipe["id"])
+        display.success(f"Added {recipe['name']} to the craft queue (position {len(queue)}).")
+
+    def cmd_unqueue(self, args):
+        """UNQUEUE <recipe> — Remove a recipe from the workshop craft queue."""
+        room = self.current_room()
+        if not room or room.id != "skerry_workshop":
+            display.error("You need to be in the workshop to manage the craft queue.")
+            return
+
+        if not args:
+            display.error("Unqueue what? UNQUEUE <recipe name>")
+            return
+
+        queue = self.state.setdefault("workshop_queue", [])
+        if not queue:
+            display.info("The queue is already empty.")
+            return
+
+        target = " ".join(args).lower()
+        _, recipe = self._find_in_db(target, self.recipes_db)
+        if not recipe:
+            display.error(f"Unknown recipe: '{target}'.")
+            return
+
+        if recipe["id"] not in queue:
+            display.info(f"{recipe['name']} isn't in the queue.")
+            return
+
+        queue.remove(recipe["id"])
+        display.success(f"Removed {recipe['name']} from the craft queue.")

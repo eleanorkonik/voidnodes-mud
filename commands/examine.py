@@ -259,6 +259,39 @@ class ExamineMixin:
             display.seed_speak(self.seed.communicate(self.seed_name))
             return
 
+        if target == "workshop":
+            workshop = self.skerry.get_room("skerry_workshop")
+            if not workshop:
+                display.error("No workshop built yet.")
+                return
+            display.header("Workshop")
+            tool_bonus = 1 + workshop.tool_level
+            print(f"  Tool Level: {workshop.tool_level}/3")
+            print(f"  Crafts bonus: +{tool_bonus} (base +1, tools +{workshop.tool_level})")
+            # Show workshop-only recipes
+            workshop_recipes = [r for r in self.recipes_db.values()
+                                if r.get("requires_room") == "skerry_workshop"]
+            if workshop_recipes:
+                names = [r["name"] for r in workshop_recipes]
+                print(f"  Workshop-only recipes: {', '.join(names)}")
+            # Show queue
+            queue = self.state.get("workshop_queue", [])
+            if queue:
+                queue_names = [self.recipes_db.get(rid, {}).get("name", rid) for rid in queue]
+                print(f"  Craft queue: {', '.join(queue_names)}")
+            else:
+                print(f"  Craft queue: {display.DIM}empty (use QUEUE <recipe> to add){display.RESET}")
+            # Show items in workshop
+            if workshop.items:
+                from collections import Counter
+                counts = Counter(workshop.items)
+                mat_parts = []
+                for item_id, count in counts.items():
+                    name = self.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
+                    mat_parts.append(f"{count}x {name}")
+                print(f"  Materials on hand: {', '.join(mat_parts)}")
+            return
+
         if target == "skerry":
             display.header("Skerry Status")
             cap = self.skerry.population_cap()

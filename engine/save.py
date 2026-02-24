@@ -179,6 +179,9 @@ def _migrate_state(state):
         defaults = _room_defaults.get(rid, {})
         for key, val in defaults.items():
             tmpl.setdefault(key, val)
+    # Workshop queue
+    state.setdefault("workshop_queue", [])
+    # Ensure new workshop recipes are discoverable (added with workshop build)
     # Migrate event_log: convert old string entries to dicts
     event_log = state.get("event_log", [])
     for i, entry in enumerate(event_log):

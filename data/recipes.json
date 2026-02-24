@@ -86,6 +86,36 @@
         "description": "Flat cakes from tuber starch and grain flour. Keeps you going.",
         "from_stores": true
     },
+    "leather_armor": {
+        "id": "leather_armor",
+        "name": "Leather Armor",
+        "materials": {"hide": 2, "bone": 1},
+        "result": "leather_armor",
+        "difficulty": 3,
+        "skill": "Crafts",
+        "description": "Stitch thick hides over a bone frame for crude but effective protection.",
+        "requires_room": "skerry_workshop"
+    },
+    "bone_needles": {
+        "id": "bone_needles",
+        "name": "Bone Needles",
+        "materials": {"bone": 1},
+        "result": "bone_needles",
+        "difficulty": 1,
+        "skill": "Crafts",
+        "description": "Carve fine needles from dense bone. Essential for advanced fabric work.",
+        "requires_room": "skerry_workshop"
+    },
+    "reinforced_patch": {
+        "id": "reinforced_patch",
+        "name": "Reinforced Patch",
+        "materials": {"hide": 1, "metal_scraps": 1},
+        "result": "reinforced_patch",
+        "difficulty": 2,
+        "skill": "Crafts",
+        "description": "Layer hide over metal scraps for a patch that won't tear twice.",
+        "requires_room": "skerry_workshop"
+    },
     "spore_broth": {
         "id": "spore_broth",
         "name": "Spore Broth",

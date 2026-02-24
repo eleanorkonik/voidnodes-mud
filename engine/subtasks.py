@@ -6,6 +6,13 @@ from pathlib import Path
 
 from engine import dice, farming
 
+# Crafting material IDs — items that should be hauled to the workshop
+CRAFTING_MATERIALS = {
+    "metal_scraps", "wire", "torn_fabric", "coral_fragments",
+    "crystal_shards", "frozen_water", "ancient_alloys", "rope",
+    "hide", "bone", "resin", "luminous_moss",
+}
+
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 _subtask_defs = None
@@ -85,13 +92,19 @@ def _room_has_items(game, room, npc):
 
 def _room_has_materials(game, room, npc):
     """Workshop has materials to craft with — checks room items for raw materials."""
-    material_ids = {"metal_scraps", "wire", "torn_fabric", "coral_fragments",
-                    "crystal_shards", "frozen_water", "ancient_alloys", "rope"}
-    return any(item_id in material_ids for item_id in room.items)
+    return any(item_id in CRAFTING_MATERIALS for item_id in room.items)
 
 
 def _tools_not_maxed(game, room, npc):
     return room.tool_level < 3
+
+
+def _has_delivery_targets(game, room, npc):
+    """At least one delivery target room exists on the skerry."""
+    for r in game.skerry.get_all_rooms():
+        if r.id == "skerry_workshop" or r.id == "skerry_garden":
+            return True
+    return False
 
 
 def _has_perishable_food(game, room, npc):
@@ -106,6 +119,7 @@ CONDITIONS = {
     "room_has_materials": _room_has_materials,
     "tools_not_maxed": _tools_not_maxed,
     "has_perishable_food": _has_perishable_food,
+    "has_delivery_targets": _has_delivery_targets,
 }
 
 
@@ -241,9 +255,93 @@ def _handler_strip_components(game, room, npc, shifts):
     return []
 
 
+def _handler_haul_materials(game, room, npc, shifts):
+    """Move processed materials from junkyard to destination rooms based on type."""
+    # Build routing: item type → destination room
+    routes = []
+    workshop = game.skerry.get_room("skerry_workshop")
+    garden = game.skerry.get_room("skerry_garden")
+
+    if workshop:
+        routes.append((CRAFTING_MATERIALS, workshop))
+    if garden:
+        specimens_set = set(game.specimens_db.keys()) if hasattr(game, 'specimens_db') else set()
+        if specimens_set:
+            routes.append((specimens_set, garden))
+
+    if not routes:
+        return []
+
+    hauled = []
+    for item_id in list(room.items):
+        for valid_ids, dest_room in routes:
+            if item_id in valid_ids:
+                room.remove_item(item_id)
+                dest_room.add_item(item_id)
+                item_name = game.items_db.get(item_id, {}).get("name", item_id)
+                dest_name = dest_room.name
+                hauled.append(f"{item_name} → {dest_name}")
+                break
+
+    if hauled:
+        summary = ', '.join(hauled[:3])
+        if len(hauled) > 3:
+            summary += f" (+{len(hauled) - 3} more)"
+        return [f"Hauled: {summary}"]
+    return []
+
+
+def _load_recipes():
+    """Load recipes from data/recipes.json. Cached."""
+    with open(DATA_DIR / "recipes.json") as f:
+        return json.load(f)
+
+
 def _handler_craft_supplies(game, room, npc, shifts):
-    """Auto-craft a common item from available materials."""
-    # Simple craft: need metal_scraps or rope in room
+    """Auto-craft from the workshop queue, falling back to random scrap crafting."""
+    # Check for a player-set queue
+    queue = game.state.get("workshop_queue", [])
+    recipes = game.recipes_db if hasattr(game, 'recipes_db') else _load_recipes()
+
+    # Tool level bonus for workshop
+    tool_bonus = 0
+    if room.id == "skerry_workshop":
+        tool_bonus = 1 + room.tool_level
+
+    # Try each queued recipe in order
+    for recipe_id in queue:
+        recipe = recipes.get(recipe_id)
+        if not recipe:
+            continue
+        # Check if all materials are in the room
+        materials = recipe.get("materials", {})
+        has_all = all(
+            sum(1 for i in room.items if i == mat) >= needed
+            for mat, needed in materials.items()
+        )
+        if not has_all:
+            continue
+
+        # Skill check with tool bonus
+        dc = recipe.get("difficulty", 1)
+        skill_name = recipe.get("skill", "Crafts")
+        skill_val = _npc_skill(npc, skill_name) + tool_bonus
+        total, craft_shifts, dice_result = dice.skill_check(skill_val, dc)
+
+        if craft_shifts >= 0:
+            # Consume materials
+            for mat, needed in materials.items():
+                for _ in range(needed):
+                    room.remove_item(mat)
+            result_id = recipe["result"]
+            room.add_item(result_id)
+            result_name = game.items_db.get(result_id, {}).get("name", result_id)
+            return [f"Crafted: {result_name} (from queue)"]
+        else:
+            recipe_name = recipe.get("name", recipe_id)
+            return [f"Failed to craft {recipe_name} (DC {dc})."]
+
+    # Fallback: random scrap crafting (original behavior)
     craftable = {
         "metal_scraps": ["basic_tools", "shelter_patch"],
         "rope": ["shelter_patch"],
@@ -361,6 +459,7 @@ HANDLERS = {
     "plant_seeds": _handler_plant_seeds,
     "sort_salvage": _handler_sort_salvage,
     "strip_components": _handler_strip_components,
+    "haul_materials": _handler_haul_materials,
     "craft_supplies": _handler_craft_supplies,
     "improve_tools": _handler_improve_tools,
     "collect_water": _handler_collect_water,

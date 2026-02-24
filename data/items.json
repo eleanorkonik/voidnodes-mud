@@ -243,6 +243,41 @@
         "stackable": false,
         "special": null
     },
+    "leather_armor": {
+        "id": "leather_armor",
+        "name": "Leather Armor",
+        "description": "Thick hide stitched over a bone frame. Heavy and rough, but it'll stop a claw.",
+        "type": "clothing",
+        "size": "medium",
+        "slot": "torso",
+        "aspects": ["Hide-Stitched Protection"],
+        "mote_value": 3,
+        "stat_bonuses": {"Physique": 1},
+        "stackable": false,
+        "special": null
+    },
+    "bone_needles": {
+        "id": "bone_needles",
+        "name": "Bone Needles",
+        "description": "A set of fine needles carved from dense bone. Sharp enough for leather, delicate enough for fabric.",
+        "type": "material",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
+    "reinforced_patch": {
+        "id": "reinforced_patch",
+        "name": "Reinforced Patch",
+        "description": "Hide layered over metal scraps, stitched tight. Tougher than a standard shelter patch.",
+        "type": "crafted",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": null
+    },
     "bandages": {
         "id": "bandages",
         "name": "Bandages",

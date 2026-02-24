@@ -108,6 +108,8 @@ COMMANDS = {
     "clone":     {"args": "required"},
     "bank":      {"args": "required"},
     "withdraw":  {"args": "required"},
+    "queue":     {"args": "optional"},
+    "unqueue":   {"args": "required"},
 }
 
 

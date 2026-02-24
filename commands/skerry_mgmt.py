@@ -269,7 +269,11 @@ class SkerryMgmtMixin:
             workers = [self.npcs_db[nid] for nid in self.state.get("recruited_npcs", [])
                        if self.npcs_db.get(nid, {}).get("assignment") == task_name]
 
-            print(f"\n  {display.BRIGHT_WHITE}{room.name}{display.RESET} ({room.role})")
+            header = f"\n  {display.BRIGHT_WHITE}{room.name}{display.RESET} ({room.role})"
+            if room.role == "craft":
+                tool_bonus = 1 + room.tool_level
+                header += f" — Tool Level: {room.tool_level}/3 (+{tool_bonus} Crafts bonus)"
+            print(header)
             for st in st_defs:
                 # Find who's working on this subtask
                 assigned_names = []
@@ -288,6 +292,12 @@ class SkerryMgmtMixin:
                 skill_str = f" ({st['skill']} DC {st['dc']})" if st.get("skill") else ""
                 print(f"    {st['order']}. {st['name']}{skill_str} — {worker_str}")
                 print(f"       {display.DIM}{st['description']}{display.RESET}")
+            # Show workshop queue if this is the craft room
+            if room.role == "craft":
+                queue = self.state.get("workshop_queue", [])
+                if queue:
+                    queue_names = [self.recipes_db.get(rid, {}).get("name", rid) for rid in queue]
+                    print(f"    {display.DIM}Queue: {', '.join(queue_names)}{display.RESET}")
             any_shown = True
 
         if not any_shown:
