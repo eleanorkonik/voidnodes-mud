@@ -28,9 +28,7 @@
                 "metal_scraps"
             ],
             "npcs": [],
-            "enemies": [
-                "rat_swarm"
-            ],
+            "enemies": [],
             "discovered": false
         },
         {
@@ -53,7 +51,9 @@
             "npcs": [
                 "emmy"
             ],
-            "enemies": [],
+            "enemies": [
+                "rat_swarm"
+            ],
             "discovered": false
         },
         {
