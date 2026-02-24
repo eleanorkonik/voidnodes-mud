@@ -258,30 +258,30 @@ class ExamineMixin:
             print(f"  Population: {current}/{cap}")
             print()
             for room in self.skerry.get_all_rooms():
-                parts = []
-                if room.structures:
-                    parts.append(f"structures={', '.join(room.structures)}")
+                print(f"  {display.npc_name(room.name)}")
                 if room.role:
                     # Who lives here
                     settled_names = [n["name"] for n in self.npcs_db.values()
                                      if n.get("recruited") and n.get("settled_room") == room.id]
-                    settled_str = ", ".join(settled_names) if settled_names else "none"
-                    # Who's working on this room's task (including ad-hoc helpers)
+                    beds = f"{len(settled_names)}/{room.max_workers}"
+                    if settled_names:
+                        print(f"    {display.DIM}Residents:{display.RESET} {', '.join(settled_names)} {display.DIM}({beds}){display.RESET}")
+                    else:
+                        print(f"    {display.DIM}Residents: — ({beds} beds){display.RESET}")
+                    # Who's working on this room's task
                     task_for_role = self._role_to_task(room.role)
                     worker_names = [n["name"] for n in self.npcs_db.values()
                                     if n.get("recruited") and n.get("assignment") == task_for_role]
-                    worker_str = ", ".join(worker_names) if worker_names else "none"
-                    beds = f"{len(settled_names)}/{room.max_workers}"
-                    parts.append(f"settled={settled_str} ({beds}), workers={worker_str}")
-                if not parts:
-                    # Landing pad: count reachable void nodes
-                    if room.id == "skerry_landing":
-                        node_count = sum(1 for dest in room.exits.values()
-                                         if not dest.startswith("skerry_"))
-                        parts.append(f"{node_count} node{'s' if node_count != 1 else ''} within sensing distance")
+                    if worker_names:
+                        print(f"    {display.DIM}Working:{display.RESET}   {', '.join(worker_names)}")
                     else:
-                        parts.append("—")
-                print(f"  {display.npc_name(room.name)}: {', '.join(parts)}")
+                        print(f"    {display.DIM}Working:   —{display.RESET}")
+                elif room.id == "skerry_landing":
+                    node_count = sum(1 for dest in room.exits.values()
+                                     if not dest.startswith("skerry_"))
+                    print(f"    {display.DIM}{node_count} node{'s' if node_count != 1 else ''} within sensing distance{display.RESET}")
+                else:
+                    print(f"    {display.DIM}—{display.RESET}")
 
             if self.skerry.expandable:
                 inv_counts = self._inventory_counts(self.steward)
