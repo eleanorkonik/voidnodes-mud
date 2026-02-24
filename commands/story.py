@@ -186,6 +186,8 @@ class StoryMixin:
                         old_mood = npc.get("mood", "content")
                         npc["mood"] = "restless"
                         display.info(f"  {npc['name']} is getting restless without proper shelter.")
+                        if not npc.get("settled_room"):
+                            display.info(f"    Tip: SETTLE {npc['name'].upper()} IN <room> to assign them a bed.")
                         self._log_event("npc_mood_change", comic_weight=2,
                                         npc_name=npc["name"], npc_id=npc_id,
                                         old_mood=old_mood, new_mood="restless",
