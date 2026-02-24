@@ -9,6 +9,9 @@ class CombatMixin:
     """Mixin providing combat commands and helpers for the Game class."""
 
     def cmd_attack(self, args):
+        if self.state["current_phase"] == "steward":
+            self._wrong_phase_narrate("explorer", "combat")
+            return
         if not args and not self.in_combat:
             display.error("Attack what?")
             return
@@ -460,6 +463,9 @@ class CombatMixin:
         display.narrate("The enemy lets you go — for now.")
 
     def cmd_retreat(self, args):
+        if self.state["current_phase"] == "steward":
+            self._wrong_phase_narrate("explorer", "void")
+            return
         if self.in_combat:
             display.warning(f"Emergency retreat! {self.seed_name} pulls you back to safety.")
             self._seed_extraction()

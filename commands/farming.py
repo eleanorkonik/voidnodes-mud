@@ -8,6 +8,9 @@ class FarmingMixin:
 
     def cmd_plant(self, args):
         """Manually plant a specimen in a garden plot."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built. Build one first.")
             return
@@ -73,6 +76,9 @@ class FarmingMixin:
 
     def cmd_harvest(self, args):
         """Manually harvest a ready garden plot."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built.")
             return
@@ -91,7 +97,7 @@ class FarmingMixin:
                         display.success(f"  Plot {plot['id']}: Harvested {food['name']} x{food.get('quantity', 1)}")
                         if utility:
                             for _ in range(utility.get("quantity", 1)):
-                                self.steward.add_to_inventory(utility["id"])
+                                self.current_character().add_to_inventory(utility["id"])
                             display.success(f"  Byproduct: {utility['name']} x{utility.get('quantity', 1)}")
                         harvested_any = True
             if not harvested_any:
@@ -128,11 +134,14 @@ class FarmingMixin:
                             quantity=food.get("quantity", 1))
             if utility:
                 for _ in range(utility.get("quantity", 1)):
-                    self.steward.add_to_inventory(utility["id"])
+                    self.current_character().add_to_inventory(utility["id"])
                 display.success(f"Byproduct: {utility['name']} x{utility.get('quantity', 1)}")
 
     def cmd_survey(self, args):
         """Survey all garden plots."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built. Build one first.")
             return
@@ -141,6 +150,9 @@ class FarmingMixin:
 
     def cmd_uproot(self, args):
         """Remove a plant from a garden plot."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built.")
             return
@@ -169,6 +181,9 @@ class FarmingMixin:
 
     def cmd_select(self, args):
         """Selective breeding: shift a trait on a planted specimen."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built.")
             return
@@ -218,6 +233,9 @@ class FarmingMixin:
 
     def cmd_clone(self, args):
         """Clone a cutting or transplant specimen."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built.")
             return
@@ -243,13 +261,16 @@ class FarmingMixin:
 
         clone = farming.clone_plant(plant)
         # Store the clone as a specimen in inventory (plantable later)
-        self.steward.add_to_inventory(plant["specimen_id"])
+        self.current_character().add_to_inventory(plant["specimen_id"])
         display.success(f"Cloned {plant['name']}. Specimen added to inventory.")
         if plant["traits"].get("uniformity", 5) >= 7:
             display.warning("  Warning: High uniformity — clones share all vulnerabilities.")
 
     def _handle_cross_pollinate(self, args):
         """Handle CROSS-POLLINATE command."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "farming")
+            return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built.")
             return
@@ -311,7 +332,7 @@ class FarmingMixin:
         # Add offspring to seed vault or inventory
         for child in offspring:
             # Store as their parent specimen_id (plantable)
-            self.steward.add_to_inventory(child["specimen_id"])
+            self.current_character().add_to_inventory(child["specimen_id"])
             display.info(f"  New seed: {child['name']} (Gen {child['generation']})")
 
         if reason and "reduced fertility" in reason.lower():
@@ -319,6 +340,9 @@ class FarmingMixin:
 
     def cmd_bank(self, args):
         """Store a specimen in the seed vault for safekeeping."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "stores")
+            return
         if not self.skerry.has_structure("storehouse"):
             display.error("No storehouse built — need a seed vault to bank specimens.")
             return
@@ -346,6 +370,9 @@ class FarmingMixin:
 
     def cmd_withdraw(self, args):
         """Retrieve a specimen from the seed vault."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "stores")
+            return
         if not self.skerry.has_structure("storehouse"):
             display.error("No storehouse built.")
             return
@@ -362,7 +389,7 @@ class FarmingMixin:
 
         entry = farming.withdraw_specimen(self.skerry.seed_vault, index)
         if entry:
-            self.steward.add_to_inventory(entry["specimen_id"])
+            self.current_character().add_to_inventory(entry["specimen_id"])
             display.success(f"Withdrew {entry['name']} from the seed vault. Added to inventory.")
             self._log_event("specimen_withdrawn", comic_weight=1,
                             specimen=entry["name"])

@@ -107,6 +107,28 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
     def steward_name(self):
         return self.state.get("steward_name", "Miria") if self.state else "Miria"
 
+    def _wrong_phase_narrate(self, intended_role, context=None):
+        """Narrative rejection when a command is used by the wrong character."""
+        phase = self.state["current_phase"]
+        other = self.steward_name if phase == "explorer" else self.explorer_name
+        if intended_role == "steward" and phase == "explorer":
+            msgs = {
+                "farming": f"That's {other}'s domain. Your hands are better suited to a blade.",
+                "building": f"{other} handles the building. You handle the void.",
+                "management": f"The people answer to {other} here. Focus on what's out there.",
+                "stores": f"{other} manages the stores.",
+            }
+            display.seed_speak(msgs.get(context, f"Leave that to {other}."))
+        elif intended_role == "explorer" and phase == "steward":
+            if context == "combat":
+                display.narrate("There's nothing to fight here. The skerry is safe.")
+            elif context == "scavenge":
+                display.seed_speak(f"The skerry's been picked clean. {other} can find materials out there.")
+            elif context == "void":
+                display.seed_speak(f"The void is {other}'s domain. I need you here.")
+            else:
+                display.seed_speak(f"That's {other}'s kind of work.")
+
     def start(self):
         """Main entry point."""
         display.title_screen()
@@ -363,7 +385,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                     continue
 
                 if not parser.is_valid_for_phase(cmd, phase):
-                    display.error(f"'{cmd.upper()}' is not available during the {phase} phase.")
+                    display.error(f"'{cmd.upper()}' is not available right now.")
                     continue
 
                 for i in range(repeat):

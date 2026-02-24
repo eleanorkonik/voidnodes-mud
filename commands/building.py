@@ -195,6 +195,9 @@ class BuildingMixin:
         return None
 
     def cmd_build(self, args):
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "building")
+            return
         if not args:
             display.error("Build what? Type CHECK SKERRY to see buildable structures.")
             return
@@ -222,7 +225,7 @@ class BuildingMixin:
                 needed = {"metal_scraps": 3, "torn_fabric": 2}
                 label = "proper house"
 
-            inv_counts = self._inventory_counts(self.steward)
+            inv_counts = self._inventory_counts(self.current_character())
             room = self.current_room()
             if room:
                 for item_id in room.items:
@@ -242,7 +245,7 @@ class BuildingMixin:
                     if room and mat in room.items:
                         room.remove_item(mat)
                     else:
-                        self.steward.remove_from_inventory(mat)
+                        self.current_character().remove_from_inventory(mat)
 
             self.skerry.build_npc_house(npc_id)
             npc["house_level"] = self.skerry.get_house_level(npc_id)
@@ -329,19 +332,21 @@ class BuildingMixin:
         opposite = self.OPPOSITE_DIR[direction]
 
         # Consume materials
+        char = self.current_character()
         for mat, count in tmpl.get("requires", {}).get("materials", {}).items():
             for _ in range(count):
                 if room and mat in room.items:
                     room.remove_item(mat)
                 else:
-                    self.steward.remove_from_inventory(mat)
+                    char.remove_from_inventory(mat)
 
         # Consume specimen if required (garden)
         spec_needed = tmpl.get("requires", {}).get("any_specimen", 0)
         for _ in range(spec_needed):
-            for item_id in list(self.steward.inventory):
+            char = self.current_character()
+            for item_id in list(char.inventory):
                 if farming.is_specimen(item_id):
-                    self.steward.remove_from_inventory(item_id)
+                    char.remove_from_inventory(item_id)
                     break
 
         # Override template exits/connect_to with player's choice

@@ -72,7 +72,7 @@ class SkerryMgmtMixin:
 
         # Only the steward can assign housing
         if room_target and self.state.get("current_phase") != "steward":
-            display.error("Only the steward can assign housing. Use SETTLE <name> to bring them to the skerry.")
+            display.seed_speak(f"{self.steward_name} handles the housing. You can settle them on the skerry, but room assignments are her call.")
             return
 
         npc_id, npc = self._find_in_db(npc_target, self.npcs_db)
@@ -144,6 +144,9 @@ class SkerryMgmtMixin:
         self.state["tutorial_settle_done"] = True
 
     def cmd_assign(self, args):
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "management")
+            return
         if len(args) < 2:
             display.error("Usage: ASSIGN <npc> <task>  (tasks: salvage, gardening, guarding, crafting, organizing, gathering, communal, idle)")
             display.info("  You can also assign a specific subtask: ASSIGN <npc> <subtask>  (e.g., ASSIGN LIRA WATER PLANTS)")
@@ -168,8 +171,9 @@ class SkerryMgmtMixin:
                 display.warning(f"The {required_structure.replace('_', ' ')} hasn't been built yet — {npc['name']} won't be able to do this.")
 
             # Empathy skill check (DC 1)
-            total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Empathy"), 1)
-            print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Empathy'), 'Empathy')}")
+            char = self.current_character()
+            total, shifts, dice_result = dice.skill_check(char.get_skill("Empathy"), 1)
+            print(f"  Organize: {dice.roll_description(dice_result, char.get_skill('Empathy'), 'Empathy')}")
 
             if shifts >= 0:
                 npc["assignment"] = master_task
@@ -202,8 +206,9 @@ class SkerryMgmtMixin:
             display.warning(f"The {required_structure.replace('_', ' ')} hasn't been built yet — {npc['name']} won't be able to produce anything.")
 
         # Empathy skill check (DC 1)
-        total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Empathy"), 1)
-        print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Empathy'), 'Empathy')}")
+        char = self.current_character()
+        total, shifts, dice_result = dice.skill_check(char.get_skill("Empathy"), 1)
+        print(f"  Organize: {dice.roll_description(dice_result, char.get_skill('Empathy'), 'Empathy')}")
 
         if shifts >= 0:
             npc["assignment"] = task
@@ -273,6 +278,9 @@ class SkerryMgmtMixin:
 
     def cmd_rest(self, args):
         """Advance the day from steward phase. Time passes on the skerry."""
+        if self.state["current_phase"] == "explorer":
+            display.seed_speak(f"Rest? Out here, rest means death. Switch to {self.steward_name} if you want to advance the day.")
+            return
         self._log_event("rest", comic_weight=1, day=self.state["day"])
         self.state["day"] += 1
         day = self.state["day"]
@@ -286,10 +294,16 @@ class SkerryMgmtMixin:
         display.display_status(self.current_character(), "steward")
 
     def cmd_trade(self, args):
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "management")
+            return
         display.narrate("Trading isn't fully set up yet — NPCs share resources with the community for now.")
 
     def cmd_store(self, args):
         """Move food from inventory to food stores."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "stores")
+            return
         if not self.skerry.has_structure("storehouse"):
             display.error("No storehouse built. Build one to store food.")
             return

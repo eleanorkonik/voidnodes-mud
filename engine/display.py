@@ -319,57 +319,69 @@ def display_character_sheet(character):
 def display_help(phase, seed_name="Tuft"):
     """Display available commands for current phase."""
     header("Available Commands")
-    universal = [
+    general = [
         ("LOOK [thing]", "Examine surroundings or a specific thing"),
         ("IH [thing]", "List objects here, or examine something"),
         ("GO <direction>", "Move (NORTH/SOUTH/EAST/WEST/UP/DOWN, or N/S/E/W)"),
-        ("TALK / HI <npc>", "Talk to an NPC (also: GREET)"),
-        (f"CHECK <npc/{seed_name.lower()}>", f"Check status of NPC or {seed_name}"),
-        ("USE <item>", "Use an item"),
-        ("WEAR <item>", "Put on a piece of clothing or artifact"),
-        ("REMOVE <item>", "Take off something you're wearing"),
-        ("EXAMINE SELF", "See your appearance, worn items, and aspects"),
-        (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
-        ("INVOKE <aspect>", "Spend a fate point for +2 on next action"),
-        ("ASPECTS", "Show your aspects (used ones dimmed)"),
-        ("REQUEST TREATMENT", "Treat injuries (needs cure item + Lore)"),
+        ("TALK / HI <npc>", "Talk to an NPC"),
+        (f"CHECK <target>", f"Check NPC, {seed_name}, skerry, stores, or vault"),
         ("INVENTORY", "Show your inventory"),
         ("STATUS", "Show your character sheet"),
-        ("HELP", "Show this help"),
         ("MAP [zone/ALL]", "Show the zone map"),
         ("SWITCH FOCUS TO <name>", "Switch active agent"),
         ("SAVE", "Save the game"),
         ("QUIT", "Save and exit"),
+        ("HELP", "Show this help"),
     ]
-    explorer_cmds = [
-        ("ATTACK <target>", "Attack an enemy"),
-        ("EXPLOIT <aspect>", "Set up a tactical advantage (free +2)"),
-        ("DEFEND", "Take a defensive stance (+2 to defense)"),
-        ("CONCEDE", "Surrender combat (gain fate points)"),
+
+    if phase == "prologue":
+        for cmd, desc in general:
+            print(f"  {BOLD}{cmd:<28}{RESET} {desc}")
+        divider()
+        print(f"  {BOLD}{'SKIP':<28}{RESET} Skip the tutorial")
+        return
+
+    exploration = [
         ("SCAVENGE", "Search the room for materials"),
-        ("INVESTIGATE", "Search the room for hidden artifacts (Notice check)"),
-        ("PROBE <thing>", "Examine a discovered artifact or item closely"),
-        ("KEEP <item>", "Keep an artifact for its stat bonus"),
-        ("TAKE <item>", "Pick up an item"),
-        ("RECRUIT <npc>", "Try to recruit an NPC"),
+        ("INVESTIGATE", "Search for hidden artifacts (Notice check)"),
+        ("PROBE <thing>", "Examine a discovered artifact or item"),
         ("SEEK [aspect]", f"Cross the void to a node (costs 1 {seed_name} mote)"),
         ("RETREAT", f"Emergency retreat (costs {seed_name} motes)"),
+        ("RECRUIT <npc>", "Try to recruit an NPC"),
     ]
-    steward_cmds = [
-        ("INVESTIGATE", "Search the room for hidden artifacts (Notice check)"),
+    combat = [
+        ("ATTACK <target>", "Attack an enemy"),
+        ("EXPLOIT <aspect>", "Set up a tactical advantage (free +2)"),
+        ("DEFEND", "Take a defensive stance (+2 defense)"),
+        ("CONCEDE", "Surrender combat (gain fate points)"),
+    ]
+    items = [
+        ("TAKE <item>", "Pick up an item"),
+        ("USE <item>", "Use an item"),
+        ("WEAR <item>", "Equip clothing or artifact"),
+        ("REMOVE <item>", "Unequip something"),
+        (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
+        ("KEEP <item>", "Keep an artifact for its stat bonus"),
+        ("INVOKE <aspect>", "Spend a fate point for +2 on next action"),
+        ("ASPECTS", "Show your aspects"),
         ("CRAFT <recipe>", "Craft an item from materials"),
         ("RECIPES", "List known recipes"),
+        ("REQUEST TREATMENT", "Treat injuries (needs cure item + Lore)"),
+    ]
+    settlement = [
         ("BUILD <structure>", "Build a skerry structure"),
+        ("SETTLE <npc> [IN room]", "Settle an NPC on the skerry"),
         ("ASSIGN <npc> <task>", "Assign an NPC to a task"),
         ("ORGANIZE", "View all NPC assignments"),
-        ("TRADE <npc>", "Trade with an NPC"),
+        ("TASKS", "Show subtask queues"),
+        ("REST", "Advance the day"),
+    ]
+    farming = [
         ("PLANT <specimen> [plot]", "Plant a specimen in a garden plot"),
-        ("HARVEST [plot]", "Harvest ready crops (all if no plot)"),
+        ("HARVEST [plot]", "Harvest ready crops"),
         ("SURVEY", "View all garden plots and growth"),
-        ("STORE <food>", "Move food from inventory to stores"),
         ("UPROOT <plot>", "Remove a plant from a plot"),
-        ("CHECK STORES", "View food stores status"),
-        ("CHECK VAULT", "View seed vault contents"),
+        ("STORE <food>", "Move food to stores"),
         ("SELECT <plot> FOR <trait>", "Selective breed for a trait"),
         ("CROSS <plot> WITH <plot>", "Cross-pollinate two plants"),
         ("CLONE <plot>", "Clone a cutting/transplant"),
@@ -377,26 +389,21 @@ def display_help(phase, seed_name="Tuft"):
         ("WITHDRAW <#>", "Retrieve specimen from vault"),
     ]
 
-    for cmd, desc in universal:
-        print(f"  {BOLD}{cmd:<22}{RESET} {desc}")
+    for cmd, desc in general:
+        print(f"  {BOLD}{cmd:<28}{RESET} {desc}")
 
-    if phase == "prologue":
+    sections = [
+        ("Exploration", exploration),
+        ("Combat", combat),
+        ("Items & Skills", items),
+        ("Settlement", settlement),
+        ("Farming", farming),
+    ]
+    for section_name, cmds in sections:
         divider()
-        print(f"  {BOLD}{'Tutorial Commands':^40}{RESET}")
-        print(f"  {BOLD}{'MAP':<22}{RESET} Show the zone map")
-        print(f"  {BOLD}{'SKIP':<22}{RESET} Skip the tutorial")
-        return
-
-    if phase == "explorer":
-        divider()
-        print(f"  {BOLD}{'Explorer Commands':^40}{RESET}")
-        for cmd, desc in explorer_cmds:
-            print(f"  {BOLD}{cmd:<22}{RESET} {desc}")
-    elif phase == "steward":
-        divider()
-        print(f"  {BOLD}{'Steward Commands':^40}{RESET}")
-        for cmd, desc in steward_cmds:
-            print(f"  {BOLD}{cmd:<22}{RESET} {desc}")
+        print(f"  {BOLD}{section_name:^40}{RESET}")
+        for cmd, desc in cmds:
+            print(f"  {BOLD}{cmd:<28}{RESET} {desc}")
 
 
 def title_screen():

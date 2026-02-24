@@ -116,6 +116,9 @@ class NpcsMixin:
         display.seed_speak("RECRUIT her, and I can bring her safely home with you.")
 
     def cmd_recruit(self, args):
+        if self.state["current_phase"] == "steward":
+            display.narrate("Everyone here has already chosen to stay.")
+            return
         if not args:
             display.error("Recruit whom?")
             return
@@ -155,16 +158,17 @@ class NpcsMixin:
             dc = 0
 
         # Check fate point cost for retries
+        char = self.current_character()
         attempts = npc.get("recruit_attempts", 0)
         if attempts > 0:
-            if not self.explorer.spend_fate_point():
-                display.error(f"You need 1 fate point to try recruiting {npc['name']} again. (You have {self.explorer.fate_points} FP.)")
+            if not char.spend_fate_point():
+                display.error(f"You need 1 fate point to try recruiting {npc['name']} again. (You have {char.fate_points} FP.)")
                 return
-            display.info(f"  Spent 1 fate point to retry. (Fate Points remaining: {self.explorer.fate_points})")
+            display.info(f"  Spent 1 fate point to retry. (Fate Points remaining: {char.fate_points})")
 
         # FATE roll — sets puzzle difficulty
         invoke_bonus = self._consume_invoke_bonus()
-        rapport_val = self.explorer.get_skill("Rapport") + invoke_bonus
+        rapport_val = char.get_skill("Rapport") + invoke_bonus
         rapport_label = f"Rapport+{invoke_bonus}" if invoke_bonus else "Rapport"
         total, shifts, dice_result = dice.skill_check(rapport_val, dc)
         print(f"  Rapport check: {dice.roll_description(dice_result, rapport_val, rapport_label)}")

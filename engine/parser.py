@@ -67,50 +67,47 @@ COMMANDS = {
     "bond":      {"phases": ["explorer", "steward", "prologue"], "args": "none"},
     "give":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "switch":    {"phases": ["explorer", "steward", "prologue"], "args": "required"},
-    # Explorer commands
-    "attack":    {"phases": ["explorer"], "args": "required"},
-    "defend":    {"phases": ["explorer"], "args": "none"},
-    "invoke":    {"phases": ["explorer", "steward"], "args": "optional"},
-    "aspects":   {"phases": ["explorer", "steward"], "args": "none"},
-    "exploit":   {"phases": ["explorer"], "args": "required"},
-    "concede":   {"phases": ["explorer"], "args": "none"},
-    "scavenge":  {"phases": ["explorer"], "args": "none"},
-    "investigate": {"phases": ["explorer", "steward"], "args": "none"},
-    "probe":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
-    "feed":      {"phases": ["explorer", "steward"], "args": "required"},
-    "keep":      {"phases": ["explorer", "prologue"], "args": "required"},
-    "recruit":   {"phases": ["explorer"], "args": "required"},
-    "retreat":   {"phases": ["explorer"], "args": "none"},
-    "settle":    {"phases": ["explorer"], "args": "required"},
-    "enter":     {"phases": ["explorer", "steward"], "args": "required"},
-    "seek":      {"phases": ["explorer", "steward"], "args": "required"},
-    "take":      {"phases": ["explorer", "prologue"], "args": "required"},
-    "process":   {"phases": ["explorer", "steward"], "args": "required"},
-    "ih":        {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
-    "offer":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
-    "drop":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},
-    "request":   {"phases": ["explorer", "steward"], "args": "required"},
-    # Steward commands
-    "rest":      {"phases": ["steward"], "args": "none"},
-    "craft":     {"phases": ["explorer", "steward"], "args": "required"},
-    "recipes":   {"phases": ["explorer", "steward"], "args": "none"},
-    "build":     {"phases": ["steward"], "args": "required"},
-    "assign":    {"phases": ["steward"], "args": "required"},
-    "organize":  {"phases": ["steward"], "args": "none"},
-    "tasks":     {"phases": ["steward"], "args": "none"},
-    "trade":     {"phases": ["steward"], "args": "required"},
-    # Farming commands (steward phase)
-    "plant":     {"phases": ["steward"], "args": "required"},
-    "harvest":   {"phases": ["steward"], "args": "optional"},
-    "survey":    {"phases": ["steward"], "args": "none"},
-    "store":     {"phases": ["steward"], "args": "required"},
-    "uproot":    {"phases": ["steward"], "args": "required"},
-    # Breeding commands (steward phase)
-    "cross-pollinate": {"phases": ["steward"], "args": "required"},
-    "select":    {"phases": ["steward"], "args": "required"},
-    "clone":     {"phases": ["steward"], "args": "required"},
-    "bank":      {"phases": ["steward"], "args": "required"},
-    "withdraw":  {"phases": ["steward"], "args": "required"},
+    # All gameplay commands — narrative guards in handlers replace phase gating
+    "attack":    {"args": "required"},
+    "defend":    {"args": "none"},
+    "invoke":    {"args": "optional"},
+    "aspects":   {"args": "none"},
+    "exploit":   {"args": "required"},
+    "concede":   {"args": "none"},
+    "scavenge":  {"args": "none"},
+    "investigate": {"args": "none"},
+    "probe":     {"args": "required"},
+    "feed":      {"args": "required"},
+    "keep":      {"args": "required"},
+    "recruit":   {"args": "required"},
+    "retreat":   {"args": "none"},
+    "settle":    {"args": "required"},
+    "enter":     {"args": "required"},
+    "seek":      {"args": "required"},
+    "take":      {"args": "required"},
+    "process":   {"args": "required"},
+    "ih":        {"args": "optional"},
+    "offer":     {"args": "required"},
+    "drop":      {"args": "required"},
+    "request":   {"args": "required"},
+    "rest":      {"args": "none"},
+    "craft":     {"args": "required"},
+    "recipes":   {"args": "none"},
+    "build":     {"args": "required"},
+    "assign":    {"args": "required"},
+    "organize":  {"args": "none"},
+    "tasks":     {"args": "none"},
+    "trade":     {"args": "required"},
+    "plant":     {"args": "required"},
+    "harvest":   {"args": "optional"},
+    "survey":    {"args": "none"},
+    "store":     {"args": "required"},
+    "uproot":    {"args": "required"},
+    "cross-pollinate": {"args": "required"},
+    "select":    {"args": "required"},
+    "clone":     {"args": "required"},
+    "bank":      {"args": "required"},
+    "withdraw":  {"args": "required"},
 }
 
 
@@ -164,12 +161,15 @@ def parse(raw_input):
 
 
 def is_valid_for_phase(command, phase):
-    """Check if a command is valid for the current phase."""
+    """Check if a command is valid for the current phase.
+
+    With unified commands, all commands are valid in all phases —
+    narrative guards in handlers provide in-world rejection instead.
+    Only 'skip' is prologue-only.
+    """
     if command not in COMMANDS:
         return False
-    return phase in COMMANDS[command]["phases"]
-
-
-def get_phase_commands(phase):
-    """Get list of commands valid for a given phase."""
-    return [cmd for cmd, info in COMMANDS.items() if phase in info["phases"]]
+    phases = COMMANDS[command].get("phases")
+    if phases:
+        return phase in phases
+    return True

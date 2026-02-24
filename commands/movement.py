@@ -345,10 +345,10 @@ class MovementMixin:
             display.error("That path leads nowhere. (This shouldn't happen.)")
             return
 
-        # Cross-zone movement — requires SEEK (explorer only)
+        # Cross-zone movement — requires SEEK
         if room.zone != target_room.zone:
             if self.state["current_phase"] != "explorer":
-                display.narrate("You can't go that way.")
+                display.seed_speak(f"The void crossing is too dangerous. {self.explorer_name} can handle it.")
                 return
             display.narrate("The void stretches before you.")
             if target_room.zone == "skerry":

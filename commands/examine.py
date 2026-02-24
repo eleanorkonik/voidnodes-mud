@@ -504,6 +504,9 @@ class ExamineMixin:
         display.narrate(f"Nothing called '{target}' to probe here.")
 
     def cmd_scavenge(self, args):
+        if self.state["current_phase"] == "steward":
+            self._wrong_phase_narrate("explorer", "scavenge")
+            return
         room = self.current_room()
         if room.has_enemies():
             enemy_id = room.enemies[0]
@@ -520,8 +523,9 @@ class ExamineMixin:
         times_searched = scavenge_counts.get(room.id, 0)
         difficulty = 1 + times_searched
 
+        char = self.current_character()
         invoke_bonus = self._consume_invoke_bonus()
-        skill_val = self.explorer.get_skill("Investigate") + invoke_bonus
+        skill_val = char.get_skill("Investigate") + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, difficulty)
 
         label = f"Investigate+{invoke_bonus}" if invoke_bonus else "Investigate"
@@ -544,8 +548,8 @@ class ExamineMixin:
             found_name = specimen_info["name"] if specimen_info else item_info.get("name", found)
             found_suffix = " (specimen)" if specimen_info else ""
 
-            if self._can_take_item(self.explorer, found, allow_overflow=False):
-                self.explorer.add_to_inventory(found)
+            if self._can_take_item(char, found, allow_overflow=False):
+                char.add_to_inventory(found)
                 display.success(f"  Found: {found_name}!{found_suffix}")
             else:
                 room.add_item(found)
@@ -559,8 +563,8 @@ class ExamineMixin:
                 bonus_name = bonus_spec["name"] if bonus_spec else bonus_info.get("name", bonus)
                 bonus_suffix = " (specimen)" if bonus_spec else ""
 
-                if self._can_take_item(self.explorer, bonus, allow_overflow=False):
-                    self.explorer.add_to_inventory(bonus)
+                if self._can_take_item(char, bonus, allow_overflow=False):
+                    char.add_to_inventory(bonus)
                     display.success(f"  Excellent work! Also found: {bonus_name}!{bonus_suffix}")
                 else:
                     room.add_item(bonus)
