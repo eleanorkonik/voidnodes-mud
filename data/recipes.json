@@ -5,7 +5,7 @@
         "materials": {"torn_fabric": 1, "resin": 1},
         "result": "rope",
         "difficulty": 1,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Braid fabric and coat with resin for a strong, flexible rope."
     },
     "torch": {
@@ -14,7 +14,7 @@
         "materials": {"luminous_moss": 1, "wire": 1},
         "result": "torch",
         "difficulty": -2,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Wrap luminous moss around a wire frame for a steady, lasting light."
     },
     "basic_tools": {
@@ -23,7 +23,7 @@
         "materials": {"metal_scraps": 2, "wire": 1},
         "result": "basic_tools",
         "difficulty": 2,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Shape metal scraps into simple but effective hand tools."
     },
     "shelter_patch": {
@@ -32,7 +32,7 @@
         "materials": {"torn_fabric": 1, "coral_fragments": 1},
         "result": "shelter_patch",
         "difficulty": 1,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Reinforce fabric with coral fragments for a durable repair patch."
     },
     "water_filter": {
@@ -41,7 +41,7 @@
         "materials": {"crystal_shards": 1, "resin": 1, "metal_scraps": 1},
         "result": "water_filter",
         "difficulty": 3,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Build a filtration device using crystal resonance to purify void-mist.",
         "requires_room": "skerry_workshop"
     },
@@ -60,7 +60,7 @@
         "materials": {"ancient_alloys": 1, "luminous_moss": 1, "wire": 1},
         "result": "signal_beacon",
         "difficulty": 4,
-        "skill": "Craft",
+        "skill": "Crafts",
         "description": "Craft a powerful beacon from ancient metals and bioluminescent moss.",
         "requires_room": "skerry_workshop"
     },
@@ -70,7 +70,7 @@
         "materials": {"biodome_wheat_harvest": 2, "moss_leaf_harvest": 1},
         "result": "hearty_stew_meal",
         "difficulty": 1,
-        "skill": "Craft",
+        "skill": "Crafts",
         "recipe_type": "food",
         "description": "A filling stew that lifts spirits. Requires grain and greens.",
         "from_stores": true
@@ -81,7 +81,7 @@
         "materials": {"feral_tuber_harvest": 2, "reef_grain_harvest": 1},
         "result": "griddle_cakes_meal",
         "difficulty": 2,
-        "skill": "Craft",
+        "skill": "Crafts",
         "recipe_type": "food",
         "description": "Flat cakes from tuber starch and grain flour. Keeps you going.",
         "from_stores": true

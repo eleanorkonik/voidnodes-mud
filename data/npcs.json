@@ -12,7 +12,7 @@
             ]
         },
         "skills": {
-            "Navigate": 3,
+            "Athletics": 3,
             "Notice": 3,
             "Empathy": 2,
             "Will": 2
@@ -102,7 +102,7 @@
         "skills": {
             "Investigate": 3,
             "Notice": 2,
-            "Craft": 2,
+            "Crafts": 2,
             "Rapport": 1
         },
         "stress": [
@@ -187,8 +187,8 @@
             ]
         },
         "skills": {
-            "Craft": 3,
-            "Endure": 2,
+            "Crafts": 3,
+            "Physique": 2,
             "Notice": 2,
             "Fight": 1
         },
@@ -274,7 +274,7 @@
         },
         "skills": {
             "Notice": 3,
-            "Endure": 2,
+            "Physique": 2,
             "Empathy": 1,
             "Rapport": 1
         },
@@ -359,9 +359,9 @@
             ]
         },
         "skills": {
-            "Craft": 3,
-            "Organize": 2,
-            "Endure": 2,
+            "Crafts": 3,
+            "Resources": 2,
+            "Physique": 2,
             "Empathy": 1
         },
         "stress": [
@@ -448,7 +448,7 @@
             "Notice": 3,
             "Empathy": 2,
             "Will": 2,
-            "Navigate": 1
+            "Athletics": 1
         },
         "stress": [
             false,
@@ -532,7 +532,7 @@
         },
         "skills": {
             "Empathy": 3,
-            "Craft": 2,
+            "Crafts": 2,
             "Lore": 2,
             "Rapport": 1
         },
@@ -627,7 +627,7 @@
         },
         "skills": {
             "Fight": 3,
-            "Endure": 3,
+            "Physique": 3,
             "Will": 2,
             "Notice": 1
         },

@@ -306,7 +306,7 @@
         "shelf_life": 2,
         "pleasure": 5,
         "variety_category": "root",
-        "buff": {"skill": "Craft", "bonus": 1, "duration": 1}
+        "buff": {"skill": "Crafts", "bonus": 1, "duration": 1}
     },
     "spore_broth_meal": {
         "id": "spore_broth_meal",

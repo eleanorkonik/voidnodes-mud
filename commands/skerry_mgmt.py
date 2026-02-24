@@ -167,9 +167,9 @@ class SkerryMgmtMixin:
             if required_structure and not self.skerry.has_structure(required_structure):
                 display.warning(f"The {required_structure.replace('_', ' ')} hasn't been built yet — {npc['name']} won't be able to do this.")
 
-            # Organize skill check (DC 1)
-            total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Organize"), 1)
-            print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Organize'), 'Organize')}")
+            # Empathy skill check (DC 1)
+            total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Empathy"), 1)
+            print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Empathy'), 'Empathy')}")
 
             if shifts >= 0:
                 npc["assignment"] = master_task
@@ -201,9 +201,9 @@ class SkerryMgmtMixin:
         if required_structure and not self.skerry.has_structure(required_structure):
             display.warning(f"The {required_structure.replace('_', ' ')} hasn't been built yet — {npc['name']} won't be able to produce anything.")
 
-        # Organize skill check (DC 1)
-        total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Organize"), 1)
-        print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Organize'), 'Organize')}")
+        # Empathy skill check (DC 1)
+        total, shifts, dice_result = dice.skill_check(self.steward.get_skill("Empathy"), 1)
+        print(f"  Organize: {dice.roll_description(dice_result, self.steward.get_skill('Empathy'), 'Empathy')}")
 
         if shifts >= 0:
             npc["assignment"] = task

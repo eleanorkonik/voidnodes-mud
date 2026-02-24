@@ -500,13 +500,13 @@ class ItemsMixin:
         dc = 2 + 2 * overflow_count
 
         if size == "large":
-            skill_name = "Endure"
+            skill_name = "Physique"
         elif size == "small":
-            skill_name = "Navigate"
+            skill_name = "Athletics"
         else:
-            endure_val = char.get_skill("Endure")
-            nav_val = char.get_skill("Navigate")
-            skill_name = "Endure" if endure_val >= nav_val else "Navigate"
+            endure_val = char.get_skill("Physique")
+            nav_val = char.get_skill("Athletics")
+            skill_name = "Physique" if endure_val >= nav_val else "Athletics"
 
         if char.fate_points < 1:
             display.narrate(f"Your {size} slots are full ({used[size]}/{capacity[size]}) and you're out of fate points.")
@@ -577,7 +577,7 @@ class ItemsMixin:
 
         # Craft skill check + invoke bonus + workshop bonus
         invoke_bonus = self._consume_invoke_bonus()
-        skill_val = char.get_skill("Craft") + invoke_bonus
+        skill_val = char.get_skill("Crafts") + invoke_bonus
         workshop_bonus = 0
         if room and room.id == "skerry_workshop":
             workshop_bonus = 1 + room.tool_level
@@ -586,7 +586,7 @@ class ItemsMixin:
         total, shifts, dice_result = dice.skill_check(skill_val, process_dc)
 
         display.header(f"Processing: {remnant_data['name']}")
-        label = f"Craft+{invoke_bonus}" if invoke_bonus else "Craft"
+        label = f"Craft+{invoke_bonus}" if invoke_bonus else "Crafts"
         print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)}")
         if workshop_bonus:
             print(f"  Workshop bonus: +{workshop_bonus}")

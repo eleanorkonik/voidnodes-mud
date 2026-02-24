@@ -57,7 +57,7 @@
             "name": "Strip Components",
             "order": 2,
             "condition": "room_has_items",
-            "skill": "Craft",
+            "skill": "Crafts",
             "dc": 1,
             "handler": "strip_components",
             "description": "Break salvage down into rarer parts."
@@ -69,7 +69,7 @@
             "name": "Craft Supplies",
             "order": 1,
             "condition": "room_has_materials",
-            "skill": "Craft",
+            "skill": "Crafts",
             "dc": 1,
             "handler": "craft_supplies",
             "description": "Auto-craft common items from available materials."
@@ -79,7 +79,7 @@
             "name": "Improve Tools",
             "order": 2,
             "condition": "tools_not_maxed",
-            "skill": "Craft",
+            "skill": "Crafts",
             "dc": 2,
             "handler": "improve_tools",
             "description": "Upgrade the workshop's tool level (cap 3)."
@@ -113,7 +113,7 @@
             "name": "Organize Stores",
             "order": 1,
             "condition": null,
-            "skill": "Organize",
+            "skill": "Empathy",
             "dc": 0,
             "handler": "organize_stores",
             "description": "Keep the storehouse in order, extending shelf life."
@@ -123,7 +123,7 @@
             "name": "Preserve Food",
             "order": 2,
             "condition": "has_perishable_food",
-            "skill": "Craft",
+            "skill": "Crafts",
             "dc": 1,
             "handler": "preserve_food",
             "description": "Treat perishable food to extend its shelf life."
@@ -167,7 +167,7 @@
             "name": "Create Art",
             "order": 2,
             "condition": null,
-            "skill": "Craft",
+            "skill": "Crafts",
             "dc": 1,
             "handler": "create_art",
             "description": "Make something beautiful for a bigger morale boost."
@@ -177,7 +177,7 @@
             "name": "Tend Shelves",
             "order": 3,
             "condition": null,
-            "skill": "Organize",
+            "skill": "Empathy",
             "dc": 0,
             "handler": "tend_shelves",
             "description": "Organize shared books and trinkets for a loyalty boost."

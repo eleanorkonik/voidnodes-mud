@@ -153,7 +153,7 @@
             "skills": {
                 "Fight": 3,
                 "Will": 3,
-                "Endure": 2
+                "Physique": 2
             },
             "stress": [
                 false,
@@ -204,7 +204,7 @@
             "skills": {
                 "Fight": 4,
                 "Will": 4,
-                "Endure": 3,
+                "Physique": 3,
                 "Notice": 2
             },
             "stress": [

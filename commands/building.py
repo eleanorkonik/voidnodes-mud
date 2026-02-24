@@ -56,7 +56,7 @@ class BuildingMixin:
             return
 
         # Skill check
-        skill_name = recipe.get("skill", "Craft")
+        skill_name = recipe.get("skill", "Crafts")
         dc = recipe["difficulty"]
         invoke_bonus = self._consume_invoke_bonus()
         skill_val = char.get_skill(skill_name) + invoke_bonus

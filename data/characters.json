@@ -8,12 +8,12 @@
         },
         "skills": {
             "Fight": 4,
-            "Navigate": 3,
-            "Endure": 3,
+            "Athletics": 3,
+            "Physique": 3,
             "Notice": 2,
             "Investigate": 2,
             "Will": 2,
-            "Craft": 1,
+            "Crafts": 1,
             "Rapport": 1,
             "Empathy": 1,
             "Lore": 1
@@ -33,16 +33,16 @@
             "other": ["Green Thumb in Any Soil", "Quiet Strength"]
         },
         "skills": {
-            "Organize": 4,
-            "Empathy": 3,
+            "Empathy": 4,
+            "Resources": 3,
             "Rapport": 3,
-            "Craft": 2,
+            "Crafts": 2,
             "Notice": 2,
             "Lore": 2,
             "Will": 1,
-            "Endure": 1,
+            "Physique": 1,
             "Investigate": 1,
-            "Navigate": 1,
+            "Athletics": 1,
             "Fight": 1
         },
         "stress": [false, false, false],

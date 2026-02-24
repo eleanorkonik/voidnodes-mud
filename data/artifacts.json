@@ -11,7 +11,7 @@
         ],
         "mote_value": 8,
         "stat_bonuses": {
-            "Craft": 1
+            "Crafts": 1
         },
         "stackable": false,
         "special": null,

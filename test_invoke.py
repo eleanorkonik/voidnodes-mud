@@ -19,7 +19,7 @@ CHAR_DATA = {
         "trouble": "Honor-Bound to Protect Everyone",
         "other": ["Battle-Scarred Veteran", "Reluctant Leader"],
     },
-    "skills": {"Fight": 4, "Navigate": 3, "Endure": 3, "Notice": 2},
+    "skills": {"Fight": 4, "Athletics": 3, "Physique": 3, "Notice": 2},
     "stress": [False, False, False],
     "consequences": {"mild": None, "moderate": None, "severe": None},
     "fate_points": 5,
