@@ -202,6 +202,16 @@ class ExamineMixin:
                 print(f"  {display.npc_name(agent_data['name'])} is here.")
                 has_contents = True
 
+        # Artifacts in this room
+        for art_id, art in self._artifacts_in_room(room.id):
+            status = self.state.get("artifacts_status", {}).get(art_id)
+            if status == "discovered":
+                print(f"  {display.BRIGHT_WHITE}{display.BOLD}{art['name']}{display.RESET} {display.DIM}(artifact){display.RESET}")
+            else:
+                hint = art.get("hint_sensory", "something unusual")
+                print(f"  {display.DIM}You notice {hint}.{display.RESET}")
+            has_contents = True
+
         # Room features (interactable objects)
         for feature in room.features:
             print(f"  {display.aspect_text(feature['name'])}")
