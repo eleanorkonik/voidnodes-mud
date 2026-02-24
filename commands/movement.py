@@ -72,6 +72,8 @@ class MovementMixin:
 
     def _show_landing_pad_destinations(self, room):
         """Show available void destinations from the landing pad."""
+        if self.state["current_phase"] != "explorer":
+            return
         crossings = self._get_void_crossings(room)
         if not crossings:
             return
@@ -335,8 +337,11 @@ class MovementMixin:
             display.error("That path leads nowhere. (This shouldn't happen.)")
             return
 
-        # Cross-zone movement — requires SEEK
+        # Cross-zone movement — requires SEEK (explorer only)
         if room.zone != target_room.zone:
+            if self.state["current_phase"] != "explorer":
+                display.narrate("You can't go that way.")
+                return
             display.narrate("The void stretches before you.")
             if target_room.zone == "skerry":
                 display.seed_speak("Are you ready to come home?")
