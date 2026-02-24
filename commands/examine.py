@@ -291,6 +291,9 @@ class ExamineMixin:
                 print(f"\n  {display.BOLD}Buildable:{display.RESET}")
                 for tmpl in self.skerry.expandable:
                     reqs = tmpl.get("requires", {})
+                    # Hide structures the seed hasn't unlocked yet
+                    if self.seed.growth_stage < reqs.get("seed_stage", 0):
+                        continue
                     mat_parts = []
                     for k, v in reqs.get("materials", {}).items():
                         label = f"{v}x {k.replace('_', ' ')}"
@@ -308,12 +311,6 @@ class ExamineMixin:
                     if reqs.get("npcs", 0) > 0:
                         label = f"{reqs['npcs']} NPC{'s' if reqs['npcs'] > 1 else ''}"
                         if npc_count >= reqs["npcs"]:
-                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
-                        else:
-                            mat_parts.append(label)
-                    if reqs.get("seed_stage", 0) > 0:
-                        label = f"seed stage {reqs['seed_stage']}"
-                        if self.seed.growth_stage >= reqs["seed_stage"]:
                             mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
                         else:
                             mat_parts.append(label)
