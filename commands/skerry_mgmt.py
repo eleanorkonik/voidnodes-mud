@@ -37,6 +37,7 @@ class SkerryMgmtMixin:
         "gather": "gathering",
         "communal": "communal",
         "recreation": "recreation",
+        "seedcare": "seedcare",
     }
 
     def _role_to_task(self, role):
