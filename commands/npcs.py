@@ -305,10 +305,6 @@ class NpcsMixin:
         """INVOKE an aspect during recruitment — choose effect (PUSH/COUNTER/RESTORE)."""
         char = self.current_character()
 
-        # Initialize per-aspect tracking if not present
-        if "invoked_aspects" not in state:
-            state["invoked_aspects"] = set()
-
         all_aspects = aspects.collect_invokable_aspects(self, context="recruit")
 
         # Parse effect keyword from end of args
@@ -333,14 +329,14 @@ class NpcsMixin:
             display.error(f"No matching aspect for '{query}'.")
             display.info("  Available aspects:")
             for a, source in all_aspects:
-                if a not in state["invoked_aspects"]:
+                if a not in self.scene_invoked_aspects:
                     print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
-        # Check if already invoked this attempt
-        if found in state["invoked_aspects"]:
-            display.error(f"You've already invoked {display.aspect_text(found)} this conversation.")
-            remaining = [(a, s) for a, s in all_aspects if a not in state["invoked_aspects"]]
+        # Check if already invoked this scene
+        if found in self.scene_invoked_aspects:
+            display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
+            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
             if remaining:
                 display.info("  Still available:")
                 for a, source in remaining:
@@ -356,7 +352,7 @@ class NpcsMixin:
             display.error(f"No fate points to spend! (You have {char.fate_points} FP.)")
             return
 
-        state["invoked_aspects"].add(found)
+        self.scene_invoked_aspects.add(found)
         if not self.state.get("tutorial_complete"):
             self.state["tutorial_invoke_done"] = True
 

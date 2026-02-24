@@ -108,7 +108,7 @@ class FakeGame:
         }
         self.in_combat = True
         self.combat_target = "void_lurker"
-        self.invoked_aspects = set()
+        self.scene_invoked_aspects = set()
         self.exploit_advantages = {}
         self.combat_boost = 0
         self.defending = False

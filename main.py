@@ -80,7 +80,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.exploit_advantages = {}  # {aspect_name: count} — free +2 from EXPLOIT
         self.combat_boost = 0  # one-use +2 from ties
         self.combat_consequences_taken = 0  # for CONCEDE FP calculation
-        self.invoked_aspects = set()  # aspects invoked this combat (once each)
+        self.scene_invoked_aspects = set()  # aspects invoked this scene (reset on day change)
         self.enemy_compel_boost = 0  # +2 from compel accept (enemy_boost effect)
         self.in_compel = False
         self.compel_data = None
@@ -177,6 +177,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.npcs_db = self.state.get("npcs", {})
         self.agents_db = self.state.get("agents", {})
         self.specimens_db = farming.load_specimens()
+        self.scene_invoked_aspects = set(self.state.get("scene_invoked_aspects", []))
 
         # Build rooms dict — skip zones that were previously unloaded
         # (but keep entry rooms so the landing pad still shows them)
@@ -205,6 +206,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.state["seed"] = self.seed.to_dict()
         self.state["skerry"] = self.skerry.to_dict()
         self.state["agents"] = self.agents_db
+        self.state["scene_invoked_aspects"] = list(self.scene_invoked_aspects)
 
         # Update rooms in zones
         for zone_id, zone in self.state.get("zones", {}).items():

@@ -331,6 +331,7 @@ def display_help(phase, seed_name="Tuft"):
         ("EXAMINE SELF", "See your appearance, worn items, and aspects"),
         (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
         ("INVOKE <aspect>", "Spend a fate point for +2 on next action"),
+        ("ASPECTS", "Show your aspects (used ones dimmed)"),
         ("REQUEST TREATMENT", "Treat injuries (needs cure item + Lore)"),
         ("INVENTORY", "Show your inventory"),
         ("STATUS", "Show your character sheet"),

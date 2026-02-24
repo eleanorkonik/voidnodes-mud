@@ -71,6 +71,7 @@ COMMANDS = {
     "attack":    {"phases": ["explorer"], "args": "required"},
     "defend":    {"phases": ["explorer"], "args": "none"},
     "invoke":    {"phases": ["explorer", "steward"], "args": "optional"},
+    "aspects":   {"phases": ["explorer", "steward"], "args": "none"},
     "exploit":   {"phases": ["explorer"], "args": "required"},
     "concede":   {"phases": ["explorer"], "args": "none"},
     "scavenge":  {"phases": ["explorer"], "args": "none"},

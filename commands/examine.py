@@ -653,5 +653,31 @@ class ExamineMixin:
             display.info("  You haven't learned of any quests yet.")
         print()
 
+    def cmd_aspects(self, args):
+        """ASPECTS — Show all invokable aspects, with used ones dimmed."""
+        char = self.current_character()
+        context = "combat" if self.in_combat else "recruit" if self.in_recruit else "combat"
+        all_aspects = aspects.collect_invokable_aspects(self, context=context)
+
+        available = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+        used = [(a, s) for a, s in all_aspects if a in self.scene_invoked_aspects]
+
+        print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Aspects ═══{display.RESET}  (FP: {char.fate_points})")
+        print()
+
+        if available:
+            for a, source in available:
+                print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+        else:
+            print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
+
+        if used:
+            print()
+            for a, source in used:
+                print(f"  {display.DIM}\u2717 {a} ({source}) (used){display.RESET}")
+
+        print()
+        display.info("  INVOKE <aspect> to spend 1 FP for +2 on your next action.")
+
     def cmd_help(self, args):
         display.display_help(self.state["current_phase"], seed_name=self.seed_name)

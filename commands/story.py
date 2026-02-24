@@ -165,6 +165,8 @@ class StoryMixin:
 
     def _day_transition(self):
         """Handle end-of-day events."""
+        self.scene_invoked_aspects = set()
+
         day = self.state["day"]
 
         # World seed growth check

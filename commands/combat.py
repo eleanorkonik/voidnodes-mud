@@ -195,12 +195,22 @@ class CombatMixin:
         all_aspects = aspects.collect_invokable_aspects(self, context="combat")
 
         if not args:
-            # Show available aspects
+            # Show available aspects with used ones dimmed
             print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP — you have {char.fate_points})")
             print()
-            print("  Available:")
-            for a, source in all_aspects:
-                print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            available = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+            used = [(a, s) for a, s in all_aspects if a in self.scene_invoked_aspects]
+            if available:
+                print("  Available:")
+                for a, source in available:
+                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            else:
+                print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
+            if used:
+                print()
+                print("  Already invoked:")
+                for a, source in used:
+                    print(f"    {display.DIM}\u2717 {a} ({source}){display.RESET}")
             print()
             display.info("  INVOKE <aspect> to gain +2 on your next skill check.")
             if self.pending_invoke_bonus > 0:
@@ -218,13 +228,25 @@ class CombatMixin:
             display.error(f"No matching aspect for '{raw}'.")
             display.info("Available aspects:")
             for a, source in all_aspects:
-                print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+                if a not in self.scene_invoked_aspects:
+                    print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            return
+
+        # Scene-used check
+        if found in self.scene_invoked_aspects:
+            display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
+            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+            if remaining:
+                display.info("  Still available:")
+                for a, source in remaining:
+                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
         if not char.spend_fate_point():
             display.error("No fate points to spend!")
             return
 
+        self.scene_invoked_aspects.add(found)
         self.pending_invoke_bonus = 2
         self.pending_invoke_aspect = found
         if not self.state.get("tutorial_complete"):
@@ -266,14 +288,14 @@ class CombatMixin:
             display.error(f"No matching aspect found for '{aspect_name}'.")
             display.info("Available aspects:")
             for a, source in all_aspects:
-                if a not in self.invoked_aspects:
+                if a not in self.scene_invoked_aspects:
                     print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
-        # Check if already invoked this fight
-        if found in self.invoked_aspects:
-            display.error(f"You've already invoked {display.aspect_text(found)} this fight.")
-            remaining = [(a, s) for a, s in all_aspects if a not in self.invoked_aspects]
+        # Check if already invoked this scene
+        if found in self.scene_invoked_aspects:
+            display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
+            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
             if remaining:
                 display.info("  Still available:")
                 for a, source in remaining:
@@ -289,7 +311,7 @@ class CombatMixin:
             display.error("No fate points to spend!")
             return
 
-        self.invoked_aspects.add(found)
+        self.scene_invoked_aspects.add(found)
         if not self.state.get("tutorial_complete"):
             self.state["tutorial_invoke_done"] = True
 
@@ -313,7 +335,7 @@ class CombatMixin:
         print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP each — you have {char.fate_points})")
         print()
 
-        invoked = self.invoked_aspects if context == "combat" else self.recruit_state.get("invoked_aspects", set())
+        invoked = self.scene_invoked_aspects
 
         available = [(a, s) for a, s in all_aspects if a not in invoked]
         spent = [(a, s) for a, s in all_aspects if a in invoked]
@@ -459,7 +481,6 @@ class CombatMixin:
         self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
-        self.invoked_aspects = set()
         self.enemy_compel_boost = 0
         self.compel_triggered = False
         self.in_compel = False
@@ -477,7 +498,6 @@ class CombatMixin:
         self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
-        self.invoked_aspects = set()
         self.enemy_compel_boost = 0
         self.compel_triggered = False
         self.in_compel = False
@@ -599,6 +619,9 @@ class CombatMixin:
             compel = self.compel_data
             self.compel_data = None
 
+            # Mark the compelled aspect as used for the scene
+            self.scene_invoked_aspects.add(compel["aspect"])
+
             if environmental:
                 # Environmental: take stress, no FP gain
                 display.narrate(compel["accept_text"])
@@ -636,6 +659,9 @@ class CombatMixin:
             self.in_compel = False
             compel = self.compel_data
             self.compel_data = None
+
+            # Mark the compelled aspect as used for the scene
+            self.scene_invoked_aspects.add(compel["aspect"])
 
             if environmental:
                 # Environmental: spend FP, find a safer path
@@ -726,6 +752,10 @@ class CombatMixin:
 
             self.state["explorer_location"] = "skerry_landing"
             self._move_followers("skerry_landing")
+
+            # Extraction is a scene boundary — new day begins
+            self.state["day"] += 1
+            self._day_transition()
 
             display.warning(f"\n  {self.seed_name} spends {cost} motes to yank you back to the skerry!")
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
