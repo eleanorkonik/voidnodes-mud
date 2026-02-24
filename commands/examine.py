@@ -548,8 +548,9 @@ class ExamineMixin:
                 self.explorer.add_to_inventory(found)
                 display.success(f"  Found: {found_name}!{found_suffix}")
             else:
-                display.success(f"  Spotted: {found_name}{found_suffix}")
-                display.narrate("  But your pack is full. You leave it behind.")
+                room.add_item(found)
+                display.success(f"  Found: {found_name}!{found_suffix}")
+                display.narrate("  But your pack is full. You set it on the ground.")
 
             if shifts >= 3:  # Succeed with style
                 bonus = random.choice(possible_loot)
@@ -562,8 +563,9 @@ class ExamineMixin:
                     self.explorer.add_to_inventory(bonus)
                     display.success(f"  Excellent work! Also found: {bonus_name}!{bonus_suffix}")
                 else:
-                    display.success(f"  Excellent work! Also spotted: {bonus_name}{bonus_suffix}")
-                    display.narrate("  But you can't carry any more.")
+                    room.add_item(bonus)
+                    display.success(f"  Excellent work! Also found: {bonus_name}!{bonus_suffix}")
+                    display.narrate("  But you can't carry any more. You set it on the ground.")
 
             self._log_event("scavenge_success", comic_weight=2,
                             item_found=found,

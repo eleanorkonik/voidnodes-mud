@@ -4,7 +4,7 @@ from engine import display, dice
 from models.character import BODY_SLOTS
 
 STACK_SIZE = 5
-SKERRY_CAPACITY = {"large": 5, "medium": 10, "small": 100}
+SKERRY_CAPACITY = {"large": 5, "medium": 50, "small": 500}
 
 
 class ItemsMixin:
