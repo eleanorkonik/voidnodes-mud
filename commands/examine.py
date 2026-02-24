@@ -16,8 +16,6 @@ class ExamineMixin:
 
         if not args:
             display.display_room(room, self.game_context())
-            if room.id == "skerry_landing":
-                self._show_landing_pad_destinations(room)
             return
 
         self._examine_target(" ".join(args))
@@ -585,11 +583,17 @@ class ExamineMixin:
                 display.error(f"Unknown zone: '{args[0]}'. Try: skerry, debris, coral, wreck, verdant")
                 return
             # Check if at least one room discovered there
-            layout = map_renderer.ZONE_LAYOUTS.get(zone_id, {})
-            discovered = any(
-                self.rooms.get(rid) and self.rooms[rid].discovered
-                for _, _, rid in layout.get("grid", [])
-            )
+            if zone_id == "skerry":
+                discovered = any(
+                    r.discovered for r in self.rooms.values()
+                    if r.id.startswith("skerry_")
+                )
+            else:
+                layout = map_renderer.ZONE_LAYOUTS.get(zone_id, {})
+                discovered = any(
+                    self.rooms.get(rid) and self.rooms[rid].discovered
+                    for _, _, rid in layout.get("grid", [])
+                )
             if not discovered:
                 display.error(f"You haven't discovered anything in that zone yet.")
                 return

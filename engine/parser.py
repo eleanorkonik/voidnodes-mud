@@ -15,7 +15,7 @@ DIRECTION_ALIASES = {
 # Command aliases
 COMMAND_ALIASES = {
     "l": "look", "i": "inventory", "inv": "inventory",
-    "x": "look", "examine": "probe",
+    "x": "look", "examine": "look",
     "equip": "wear", "unequip": "remove", "unwear": "remove",
     "get": "take", "grab": "take", "pick": "take",
     "q": "quit", "exit": "quit",

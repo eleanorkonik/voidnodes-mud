@@ -313,6 +313,10 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                 # Naming the world seed — capture raw input instead of parsing
                 if self.state.get("awaiting_world_seed_name"):
                     name = raw.strip()
+                    if name.lower() == "skip":
+                        self.state["awaiting_world_seed_name"] = False
+                        self.cmd_skip([])
+                        continue
                     if not name:
                         display.seed_speak("Go on. Anything you like.")
                         continue
@@ -362,8 +366,8 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                 for i in range(repeat):
                     if not self.running:
                         break
-                    # State-changing intercepts break the chain
-                    if self.in_combat or self.in_recruit or self.in_compel:
+                    # Only break repeat chains, not the first execution
+                    if i > 0 and (self.in_combat or self.in_recruit or self.in_compel):
                         break
 
                     if repeat > 1 and i > 0:

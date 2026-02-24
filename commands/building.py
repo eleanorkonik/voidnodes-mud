@@ -141,9 +141,9 @@ class BuildingMixin:
             can_craft = all(available.get(mat, 0) >= needed
                           for mat, needed in recipe.get("materials", {}).items())
             if can_craft:
-                print(f"  {display.BRIGHT_WHITE}{display.BOLD}{recipe.get('name', rid)}{display.RESET}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)})")
+                print(f"  {display.BRIGHT_WHITE}{display.BOLD}{recipe.get('name', rid)}{display.RESET}: {mats} → {result_name} (DC {recipe.get('difficulty', 0):+d})")
             else:
-                print(f"  {display.DIM}{recipe.get('name', rid)}: {mats} → {result_name} (DC +{recipe.get('difficulty', 0)}){display.RESET}")
+                print(f"  {display.DIM}{recipe.get('name', rid)}: {mats} → {result_name} (DC {recipe.get('difficulty', 0):+d}){display.RESET}")
 
     OPPOSITE_DIR = {
         "north": "south", "south": "north",
