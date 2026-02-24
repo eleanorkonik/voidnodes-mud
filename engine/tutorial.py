@@ -214,7 +214,7 @@ def after_command(cmd, args, game):
         loc = game.state.get("explorer_location")
         if loc == "skerry_landing":
             print()
-            game._show_sensed_nodes(game.current_room())
+            game._show_landing_pad_destinations(game.current_room())
             game.state["tutorial_step"] = "explorer_void_cross"
         else:
             # Not there yet — nudge toward landing pad
@@ -704,7 +704,7 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_navigate":
         _tutorial_prompt("Head south to the landing pad.")
     elif step == "explorer_void_cross":
-        game._show_sensed_nodes(game.current_room())
+        game._show_landing_pad_destinations(game.current_room())
     elif step == "explorer_free":
         _explorer_free_resume_hint(gs)
     elif step == "explorer_return":
