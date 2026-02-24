@@ -261,6 +261,9 @@ class ExamineMixin:
                     # Who lives here
                     settled_names = [n["name"] for n in self.npcs_db.values()
                                      if n.get("recruited") and n.get("settled_room") == room.id]
+                    # Explorer and steward live in the basic shelter
+                    if room.id == "skerry_shelter":
+                        settled_names = [self.explorer.name, self.steward.name] + settled_names
                     beds = f"{len(settled_names)}/{room.max_workers}"
                     if settled_names:
                         print(f"    {display.DIM}Residents:{display.RESET} {', '.join(settled_names)} {display.DIM}({beds}){display.RESET}")
