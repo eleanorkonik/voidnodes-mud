@@ -52,6 +52,9 @@ class SkerryMgmtMixin:
         for r in self.skerry.get_all_rooms():
             if required_structure in r.structures:
                 npc["location"] = r.id
+                # Hint to settle if not already settled in this room
+                if npc.get("settled_room") != r.id:
+                    display.info(f"  Tip: SETTLE {npc['name'].upper()} IN {r.name.upper()} to give them a permanent bed there.")
                 return
 
     def _count_settled_in_room(self, room_id):
