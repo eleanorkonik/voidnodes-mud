@@ -430,8 +430,9 @@ class NpcsMixin:
                     base_loyalty += 2
                     display.success(f"  Bonus: {npc_name} shares everything they know. (+2 loyalty)")
 
-            if bonus_tiers >= 3:
+            if bonus_tiers >= 3 and len(state["counters"]) == state["num_colors"]:
                 # Tier 3: exceptional rapport — happy mood + high loyalty
+                # Requires no eliminated colors (all threads maintained)
                 base_loyalty = max(base_loyalty, 7)
                 npc["mood"] = "happy"
                 display.success(f"  Bonus: A perfect conversation. {npc_name} is genuinely fired up.")
