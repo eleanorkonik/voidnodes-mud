@@ -35,7 +35,7 @@
         ],
         "mote_value": 12,
         "stat_bonuses": {
-            "Commune": 1
+            "Empathy": 1
         },
         "stackable": false,
         "special": null,

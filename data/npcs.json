@@ -14,7 +14,7 @@
         "skills": {
             "Navigate": 3,
             "Notice": 3,
-            "Commune": 2,
+            "Empathy": 2,
             "Will": 2
         },
         "stress": [
@@ -100,7 +100,7 @@
             ]
         },
         "skills": {
-            "Scavenge": 3,
+            "Investigate": 3,
             "Notice": 2,
             "Craft": 2,
             "Rapport": 1
@@ -275,7 +275,7 @@
         "skills": {
             "Notice": 3,
             "Endure": 2,
-            "Commune": 1,
+            "Empathy": 1,
             "Rapport": 1
         },
         "stress": [
@@ -362,7 +362,7 @@
             "Craft": 3,
             "Organize": 2,
             "Endure": 2,
-            "Commune": 1
+            "Empathy": 1
         },
         "stress": [
             false,
@@ -446,7 +446,7 @@
         },
         "skills": {
             "Notice": 3,
-            "Commune": 2,
+            "Empathy": 2,
             "Will": 2,
             "Navigate": 1
         },
@@ -531,7 +531,7 @@
             ]
         },
         "skills": {
-            "Commune": 3,
+            "Empathy": 3,
             "Craft": 2,
             "Lore": 2,
             "Rapport": 1

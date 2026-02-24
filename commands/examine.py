@@ -521,13 +521,13 @@ class ExamineMixin:
         difficulty = 1 + times_searched
 
         invoke_bonus = self._consume_invoke_bonus()
-        skill_val = self.explorer.get_skill("Scavenge") + invoke_bonus
+        skill_val = self.explorer.get_skill("Investigate") + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, difficulty)
 
-        label = f"Scavenge+{invoke_bonus}" if invoke_bonus else "Scavenge"
+        label = f"Investigate+{invoke_bonus}" if invoke_bonus else "Investigate"
         if times_searched > 0:
             display.info(f"  You've searched here {times_searched} time{'s' if times_searched != 1 else ''} before. (DC {difficulty})")
-        print(f"  Scavenge: {dice.roll_description(dice_result, skill_val, label)} vs DC {difficulty}")
+        print(f"  Investigate: {dice.roll_description(dice_result, skill_val, label)} vs DC {difficulty}")
 
         scavenge_counts[room.id] = times_searched + 1
 
