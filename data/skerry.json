@@ -15,8 +15,8 @@
             "structures": [],
             "assigned_npcs": [],
             "resources": {},
-            "role": null,
-            "max_workers": 0
+            "role": "recreation",
+            "max_workers": 1
         },
         {
             "id": "skerry_shelter",
@@ -50,8 +50,8 @@
             "structures": [],
             "assigned_npcs": [],
             "resources": {},
-            "role": null,
-            "max_workers": 0
+            "role": "garden",
+            "max_workers": 1
         },
         {
             "id": "skerry_junkyard",
@@ -68,7 +68,7 @@
             "assigned_npcs": [],
             "resources": {},
             "role": "salvage",
-            "max_workers": 2
+            "max_workers": 1
         },
         {
             "id": "skerry_landing",
