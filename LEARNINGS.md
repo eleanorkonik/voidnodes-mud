@@ -33,6 +33,8 @@ Extracted from Claude Code session logs. Things learned through building, playte
 ## Display & Formatting
 
 - **Zone aspect goes in the single "Aspects:" line** — NOT a separate "Zone:" line. Eleanor explicitly rejected the separate line.
+- **1 aspect per room** — each room gets exactly one situation aspect as its high concept (physical feature, positioning, obstacle, or contextual detail). The zone aspect displays alongside it automatically, so the player sees 2 total.
+- **No commas in aspect names** — comma-separated display makes them ambiguous. Use parentheses instead.
 - **Aspects should ALWAYS be magenta** (`display.aspect_text()`). Seed dialogue mentioning aspects must color them.
 - **Mote economy is visible** — no hidden numbers. Player always knows exact mote count and distance to next stage.
 - **Remove stage names from player-facing display** — show "motes to maturation" instead.

@@ -64,6 +64,8 @@ Create `data/zones/<zone_id>.json`:
 - Every room needs a `"zone"` field matching the zone ID
 - All rooms start with `"discovered": false`
 - Enemy `stress` array length = number of stress boxes
+- **Each room gets exactly 1 aspect** — a situation aspect capturing the room's high concept. Think: physical features ("Dense Underbrush"), positioning ("Sniper's Perch"), immediate obstacles ("Burning Barn"), or contextual details ("Disgruntled Townsfolk"). The zone-level aspect is displayed alongside it automatically.
+- **No commas in aspect names** — they're displayed comma-separated, so commas in names cause ambiguity. Use parentheses instead: "Better Than Nothing (Worse Than Home)"
 
 ### 2. Add NPCs to npcs.json
 
