@@ -21,6 +21,7 @@
         },
         "discovery_text": "Among the wreckage of the turbines, you spot a device that's still intact \u2014 still humming. The Stabilization Engine. It pulses faintly, as if waiting to be useful again.",
         "hint_sensory": "something humming through the walls \u2014 mechanical, steady, like it never stopped running",
+        "notice_dc": 1,
         "originZone": "debris_field"
     },
     "growth_lattice": {
@@ -45,6 +46,7 @@
         },
         "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness \u2014 it can feel this thing, and it wants it.",
         "hint_sensory": "a green glow \u2014 not bioluminescence, something crystalline, threaded through everything around it",
+        "notice_dc": 2,
         "originZone": "coral_thicket"
     },
     "eliok_house": {
@@ -68,6 +70,7 @@
         },
         "discovery_text": "The crystal pillar cracks as you touch it, and the tiny house falls gently into your hands. It's warm. Impossibly warm. Inside, you can see furniture, tapestries, a hearth with a fire that somehow still burns. This is the Eliok House \u2014 a home that remembers what home means.\n\nFeed it to {seed_name} for 25 motes \u2014 the largest single offering possible.\nOr keep it, and it will transform into proper NPC housing on the skerry, complete with a tiny dryad companion who tends the gardens.",
         "hint_sensory": "warmth \u2014 real warmth, radiating from behind a seal. Something alive in there, or remembering being alive",
+        "notice_dc": 0,
         "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges \u2014 a remnant of the Eliok civilization \u2014 and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
         "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees \u2014 a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers.",
         "originZone": "frozen_wreck"
@@ -110,6 +113,7 @@
         },
         "discovery_text": "At the base of the crystallized plant, a single bud glows with concentrated life. The Bloom Catalyst. When you pick it up, every plant in the chamber shivers.",
         "hint_sensory": "concentrated life \u2014 a green pulse, like a heartbeat, deep inside the overgrowth",
+        "notice_dc": 2,
         "originZone": "verdant_wreck"
     },
     "red_clown_nose": {

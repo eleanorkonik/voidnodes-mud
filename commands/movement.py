@@ -236,9 +236,11 @@ class MovementMixin:
         if target_room.id == "skerry_landing":
             self._show_landing_pad_destinations(target_room)
 
-        # Check for aggressive enemies
+        # Check for aggressive enemies (explorer only) + passive artifact discovery
         if self.state["current_phase"] == "explorer":
             self._on_room_enter(target_room)
+        else:
+            self._check_passive_artifact_discovery(target_room)
 
     def cmd_enter(self, args):
         """Handle ENTER VOID — legacy command, redirects to SEEK."""
@@ -294,6 +296,8 @@ class MovementMixin:
             display.display_room(target_room, self.game_context())
             if self.state["current_phase"] == "explorer":
                 self._on_room_enter(target_room)
+            else:
+                self._check_passive_artifact_discovery(target_room)
             return
 
         # Multiple crossings — show what the seed senses and prompt SEEK
@@ -406,14 +410,43 @@ class MovementMixin:
                     display.seed_speak("TALK to them — they might know something useful.")
                     break
 
-        # Check for aggressive enemies
+        # Check for aggressive enemies (explorer only) + passive artifact discovery
         if self.state["current_phase"] == "explorer":
             self._on_room_enter(target_room)
+        else:
+            # Steward still gets passive artifact discovery
+            self._check_passive_artifact_discovery(target_room)
 
         # World seed flavor message occasionally
         if not self.in_combat and random.random() < 0.3:
             print()
             display.seed_speak(self.seed.communicate(self.seed_name))
+
+    def _check_passive_artifact_discovery(self, room):
+        """Passive Notice check for undiscovered artifacts on room entry.
+
+        Works for both explorer and steward — uses current character's Notice skill.
+        """
+        char = self.current_character()
+        for art_id, art in self._artifacts_in_room(room.id):
+            if art_id in self.state.get("artifacts_status", {}):
+                continue
+            dc = art.get("notice_dc", 2)
+            notice_val = char.get_skill("Notice")
+            total, shifts, dice_result = dice.skill_check(notice_val, dc)
+            if shifts >= 0:
+                print()
+                display.header(art["name"])
+                display.narrate(self.sub(art.get("discovery_text", art["description"])))
+                self.state.setdefault("artifacts_status", {})[art_id] = "discovered"
+                display.info(f"  Feed to {self.seed_name}: {art['mote_value']} motes")
+                if art.get("stat_bonuses"):
+                    bonuses = ", ".join(f"+{v} {k}" for k, v in art["stat_bonuses"].items())
+                    display.info(f"  Keep for: {bonuses}")
+                if art.get("keep_effect"):
+                    display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
+                self._log_event("artifact_noticed", comic_weight=3,
+                                artifact_id=art_id, artifact_name=art["name"])
 
     def _on_room_enter(self, room):
         """Check for hazards and aggressive enemies when entering a room."""
@@ -423,6 +456,9 @@ class MovementMixin:
         if fire_compel:
             self._present_compel(fire_compel, environmental=True)
             return  # don't also trigger enemy ambush in a burning room
+
+        # Passive artifact discovery — Notice check
+        self._check_passive_artifact_discovery(room)
 
         if not room.enemies:
             return
