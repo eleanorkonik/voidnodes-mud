@@ -65,7 +65,7 @@ class ExamineMixin:
 
         # Look at artifact at this location
         for art_id, art in self._artifacts_in_room(room.id):
-            if target in art.get("name", "").lower() or target == art_id:
+            if target in art.get("name", "").lower() or target == art_id or target in art.get("hint_sensory", "").lower():
                 display.header(art["name"])
                 display.narrate(f"  {art.get('description', '')}")
                 if art.get("aspects"):
@@ -379,7 +379,7 @@ class ExamineMixin:
 
         # Check artifacts at this location
         for art_id, art in self._artifacts_in_room(room.id):
-            if target in art.get("name", "").lower() or target == art_id:
+            if target in art.get("name", "").lower() or target == art_id or target in art.get("hint_sensory", "").lower():
                 if art_id not in self.state.get("artifacts_status", {}):
                     display.header(art["name"])
                     display.narrate(self.sub(art.get("discovery_text", art["description"])))
