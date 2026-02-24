@@ -60,7 +60,7 @@
                 "east": "vw_promenade"
             },
             "aspects": [
-                "Still Water, Still Alive"
+                "Still Water (Still Alive)"
             ],
             "items": [
                 "coral_fragments",
@@ -101,8 +101,7 @@
                 "east": "vw_canopy"
             },
             "aspects": [
-                "Wild Growth",
-                "Someone Has Been Tending This"
+                "Wild Growth"
             ],
             "items": [],
             "npcs": [
@@ -224,8 +223,7 @@
                 "south": "vw_root_wall"
             },
             "aspects": [
-                "Crystallized Mid-Bloom",
-                "The Last Garden"
+                "Crystallized Mid-Bloom"
             ],
             "features": [
                 {

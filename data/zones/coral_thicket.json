@@ -25,8 +25,7 @@
                 "east": "ct_tunnel"
             },
             "aspects": [
-                "Beautiful Enough to Drop Your Guard",
-                "The Sweetness Wants Something From You"
+                "Beautiful Enough to Drop Your Guard"
             ],
             "items": [
                 "luminous_moss"
@@ -46,7 +45,6 @@
                 "north": "ct_heart"
             },
             "aspects": [
-                "The Light Never Holds Still",
                 "Someone Lived Here For a Reason"
             ],
             "items": [
@@ -69,8 +67,7 @@
                 "north": "ct_spore_chamber"
             },
             "aspects": [
-                "No Room to Swing a Sword",
-                "Everything Here Has Thorns"
+                "No Room to Swing a Sword"
             ],
             "items": [
                 "coral_fragments"
@@ -92,8 +89,7 @@
                 "north": "ct_heart"
             },
             "aspects": [
-                "Breathe Wrong and You'll See Things",
-                "The Warmth Makes You Want to Stay"
+                "Breathe Wrong and You'll See Things"
             ],
             "items": [
                 "luminous_moss",
@@ -115,7 +111,6 @@
                 "east": "ct_spore_chamber"
             },
             "aspects": [
-                "Old Enough to Have Secrets",
                 "Someone's Been Tending This Place"
             ],
             "items": [
