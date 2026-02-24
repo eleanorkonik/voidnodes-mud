@@ -25,36 +25,6 @@ Skerry Status
 
 Emmy should be 1/1 beds for the junkyard, and sevarik and miria are 2/2 beds for the shelter.
 
-### BUG: MAP WRONG
-
-  The Verdant Wreck
-
-
-
-      [?] [?]
-       | /
-      [*]
-       |
-  [ ]-[ ]-[ ]
-       |
-      [ ]
-
-  [*] You  [ ] Explored  [?] Unknown  [!] Enemies
-
-The map shows a NE exit but there isn't one, should be E. Same in reverse:
-
-      [?] [*]
-       | /
-      [ ]
-       |
-  [ ]-[ ]-[ ]
-       |
-      [ ]
-
-  [*] You  [ ] Explored  [?] Unknown  [!] Enemies
-> sw
-You can't go southwest. Exits: WEST
-
 ## Design Questions (deferred)
 
 ### PROBLEM: Workshop purpose / material distribution unclear
@@ -123,3 +93,7 @@ Code already shows zone aspects in room display — was working correctly.
 ### FIXED: Sort Salvage ignores remnants, produces random scrap
 
 `_handler_sort_salvage` now processes remnants first (using their `process_yields` and `process_dc` with NPC Crafts skill check), only falls back to random scrap when no remnants are in the room.
+
+### FIXED: Verdant Wreck map shows NE/SW where E/W should be
+
+`vw_canopy` was at grid position (1,2) instead of (2,2) — one row too high, causing the renderer to draw a diagonal instead of a horizontal connection from the greenhouse.

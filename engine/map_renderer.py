@@ -67,7 +67,7 @@ ZONE_LAYOUTS = {
             (0, 1, "vw_heart"),
             (1, 0, "vw_control"),
             (1, 1, "vw_root_wall"),
-            (1, 2, "vw_canopy"),
+            (2, 2, "vw_canopy"),
             (2, 1, "vw_greenhouse"),
             (3, 0, "vw_tanks"),
             (3, 1, "vw_promenade"),
