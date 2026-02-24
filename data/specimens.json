@@ -193,5 +193,33 @@
         "growth_time": 2,
         "base_yield": 4,
         "probe_text": "Grows on anything wet. Extremely fast. High volume, zero flavor, low nutrition per unit. Emergency calories \u2014 nobody wants to eat this long-term but it keeps you alive."
+    },
+    "spore_specimen": {
+        "id": "spore_specimen",
+        "name": "Spore Specimen",
+        "specimen_type": "spore",
+        "family": "fungal",
+        "origin": "coral_thicket",
+        "domestication": "wild",
+        "compatibility_group": "fungal-F",
+        "description": "A sealed sample of combat spores scraped from a defeated spore cloud. The luminescence is fading but the spores are viable.",
+        "traits": {
+            "yield": 4, "defense": 6,
+            "speed": 5, "nutrition": 5,
+            "specialist": 5, "generalist": 5,
+            "uniformity": 2, "diversity": 8,
+            "edible": 5, "utility": 5
+        },
+        "hidden_traits": {
+            "shade_dependent": true,
+            "volatile_spores": true
+        },
+        "produces": {
+            "food_id": "glowcap_mushroom",
+            "utility_id": "luminous_extract"
+        },
+        "growth_time": 4,
+        "base_yield": 2,
+        "probe_text": "Combat spores \u2014 more aggressive strain than the cultivated variety. Volatile but viable. Might produce hardier fruiting bodies if domesticated."
     }
 }

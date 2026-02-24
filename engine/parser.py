@@ -37,6 +37,10 @@ COMMAND_ALIASES = {
     "vault": "bank",
     "sleep": "rest",
     "nap": "rest",
+    "butcher": "process",
+    "skin": "process",
+    "dismantle": "process",
+    "salvage": "process",
 }
 
 # All recognized commands and which phase they're valid in
@@ -79,6 +83,7 @@ COMMANDS = {
     "enter":     {"phases": ["explorer", "steward"], "args": "required"},
     "seek":      {"phases": ["explorer", "steward"], "args": "required"},
     "take":      {"phases": ["explorer", "prologue"], "args": "required"},
+    "process":   {"phases": ["explorer", "steward"], "args": "required"},
     "ih":        {"phases": ["explorer", "steward", "prologue"], "args": "optional"},
     "offer":     {"phases": ["explorer", "steward", "prologue"], "args": "required"},
     "drop":      {"phases": ["explorer", "steward", "prologue"], "args": "required"},

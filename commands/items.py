@@ -111,6 +111,11 @@ class ItemsMixin:
             display.success(f"You pick up {item.get('name', item_id)}.")
             self._log_event("item_taken", comic_weight=1,
                             item_id=item_id, item_name=item.get("name", item_id))
+            # Tutorial nudge: first time picking up remnants with tools
+            if item.get("type") == "remnants" and "basic_tools" in char.inventory:
+                if not self.state.get("tutorial_process_shown"):
+                    display.seed_speak("You have tools — you can PROCESS remnants for materials.")
+                    self.state["tutorial_process_shown"] = True
             return
 
         display.narrate(f"There's nothing called '{target}' here to take.")
@@ -523,3 +528,108 @@ class ItemsMixin:
         else:
             display.narrate("  Too much to carry. It slips from your grip.")
             return False
+
+    # ── PROCESS ───────────────────────────────────────────────────
+
+    def cmd_process(self, args):
+        """PROCESS <remnants> — Break down enemy remains into materials."""
+        if not args:
+            display.error("Process what? PROCESS <remnants> to break them down for materials.")
+            return
+
+        target = " ".join(args).lower()
+        char = self.current_character()
+        room = self.current_room()
+
+        # Find remnants in room items or inventory
+        remnant_id = None
+        remnant_data = None
+        in_room = False
+
+        # Check room first
+        for rid in list(room.items):
+            item = self.items_db.get(rid, {})
+            if item.get("type") == "remnants" and (target in item.get("name", "").lower() or target == rid):
+                remnant_id, remnant_data = rid, item
+                in_room = True
+                break
+
+        # Then inventory
+        if not remnant_id:
+            for rid in list(char.inventory):
+                item = self.items_db.get(rid, {})
+                if item.get("type") == "remnants" and (target in item.get("name", "").lower() or target == rid):
+                    remnant_id, remnant_data = rid, item
+                    break
+
+        if not remnant_id:
+            display.error(f"There are no remnants called '{target}' here or in your inventory.")
+            return
+
+        # Require basic_tools
+        if "basic_tools" not in char.inventory:
+            display.error("You need basic tools to process remnants. Find some first.")
+            return
+
+        process_dc = remnant_data.get("process_dc", 1)
+        process_yields = remnant_data.get("process_yields", [])
+        process_verb = remnant_data.get("process_verb", "process")
+
+        # Craft skill check + invoke bonus + workshop bonus
+        invoke_bonus = self._consume_invoke_bonus()
+        skill_val = char.get_skill("Craft") + invoke_bonus
+        workshop_bonus = 0
+        if room and room.id == "skerry_workshop":
+            workshop_bonus = 1 + room.tool_level
+            skill_val += workshop_bonus
+
+        total, shifts, dice_result = dice.skill_check(skill_val, process_dc)
+
+        display.header(f"Processing: {remnant_data['name']}")
+        label = f"Craft+{invoke_bonus}" if invoke_bonus else "Craft"
+        print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)}")
+        if workshop_bonus:
+            print(f"  Workshop bonus: +{workshop_bonus}")
+        print(f"  DC: {process_dc:+d}")
+
+        # Remove remnants regardless of outcome
+        if in_room:
+            room.remove_item(remnant_id)
+        else:
+            char.remove_from_inventory(remnant_id)
+
+        if shifts >= 0:
+            # Success — determine yield multiplier
+            masterwork = shifts >= 3
+            multiplier = 2 if masterwork else 1
+
+            if masterwork:
+                display.success(f"  Masterwork! You {process_verb} the {remnant_data['name']} with expert precision.")
+            else:
+                display.success(f"  You {process_verb} the {remnant_data['name']}.")
+
+            for yield_id, yield_count in process_yields:
+                actual_count = yield_count * multiplier
+                for _ in range(actual_count):
+                    char.add_to_inventory(yield_id)
+                yield_info = self.items_db.get(yield_id) or self.specimens_db.get(yield_id, {})
+                yield_name = yield_info.get("name", yield_id)
+                display.success(f"    +{actual_count}x {display.item_name(yield_name)}")
+
+            if masterwork:
+                display.info("  (Double yield from masterwork!)")
+        else:
+            # Fail — salvage 1x first yield
+            display.warning(f"  You botch the job — the {remnant_data['name']} are ruined.")
+            if process_yields:
+                salvage_id = process_yields[0][0]
+                char.add_to_inventory(salvage_id)
+                salvage_info = self.items_db.get(salvage_id) or self.specimens_db.get(salvage_id, {})
+                salvage_name = salvage_info.get("name", salvage_id)
+                display.narrate(f"  You salvage a few scraps: 1x {display.item_name(salvage_name)}")
+
+        self._log_event("remnants_processed", comic_weight=2,
+                        remnant=remnant_data.get("name", remnant_id),
+                        verb=process_verb,
+                        success=shifts >= 0,
+                        masterwork=shifts >= 3)

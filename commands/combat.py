@@ -691,6 +691,13 @@ class CombatMixin:
                 room.add_item(dropped)
                 item_info = self.items_db.get(dropped, {})
                 display.success(f"  It drops: {item_info.get('name', dropped)}")
+            # Drop remnants if this enemy has them
+            remnants_id = f"{enemy_id}_remnants"
+            if remnants_id in self.items_db:
+                room.add_item(remnants_id)
+                remnants_info = self.items_db[remnants_id]
+                display.narrate(f"  {remnants_info.get('name', 'Remains')} left behind.")
+
             self.explorer.gain_fate_point()
             display.info(f"  (+1 Fate Point for victory)")
             self._log_event("combat_victory", comic_weight=3,
