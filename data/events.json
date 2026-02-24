@@ -56,7 +56,7 @@
             "id": "resource_shortage",
             "name": "Resource Shortage",
             "description": "Supplies are running low. The settlers are worried about food and water.",
-            "skill_check": {"skill": "Empathy", "difficulty": 2},
+            "skill_check": {"skill": "Notice", "difficulty": 2},
             "success": "You redistribute supplies efficiently. Crisis averted.",
             "failure": "The shortage strains morale. Everyone tightens their belts.",
             "failure_effect": {"mood_penalty": true},

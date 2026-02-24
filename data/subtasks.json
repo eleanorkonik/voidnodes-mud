@@ -113,7 +113,7 @@
             "name": "Organize Stores",
             "order": 1,
             "condition": null,
-            "skill": "Empathy",
+            "skill": "Notice",
             "dc": 0,
             "handler": "organize_stores",
             "description": "Keep the storehouse in order, extending shelf life."
@@ -177,7 +177,7 @@
             "name": "Tend Shelves",
             "order": 3,
             "condition": null,
-            "skill": "Empathy",
+            "skill": "Notice",
             "dc": 0,
             "handler": "tend_shelves",
             "description": "Organize shared books and trinkets for a loyalty boost."
