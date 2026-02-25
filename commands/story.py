@@ -376,7 +376,8 @@ class StoryMixin:
             display.display_room(room, self.game_context())
 
         print()
-        display.display_status(self.explorer, "explorer")
+        display.display_status(self.explorer, "explorer", char_key="explorer",
+                               consequence_meta=self.state.get("consequence_meta", {}))
         display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         # World seed gives Sevarik direction

@@ -337,15 +337,38 @@ CONSEQUENCE_CURES = {
 TREATMENT_DIFFICULTY = {
     "mild": 0,       # auto-clears, no check needed
     "moderate": 2,   # Fair (+2)
-    "severe": 4,     # Great (+4), only downgrades to moderate
+    "severe": 4,     # Great (+4)
 }
 
-# Zone clears required before treatment
+# Zone clears required before treatment (also used for auto-heal at mild-equiv)
 ZONE_CLEARS_REQUIRED = {
     "mild": 3,       # auto-clears after 3 zone clears
     "moderate": 0,   # treatable immediately with item + check
     "severe": 3,     # gated behind 3 zone clears before treatment
 }
+
+# Severity tiers in order for effective_severity lookup
+_SEVERITY_TIERS = ["severe", "moderate", "mild"]
+
+
+def _effective_severity(original_sev, recovery):
+    """Return the effective severity after recovery steps.
+
+    Each recovery step shifts the severity down one tier:
+      severe(0) → severe, severe(1) → moderate, severe(2) → mild
+      moderate(0) → moderate, moderate(1) → mild
+      mild(0) → mild
+
+    Returns None if recovery exceeds the number of possible downgrades (fully healed).
+    """
+    try:
+        idx = _SEVERITY_TIERS.index(original_sev)
+    except ValueError:
+        return original_sev
+    new_idx = idx + recovery
+    if new_idx >= len(_SEVERITY_TIERS):
+        return None  # fully healed (past mild)
+    return _SEVERITY_TIERS[new_idx]
 
 
 def get_cure_for_consequence(consequence_text):
@@ -362,10 +385,14 @@ def get_cure_for_consequence(consequence_text):
     return "bandages"
 
 
-def check_mild_auto_heal(game):
-    """Check if any mild consequences should auto-clear based on zone clears.
+def check_auto_heal(game):
+    """Check if any consequences at mild-equivalent should auto-clear.
 
-    Returns list of (character_key, consequence_text) that were cleared.
+    Iterates ALL consequence slots. A consequence is mild-equivalent when
+    its effective severity (original severity shifted by recovery steps) is "mild".
+    Original mild consequences (recovery=0) also qualify.
+
+    Returns list of (character_key, original_severity, consequence_text) that were cleared.
     """
     zones_cleared = game.state.get("zones_cleared", 0)
     meta = game.state.get("consequence_meta", {})
@@ -376,24 +403,40 @@ def check_mild_auto_heal(game):
         if not char_data:
             continue
         cons = char_data.get("consequences", {})
-        mild = cons.get("mild")
-        if not mild:
-            continue
 
-        # Check when this consequence was taken
-        meta_key = f"{char_key}_mild"
-        taken_at = meta.get(meta_key, {}).get("taken_at", 0)
-        if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
-            cons["mild"] = None
-            # Clean up metadata
-            meta.pop(meta_key, None)
-            cleared.append((char_key, mild))
+        for sev in ["severe", "moderate", "mild"]:
+            con_text = cons.get(sev)
+            if not con_text:
+                continue
+
+            meta_key = f"{char_key}_{sev}"
+            entry = meta.get(meta_key, {})
+            recovery = entry.get("recovery", 0)
+            eff_sev = _effective_severity(sev, recovery)
+
+            # Only auto-heal if effective severity is "mild"
+            if eff_sev != "mild":
+                continue
+
+            taken_at = entry.get("taken_at", 0)
+            if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
+                cons[sev] = None
+                meta.pop(meta_key, None)
+                cleared.append((char_key, sev, con_text))
 
     return cleared
 
 
+# Keep old name as alias for any callers we might miss
+check_mild_auto_heal = check_auto_heal
+
+
 def can_treat_consequence(game, char_key, severity):
     """Check if a consequence is eligible for treatment.
+
+    Uses the treat-in-place model: consequences stay in their original slot
+    and recover through treatment steps (recovery counter). Effective severity
+    determines DC and zone-clear gates.
 
     Returns (eligible, reason_if_not).
     """
@@ -406,24 +449,23 @@ def can_treat_consequence(game, char_key, severity):
     if not consequence_text:
         return False, f"No {severity} consequence to treat."
 
-    if severity == "mild":
-        return False, "Mild consequences heal on their own with time."
-
-    zones_cleared = game.state.get("zones_cleared", 0)
     meta = game.state.get("consequence_meta", {})
     meta_key = f"{char_key}_{severity}"
-    taken_at = meta.get(meta_key, {}).get("taken_at", 0)
+    entry = meta.get(meta_key, {})
+    recovery = entry.get("recovery", 0)
+    eff_sev = _effective_severity(severity, recovery)
 
-    clears_needed = ZONE_CLEARS_REQUIRED.get(severity, 0)
+    # Already at mild-equivalent — heals on its own
+    if eff_sev == "mild" or eff_sev is None:
+        return False, "This injury is healing on its own."
+
+    # Zone-clear gate based on effective severity
+    zones_cleared = game.state.get("zones_cleared", 0)
+    taken_at = entry.get("taken_at", 0)
+    clears_needed = ZONE_CLEARS_REQUIRED.get(eff_sev, 0)
     if clears_needed > 0 and (zones_cleared - taken_at) < clears_needed:
         remaining = clears_needed - (zones_cleared - taken_at)
         return False, f"The injury is too fresh. Need {remaining} more zone{'s' if remaining != 1 else ''} cleared before treatment can begin."
-
-    # Check that the downgrade target slot is free
-    _DOWNGRADE_TARGET = {"severe": "moderate", "moderate": "mild"}
-    target_slot = _DOWNGRADE_TARGET.get(severity)
-    if target_slot and cons.get(target_slot) is not None:
-        return False, f"Can't downgrade — {target_slot} slot is already occupied. Heal the {target_slot} injury first."
 
     return True, None
 

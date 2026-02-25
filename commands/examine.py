@@ -233,7 +233,10 @@ class ExamineMixin:
 
     def cmd_status(self, args):
         char = self.current_character()
-        display.display_character_sheet(char)
+        phase = self.state.get("current_phase", "explorer")
+        char_key = "explorer" if phase == "explorer" else "steward"
+        display.display_character_sheet(char, char_key=char_key,
+                                        consequence_meta=self.state.get("consequence_meta", {}))
         print()
         display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
@@ -542,7 +545,9 @@ class ExamineMixin:
         if agent:
             role = agent.get("role", "")
             char = self.explorer if role == "explorer" else self.steward
-            display.display_character_sheet(char)
+            ck = "explorer" if role == "explorer" else "steward"
+            display.display_character_sheet(char, char_key=ck,
+                                            consequence_meta=self.state.get("consequence_meta", {}))
             return
 
         display.narrate(f"You don't know anything about '{target}'.")

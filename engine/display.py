@@ -194,13 +194,17 @@ def display_room(room, game_state):
         print(f"  Exits: {', '.join(exit_parts)}")
 
 
-def display_status(character, phase):
-    """Display character status bar."""
+def display_status(character, phase, char_key=None, consequence_meta=None):
+    """Display character status bar. Pass char_key + consequence_meta to show * on recovering."""
     stress_str = "".join("[X]" if s else "[ ]" for s in character.stress)
     cons = []
     for severity, aspect in character.consequences.items():
         if aspect:
-            cons.append(f"{severity}: {aspect}")
+            suffix = ""
+            if char_key and consequence_meta:
+                if consequence_meta.get(f"{char_key}_{severity}", {}).get("recovery", 0) > 0:
+                    suffix = "*"
+            cons.append(f"{severity}{suffix}: {aspect}")
     cons_str = ", ".join(cons) if cons else "none"
 
     header(f"[{character.name}] — {phase.upper()} PHASE")
@@ -324,8 +328,8 @@ def display_inventory(character, items_db, artifacts_db=None, specimens_db=None)
             print(f"    {slot.capitalize()}: {item_name(name)}")
 
 
-def display_character_sheet(character):
-    """Display full character sheet."""
+def display_character_sheet(character, char_key=None, consequence_meta=None):
+    """Display full character sheet. Pass char_key + consequence_meta to show * on recovering."""
     header(f"═══ {character.name} ═══")
     print(f"  {BOLD}High Concept:{RESET} {character.aspects['high_concept']}")
     print(f"  {BOLD}Trouble:{RESET} {character.aspects['trouble']}")
@@ -344,7 +348,11 @@ def display_character_sheet(character):
     print(f"  {BOLD}Stress:{RESET} {stress_str}")
     print(f"  {BOLD}Consequences:{RESET}")
     for severity, aspect in character.consequences.items():
-        status = aspect if aspect else "(none)"
+        suffix = ""
+        if char_key and consequence_meta and aspect:
+            if consequence_meta.get(f"{char_key}_{severity}", {}).get("recovery", 0) > 0:
+                suffix = "*"
+        status = f"{aspect}{suffix}" if aspect else "(none)"
         print(f"    {severity.capitalize()}: {status}")
     print(f"  {BOLD}Fate Points:{RESET} {character.fate_points} (Refresh: {character.refresh})")
 

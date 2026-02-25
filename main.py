@@ -326,7 +326,9 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                 display.display_room(current_room, self.game_context())
                 if current_room.id == "skerry_landing":
                     self._show_landing_pad_destinations(current_room)
-            display.display_status(current_char, phase)
+            char_key = "explorer" if phase == "explorer" else "steward"
+            display.display_status(current_char, phase, char_key=char_key,
+                                   consequence_meta=self.state.get("consequence_meta", {}))
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
             print()
 
@@ -502,6 +504,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         meta[meta_key] = {
             "taken_at": self.state.get("zones_cleared", 0),
             "cure": aspects.get_cure_for_consequence(consequence_text),
+            "recovery": 0,
         }
 
     def _consume_invoke_bonus(self):
@@ -799,7 +802,8 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             room = self.rooms.get(self.state["steward_location"])
             if room:
                 display.display_room(room, self.game_context())
-            display.display_status(self.steward, "steward")
+            display.display_status(self.steward, "steward", char_key="steward",
+                                   consequence_meta=self.state.get("consequence_meta", {}))
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         else:
@@ -826,7 +830,8 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             room = self.rooms.get(self.state["explorer_location"])
             if room:
                 display.display_room(room, self.game_context())
-            display.display_status(self.explorer, "explorer")
+            display.display_status(self.explorer, "explorer", char_key="explorer",
+                                   consequence_meta=self.state.get("consequence_meta", {}))
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
         self.save_game(silent=True)

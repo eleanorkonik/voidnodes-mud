@@ -127,6 +127,10 @@ def _migrate_state(state):
     # Healing system fields
     state.setdefault("zones_cleared", 0)
     state.setdefault("consequence_meta", {})
+    # Add recovery counter to existing consequence_meta entries
+    for meta_key, entry in state.get("consequence_meta", {}).items():
+        if isinstance(entry, dict):
+            entry.setdefault("recovery", 0)
     # Zone unloading
     state.setdefault("unloaded_zones", [])
     # Ensure basic_tools and bandages recipes are known

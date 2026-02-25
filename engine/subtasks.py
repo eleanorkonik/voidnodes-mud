@@ -491,34 +491,38 @@ def _handler_tend_shelves(game, room, npc, shifts):
 
 
 def _handler_tend_wounds(game, room, npc, shifts):
-    """Help mild consequences heal faster — reduces zone-clear requirement by 1."""
+    """Help mild-equivalent consequences heal faster — reduces zone-clear requirement by 1."""
     from engine import aspects
     messages = []
     zones_cleared = game.state.get("zones_cleared", 0)
     meta = game.state.get("consequence_meta", {})
-    # Check both characters for mild consequences
+    # Check both characters for mild-equivalent consequences (any slot)
     for char_key in ("explorer", "steward"):
         char_data = game.state.get(char_key, {})
         cons = char_data.get("consequences", {})
-        mild = cons.get("mild")
-        if not mild:
-            continue
-        meta_key = f"{char_key}_mild"
-        entry = meta.get(meta_key, {})
-        taken_at = entry.get("taken_at", 0)
-        required = aspects.ZONE_CLEARS_REQUIRED["mild"]
-        # Apothecary tier 1+ reduces requirement by 1
-        if room.healing_level >= 1:
-            required = max(0, required - 1)
-        remaining = max(0, required - (zones_cleared - taken_at))
-        char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
-        if remaining <= 0:
-            # Heal it
-            cons["mild"] = None
-            meta.pop(meta_key, None)
-            messages.append(f"{char_name}'s mild injury ({mild}) has healed.")
-        else:
-            messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
+        for sev in ["severe", "moderate", "mild"]:
+            con_text = cons.get(sev)
+            if not con_text:
+                continue
+            meta_key = f"{char_key}_{sev}"
+            entry = meta.get(meta_key, {})
+            recovery = entry.get("recovery", 0)
+            eff_sev = aspects._effective_severity(sev, recovery)
+            if eff_sev != "mild":
+                continue
+            taken_at = entry.get("taken_at", 0)
+            required = aspects.ZONE_CLEARS_REQUIRED["mild"]
+            # Apothecary tier 1+ reduces requirement by 1
+            if room.healing_level >= 1:
+                required = max(0, required - 1)
+            remaining = max(0, required - (zones_cleared - taken_at))
+            char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+            if remaining <= 0:
+                cons[sev] = None
+                meta.pop(meta_key, None)
+                messages.append(f"{char_name}'s injury ({con_text}) has healed.")
+            else:
+                messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
     if not messages:
         messages.append("No injuries to tend. Organized supplies instead.")
     return messages
@@ -555,33 +559,42 @@ def _handler_prepare_poultice(game, room, npc, shifts):
 
 
 def _handler_surgical_care(game, room, npc, shifts):
-    """Auto-treat moderate consequences overnight with a Lore check."""
+    """Auto-treat treatable consequences overnight — increments recovery."""
     from engine import aspects
-    # Find a character with a treatable moderate consequence
+    fake_game = type("FakeGame", (), {"state": game.state})()
+    # Find a character with a treatable consequence (most severe first)
     for char_key in ("explorer", "steward"):
         char_data = game.state.get(char_key, {})
         cons = char_data.get("consequences", {})
-        moderate = cons.get("moderate")
-        if not moderate:
-            continue
-        # Check if eligible for treatment
-        eligible, _ = aspects.can_treat_consequence(
-            type("FakeGame", (), {"state": game.state})(), char_key, "moderate"
-        )
-        if not eligible:
-            continue
-        # Need a cure item in the room
-        cure = aspects.get_cure_for_consequence(moderate)
-        if cure not in room.items:
-            continue
-        # Consume the cure item — Lore check already passed via subtask runner
-        room.remove_item(cure)
-        cons["moderate"] = None
-        meta = game.state.setdefault("consequence_meta", {})
-        meta.pop(f"{char_key}_moderate", None)
-        char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
-        return [f"Treated {char_name}'s moderate injury ({moderate}). Fully healed."]
-    return ["No moderate injuries to operate on."]
+        for sev in ["severe", "moderate"]:
+            con_text = cons.get(sev)
+            if not con_text:
+                continue
+            eligible, _ = aspects.can_treat_consequence(fake_game, char_key, sev)
+            if not eligible:
+                continue
+            cure = aspects.get_cure_for_consequence(con_text)
+            if cure not in room.items:
+                continue
+            # Consume cure item, increment recovery
+            room.remove_item(cure)
+            meta = game.state.setdefault("consequence_meta", {})
+            meta_key = f"{char_key}_{sev}"
+            entry = meta.setdefault(meta_key, {})
+            recovery = entry.get("recovery", 0)
+            entry["recovery"] = recovery + 1
+            entry["taken_at"] = game.state.get("zones_cleared", 0)
+            next_eff = aspects._effective_severity(sev, recovery + 1)
+            char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+            if next_eff == "mild":
+                return [f"Treated {char_name}'s {sev} injury ({con_text}). Now healing on its own."]
+            elif next_eff is None:
+                cons[sev] = None
+                meta.pop(meta_key, None)
+                return [f"Treated {char_name}'s injury ({con_text}). Fully healed."]
+            else:
+                return [f"Treated {char_name}'s {sev} injury ({con_text}). Recovering (effective: {next_eff})."]
+    return ["No treatable injuries found."]
 
 
 HANDLERS = {

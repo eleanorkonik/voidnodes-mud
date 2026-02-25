@@ -384,7 +384,8 @@ class SkerryMgmtMixin:
         self._day_transition()
         print()
         display.narrate(f"Morning. Day {day}.")
-        display.display_status(self.current_character(), "steward")
+        display.display_status(self.current_character(), "steward", char_key="steward",
+                               consequence_meta=self.state.get("consequence_meta", {}))
 
     def cmd_trade(self, args):
         if self.state["current_phase"] == "explorer":
