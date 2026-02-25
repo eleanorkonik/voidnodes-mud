@@ -131,7 +131,7 @@ class ItemsMixin:
         char = self.current_character()
         room = self.current_room()
 
-        if target in ("all", "materials"):
+        if target == "materials":
             dropped = []
             for item_id in list(char.inventory):
                 bid = masterwork.base_id(item_id)
@@ -152,6 +152,45 @@ class ItemsMixin:
                         display.info(f"  {display.item_name(name)}")
             else:
                 display.narrate("You don't have any materials to drop.")
+            return
+
+        if target == "all":
+            kept_artifact = self.state.get("kept_artifact")
+            dropped = []
+            for item_id in list(char.inventory):
+                # Skip explicitly KEPT artifact
+                if item_id == kept_artifact:
+                    continue
+                char.remove_from_inventory(item_id)
+                room.add_item(item_id)
+                # Track artifact status if dropping an artifact
+                if item_id in self.artifacts_db:
+                    self.state.setdefault("artifacts_status", {})[item_id] = "stored"
+                    self._on_artifact_resolved(item_id)
+                dropped.append(item_id)
+            if dropped:
+                counts = {}
+                for mid in dropped:
+                    spec = self.specimens_db.get(mid)
+                    art = self.artifacts_db.get(mid)
+                    if spec:
+                        name = spec["name"]
+                    elif art:
+                        name = art.get("name", mid)
+                    else:
+                        name = masterwork.get_display_name(mid, self.items_db)
+                    counts[name] = counts.get(name, 0) + 1
+                display.narrate("You set everything down.")
+                for name, count in counts.items():
+                    if count > 1:
+                        display.info(f"  {display.item_name(name)} x{count}")
+                    else:
+                        display.info(f"  {display.item_name(name)}")
+                if kept_artifact and kept_artifact in char.inventory:
+                    art = self.artifacts_db.get(kept_artifact, {})
+                    display.info(f"  (Kept: {art.get('name', kept_artifact)})")
+            else:
+                display.narrate("You're not carrying anything to drop.")
             return
 
         # Drop specific item

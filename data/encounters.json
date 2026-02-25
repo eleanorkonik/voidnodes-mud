@@ -25,10 +25,10 @@
             {
                 "skill": "Crafts",
                 "dc": 1,
-                "prompt": "Maybe you can make a second tool.",
+                "prompt": "Maybe you can make a second tool — if you have the materials.",
                 "success_text": "You cobble together a workable replacement from scrap.",
                 "failure_text": "The materials aren't cooperating today.",
-                "success_reward": {"item": "basic_tools"}
+                "success_reward": {"item": "basic_tools", "consume_materials": {"metal_scraps": 2, "wire": 1}, "no_materials_text": "You'd make a second tool, but there's nothing to work with. The dispute simmers."}
             }
         ],
         "resolution": {

@@ -30,17 +30,18 @@ Currently one big dump. Should support subcommands like CHECK SKERRY POPULATION,
 
 ## Design Questions
 
-### Bandages: Lore or Crafts?
-`craft bandages` rolls Lore (consistent with other medical recipes). But "tear and roll fabric strips" feels more like Crafts. Intentional?
-
 ### Tool dispute creates items from nothing
 The "Tool Dispute" challenge encounter awards Basic Tools on step 3 success without checking if materials exist in junkyard/inventory/storehouse. Should it require materials? And should the player need to GIVE TOOLS to the NPC afterward?
+
+yes, it should require materials. and the player should get a prompt to do it, and the dispute resolves on ensuring both characters have tools. 
 
 ### Craft supplies auto-crafts
 NPCs assigned to crafting auto-craft common items without Miria's direction. Should need a manual crafting queue — e.g., "always keep 2 bandages on hand."
 
+yes. and guidance on how to set it up the first time entering the relevant buildings! 
+
 ### DROP ALL keeps some items
-`drop all` drops salvage materials but keeps Preserved Food, Automaton Wreckage, Stabilization Engine. Might be intentional (quest items, artifacts) but wasn't obvious to the player.
+`drop all` should drop EVERYTHING even if it's an artifact or specimen, unless the artifact has been explicitly KEPT. 
 
 ## Bugs (not yet investigated)
 

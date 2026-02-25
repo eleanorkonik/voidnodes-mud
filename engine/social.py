@@ -374,10 +374,44 @@ def apply_reward(game, npc, reward_dict):
 
     if "item" in reward_dict:
         item_id = reward_dict["item"]
-        char = game.current_character()
-        char.add_to_inventory(item_id)
-        item_name = game.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
-        messages.append(f"  Received: {display.item_name(item_name)}")
+        # Check if materials are required
+        consume = reward_dict.get("consume_materials")
+        if consume:
+            char = game.current_character()
+            # Check all sources: inventory, room items, junkyard, storehouse
+            available = {}
+            for iid in char.inventory:
+                available[iid] = available.get(iid, 0) + 1
+            room = game.current_room()
+            if room:
+                for iid in room.items:
+                    available[iid] = available.get(iid, 0) + 1
+            can_afford = all(available.get(mat, 0) >= qty for mat, qty in consume.items())
+            if not can_afford:
+                # Can't make the item — show no_materials_text if provided
+                no_mat_text = reward_dict.get("no_materials_text")
+                if no_mat_text:
+                    messages.append(f"  {no_mat_text}")
+                else:
+                    messages.append("  Not enough materials to craft that.")
+            else:
+                # Consume materials from inventory first, then room
+                for mat, qty in consume.items():
+                    remaining = qty
+                    for _ in range(remaining):
+                        if mat in char.inventory:
+                            char.remove_from_inventory(mat)
+                        elif room and mat in room.items:
+                            room.remove_item(mat)
+                        remaining -= 1
+                char.add_to_inventory(item_id)
+                item_name = game.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
+                messages.append(f"  Received: {display.item_name(item_name)}")
+        else:
+            char = game.current_character()
+            char.add_to_inventory(item_id)
+            item_name = game.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
+            messages.append(f"  Received: {display.item_name(item_name)}")
 
     if "recipe" in reward_dict:
         recipe_id = reward_dict["recipe"]
@@ -632,7 +666,7 @@ def display_challenge_step(enc, step_idx):
     print()
 
 
-def display_contest_round(enc_state):
+def display_contest_round(enc_state, char=None):
     """Display a contest round with tactic options."""
     enc = enc_state["encounter_def"]
     tactics = enc.get("tactics", [])
@@ -647,9 +681,11 @@ def display_contest_round(enc_state):
     print()
     for i, tactic in enumerate(tactics):
         skill = tactic["skill"]
+        skill_val = char.get_skill(skill) if char else None
+        skill_str = f" +{skill_val}" if skill_val is not None else ""
         uses = enc_state["tactic_uses"].get(tactic["id"], 0)
         stale = f" {display.DIM}(-{uses} stale){display.RESET}" if uses > 0 else ""
-        print(f"  {i + 1}. {tactic['name']:<24} ({skill}){stale}")
+        print(f"  {i + 1}. {tactic['name']:<24} ({skill}{skill_str}){stale}")
     print()
     print(f"  > {display.BOLD}1/2/3{display.RESET}, {display.BOLD}INVOKE{display.RESET} <aspect>, or {display.BOLD}CONCEDE{display.RESET}")
     print()

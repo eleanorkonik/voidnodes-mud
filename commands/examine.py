@@ -442,6 +442,20 @@ class ExamineMixin:
                 else:
                     print(f"    {display.DIM}—{display.RESET}")
 
+            # Show unsettled NPCs
+            unsettled = [n["name"] for n in self.npcs_db.values()
+                         if n.get("recruited") and not n.get("settled_room")]
+            if unsettled:
+                print(f"\n  {display.BRIGHT_YELLOW}Unsettled:{display.RESET} {', '.join(unsettled)}")
+                print(f"  {display.DIM}Use SETTLE <name> IN <room> to assign them a bed.{display.RESET}")
+
+            # Show idle NPCs
+            idle = [n["name"] for n in self.npcs_db.values()
+                    if n.get("recruited") and n.get("assignment", "idle") == "idle"]
+            if idle:
+                print(f"\n  {display.BRIGHT_YELLOW}Idle:{display.RESET} {', '.join(idle)}")
+                print(f"  {display.DIM}Use ASSIGN <name> <task> to put them to work.{display.RESET}")
+
             # Shared inventory counts for upgradable + buildable sections
             inv_counts = self._inventory_counts(self.steward)
             room = self.current_room()

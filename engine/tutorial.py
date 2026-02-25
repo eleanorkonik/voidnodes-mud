@@ -615,7 +615,7 @@ def _explorer_free_hints(cmd, args, game):
             display.seed_speak("on the skerry.")
         return
 
-    # Room has NPCs, recruit not done — prompt once (first NPC you find)
+    # Room has NPCs, recruit not done — prompt GREET first, RECRUIT comes after greeting
     if not recruit_done and not game.state.get("_recruit_prompted"):
         npc_ids = room.npcs if hasattr(room, 'npcs') else []
         for npc_id in npc_ids:
@@ -623,6 +623,19 @@ def _explorer_free_hints(cmd, args, game):
             if npc and not npc.get("recruited"):
                 npc_name = npc.get("name", npc_id)
                 game.state["_recruit_prompted"] = True
+                print()
+                display.seed_speak("I sense a survivor here. Someone who knows this place.")
+                _tutorial_prompt(f"GREET {npc_name.upper()} — they might know something useful.")
+                return
+
+    # Player just greeted an NPC — now suggest recruiting
+    if cmd == "greet" and not recruit_done and not game.state.get("_recruit_hint_given"):
+        npc_ids = room.npcs if hasattr(room, 'npcs') else []
+        for npc_id in npc_ids:
+            npc = game.npcs_db.get(npc_id)
+            if npc and not npc.get("recruited"):
+                npc_name = npc.get("name", npc_id)
+                game.state["_recruit_hint_given"] = True
                 print()
                 display.seed_speak("Survivors! They could use a safe place.")
                 _tutorial_prompt(f"RECRUIT {npc_name.upper()} to bring them to the skerry.")
@@ -704,7 +717,8 @@ def get_current_hint(step, game_state=None):
     elif step == "explorer_navigate":
         _tutorial_prompt("Head south to the landing pad.")
     elif step == "explorer_void_cross":
-        game._show_landing_pad_destinations(game.current_room())
+        display.seed_speak("You're at the edge. SEEK an aspect to follow it into the void.")
+        _tutorial_prompt("SEEK <aspect words> to cross into a zone.")
     elif step == "explorer_free":
         _explorer_free_resume_hint(gs)
     elif step == "explorer_return":

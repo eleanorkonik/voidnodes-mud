@@ -426,6 +426,24 @@ class MovementMixin:
                     self._present_compel(social_compel)
                     return
 
+        # First-visit building hints (steward phase, skerry buildings)
+        if self.state["current_phase"] == "steward" and target_room.zone == "skerry":
+            visited_key = f"_visited_{target_room.id}"
+            if not self.state.get(visited_key) and target_room.role:
+                self.state[visited_key] = True
+                _BUILDING_HINTS = {
+                    "craft": "This is your workshop. CRAFT items here, or ASSIGN someone and set a QUEUE for them to follow.",
+                    "salvage": "The junkyard. ASSIGN someone to salvage — they'll sort and strip materials.",
+                    "garden": "A garden! PLANT specimens here, and ASSIGN someone to tend the plots.",
+                    "guard": "A lookout post. ASSIGN someone to watch for threats.",
+                    "storage": "The storehouse. CHECK STORES to see food supplies, CHECK VAULT for seeds.",
+                    "healing": "An apothecary. REQUEST TREATMENT for injuries, or ASSIGN a healer.",
+                }
+                hint = _BUILDING_HINTS.get(target_room.role)
+                if hint:
+                    print()
+                    display.seed_speak(hint)
+
         # World seed flavor message occasionally
         if not self.in_combat and not self.in_compel and random.random() < 0.3:
             print()

@@ -43,10 +43,10 @@ ZONE_LAYOUTS = {
         "name": "The Coral Thicket",
         "grid": [
             (0, 0, "ct_heart"),
+            (0, 1, "ct_spore_chamber"),
             (1, 0, "ct_grove"),
-            (1, 1, "ct_spore_chamber"),
+            (1, 1, "ct_tunnel"),
             (2, 0, "ct_entrance"),
-            (2, 1, "ct_tunnel"),
         ],
     },
     "frozen_wreck": {

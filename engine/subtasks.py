@@ -336,9 +336,11 @@ def _load_recipes():
 
 
 def _handler_craft_supplies(game, room, npc, shifts):
-    """Auto-craft from the workshop queue, falling back to random scrap crafting."""
-    # Check for a player-set queue
+    """Craft from the workshop queue. Does nothing if queue is empty."""
     queue = game.state.get("workshop_queue", [])
+    if not queue:
+        return []
+
     recipes = game.recipes_db if hasattr(game, 'recipes_db') else _load_recipes()
 
     # Tool level bonus for workshop
@@ -379,19 +381,6 @@ def _handler_craft_supplies(game, room, npc, shifts):
             recipe_name = recipe.get("name", recipe_id)
             return [f"Failed to craft {recipe_name} (DC {dc})."]
 
-    # Fallback: random scrap crafting (original behavior)
-    craftable = {
-        "metal_scraps": ["basic_tools", "shelter_patch"],
-        "rope": ["shelter_patch"],
-        "wire": ["basic_tools"],
-    }
-    for item_id in list(room.items):
-        if item_id in craftable:
-            room.remove_item(item_id)
-            product = random.choice(craftable[item_id])
-            room.add_item(product)
-            product_name = game.items_db.get(product, {}).get("name", product)
-            return [f"Crafted: {product_name}"]
     return []
 
 

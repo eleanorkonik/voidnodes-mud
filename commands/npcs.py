@@ -118,7 +118,7 @@ class NpcsMixin:
             state = social.create_encounter_state(enc_id, enc, npc_id, npc_name)
             self.in_social_encounter = True
             self.social_encounter_state = state
-            social.display_contest_round(state)
+            social.display_contest_round(state, char=self.current_character())
 
     def _handle_social_encounter_input(self, raw):
         """Route input during a social encounter to the appropriate handler."""
@@ -129,6 +129,17 @@ class NpcsMixin:
 
         enc_type = state["type"]
         cmd = raw.lower().strip()
+
+        # Allow info commands during encounters
+        if cmd in ("stat", "stats", "status"):
+            self.cmd_stat([])
+            return
+        if cmd.startswith("probe ") or cmd.startswith("check "):
+            parts = cmd.split(None, 1)
+            handler = getattr(self, f"cmd_{parts[0]}", None)
+            if handler:
+                handler(parts[1].split() if len(parts) > 1 else [])
+            return
 
         if enc_type == "challenge":
             self._handle_challenge_input(cmd, state)
@@ -262,7 +273,7 @@ class NpcsMixin:
             self._resolve_contest(state)
         else:
             print()
-            social.display_contest_round(state)
+            social.display_contest_round(state, char=self.current_character())
 
     def _resolve_contest(self, state, conceded=False):
         """Resolve a completed contest encounter."""
@@ -672,17 +683,19 @@ class NpcsMixin:
                     base_loyalty += 2
                     display.success(f"  Bonus: {npc_name} shares everything they know. (+2 loyalty)")
 
-            if bonus_tiers >= 3 and not state["eliminated"]:
+            # True perfect: every tile visited, zero eliminations
+            total_tiles = state["grid_size"] ** 2
+            all_visited = len(state["visited"]) == total_tiles
+            is_flawless = all_visited and not state["eliminated"]
+
+            if bonus_tiers >= 3 and not state["eliminated"] and not is_flawless:
                 # Tier 3: exceptional rapport — happy mood + high loyalty
-                # Requires no tiles eliminated (no conversational threads lost)
+                # (Only show if NOT flawless — flawless subsumes this)
                 base_loyalty = max(base_loyalty, 7)
                 npc["mood"] = "happy"
                 display.success(f"  Bonus: An exceptional conversation. {npc_name} is genuinely fired up.")
 
-            # True perfect: every tile visited, zero eliminations
-            total_tiles = state["grid_size"] ** 2
-            all_visited = len(state["visited"]) == total_tiles
-            if all_visited and not state["eliminated"]:
+            if is_flawless:
                 base_loyalty = min(10, base_loyalty + 3)
                 npc["mood"] = "happy"
                 backstory = npc.get("backstory", {})
