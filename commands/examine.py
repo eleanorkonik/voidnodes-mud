@@ -292,6 +292,51 @@ class ExamineMixin:
                 print(f"  Materials on hand: {', '.join(mat_parts)}")
             return
 
+        if target in ("apothecary", "infirmary", "hospital"):
+            healing_room = self.skerry.get_room("skerry_apothecary")
+            if not healing_room:
+                display.error("No apothecary built yet.")
+                return
+            display.header(healing_room.name)
+            tier_names = {0: "Apothecary", 1: "Infirmary", 2: "Hospital"}
+            tier_label = tier_names.get(healing_room.healing_level, "Apothecary")
+            heal_bonus = healing_room.healing_level
+            print(f"  Tier: {tier_label} (Level {healing_room.healing_level}/2)")
+            print(f"  Lore bonus: +{heal_bonus}")
+            # Show what this tier enables
+            tier_perks = {
+                0: "Bandage-brewing, basic wound tending.",
+                1: "Poultice preparation, mild injuries heal faster, +1 Lore bonus.",
+                2: "Surgical care for severe injuries, -1 treatment DC, +2 Lore bonus.",
+            }
+            print(f"  Capabilities: {tier_perks.get(healing_room.healing_level, '')}")
+            # Show upgrade info
+            from commands.building import BuildingMixin
+            apoth_tiers = BuildingMixin.UPGRADE_TIERS.get("apothecary", {})
+            next_tier = apoth_tiers.get("tiers", {}).get(healing_room.healing_level)
+            if next_tier:
+                cost_str = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
+                                    for k, v in next_tier["cost"].items())
+                print(f"  Next upgrade: {next_tier['name']} — needs: {cost_str} ({next_tier['skill']} DC {next_tier['dc']})")
+            else:
+                print(f"  {display.DIM}Fully upgraded.{display.RESET}")
+            # Show apothecary-only recipes
+            apoth_recipes = [r for r in self.recipes_db.values()
+                             if r.get("requires_room") == "skerry_apothecary"]
+            if apoth_recipes:
+                names = [r["name"] for r in apoth_recipes]
+                print(f"  Apothecary recipes: {', '.join(names)}")
+            # Show items in room
+            if healing_room.items:
+                from collections import Counter
+                counts = Counter(healing_room.items)
+                mat_parts = []
+                for item_id, count in counts.items():
+                    name = self.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
+                    mat_parts.append(f"{count}x {name}")
+                print(f"  Supplies on hand: {', '.join(mat_parts)}")
+            return
+
         if target == "skerry":
             display.header("Skerry Status")
             cap = self.skerry.population_cap()

@@ -110,6 +110,7 @@ COMMANDS = {
     "withdraw":  {"args": "required"},
     "queue":     {"args": "optional"},
     "unqueue":   {"args": "required"},
+    "upgrade":   {"args": "required"},
 }
 
 

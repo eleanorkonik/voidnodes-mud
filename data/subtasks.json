@@ -139,6 +139,48 @@
             "description": "Treat perishable food to extend its shelf life."
         }
     ],
+    "healing": [
+        {
+            "id": "tend_wounds",
+            "name": "Tend Wounds",
+            "order": 1,
+            "condition": "has_wounded",
+            "skill": "Lore",
+            "dc": 0,
+            "handler": "tend_wounds",
+            "description": "Check on the injured and help mild wounds heal faster."
+        },
+        {
+            "id": "brew_remedies",
+            "name": "Brew Remedies",
+            "order": 2,
+            "condition": "room_has_fabric",
+            "skill": "Crafts",
+            "dc": 1,
+            "handler": "brew_remedies",
+            "description": "Turn torn fabric into clean bandages."
+        },
+        {
+            "id": "prepare_poultice",
+            "name": "Prepare Poultice",
+            "order": 3,
+            "condition": "healing_level_1",
+            "skill": "Lore",
+            "dc": 2,
+            "handler": "prepare_poultice",
+            "description": "Brew a medicinal poultice from plant extracts."
+        },
+        {
+            "id": "surgical_care",
+            "name": "Surgical Care",
+            "order": 4,
+            "condition": "healing_level_2",
+            "skill": "Lore",
+            "dc": 3,
+            "handler": "surgical_care",
+            "description": "Perform careful surgery to treat serious injuries overnight."
+        }
+    ],
     "guard": [
         {
             "id": "scan_horizon",

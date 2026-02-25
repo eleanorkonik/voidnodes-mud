@@ -160,6 +160,22 @@
             "max_workers": 2
         },
         {
+            "id": "skerry_apothecary",
+            "name": "Apothecary",
+            "description": "A sheltered alcove walled with salvaged plating, its floor swept clean and covered with woven fabric mats. Bundles of dried moss and rolled bandages hang from hooks along one wall. A low cot sits against the back, its frame lashed together from bent metal. The air smells faintly of resin and something medicinal.",
+            "zone": "skerry",
+            "exits": {"east": "skerry_shelter"},
+            "connect_to": {"skerry_shelter": "west"},
+            "aspects": ["A Place to Mend What the Void Breaks"],
+            "requires": {"materials": {"torn_fabric": 2, "rope": 1}, "npcs": 1},
+            "structures": ["apothecary"],
+            "assigned_npcs": [],
+            "resources": {},
+            "role": "healing",
+            "max_workers": 2,
+            "healing_level": 0
+        },
+        {
             "id": "skerry_lookout",
             "name": "Lookout Post",
             "description": "A raised platform of dark ancient alloy, bolted together and braced with wire stays. It stands twice a person's height above the skerry, reached by a crude ladder. From the top, the void spreads in every direction — black and limitless, broken only by the distant glow of the four nodes.",

@@ -1,37 +1,8 @@
 ## Open Bugs
 
-### BUG: beds not filled properly
-
-Skerry Status
-  Population: 3/8
-
-  Central Clearing
-    Residents: — (0/1 beds)
-    Working:   —
-  Basic Shelter
-    Residents: — (0/2 beds)
-    Working:   —
-  The Hollow
-    Residents: — (0/1 beds)
-    Working:   —
-  The Junkyard
-    Residents: — (0/1 beds)
-    Working:   Emmy
-  Landing Pad
-    4 nodes within sensing distance
-  Workshop
-    Residents: — (0/2 beds)
-    Working:   —
-
-Emmy should be 1/1 beds for the junkyard, and sevarik and miria are 2/2 beds for the shelter.
+(none)
 
 ## Design Questions (deferred)
-
-### PROBLEM: Workshop purpose / material distribution unclear
-
-It's not entirely clear how to utilize the workshop, or how it synergizes with the JUNKYARD. Are we supposed to move components there? Does it let you make better tools? what commands allow usage?
-
-SUBISSUE: Should there be a way to move BUILDING MATERIALS to the WORKSHOP after they've been PROCESSED into raw materials? Should the NPC be doing that as part of "salvaging" -- moving things to the right rooms if they're useful in certain places (like bandages to the apothecary...)
 
 ### FEATURE REQUEST: Buildable apothecary
 
@@ -97,3 +68,11 @@ Code already shows zone aspects in room display — was working correctly.
 ### FIXED: Verdant Wreck map shows NE/SW where E/W should be
 
 `vw_canopy` was at grid position (1,2) instead of (2,2) — one row too high, causing the renderer to draw a diagonal instead of a horizontal connection from the greenhouse.
+
+### FIXED: Beds not filled properly in CHECK SKERRY
+
+Emmy showed 0/1 beds in junkyard despite being settled; Sevarik/Miria showed 0/2 in shelter. Settled NPC counting wasn't reading `settled_room` correctly.
+
+### FIXED: Workshop purpose / material distribution unclear
+
+Implemented junkyard→workshop pipeline: haul_materials subtask routes crafting materials automatically, QUEUE/UNQUEUE commands for craft priority, workshop-only recipes (Leather Armor, Bone Needles, Reinforced Patch), tool_level shown in TASKS and CHECK WORKSHOP.

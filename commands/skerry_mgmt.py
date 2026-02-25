@@ -18,8 +18,9 @@ class SkerryMgmtMixin:
         "storehouse": "organizing", "the storehouse": "organizing",
         "water": "gathering", "water collection": "gathering",
         "shelter": "communal", "basic shelter": "communal",
+        "apothecary": "healing", "infirmary": "healing", "hospital": "healing",
     }
-    _VALID_TASKS = {"salvage", "gardening", "guarding", "crafting", "organizing", "gathering", "communal", "idle"}
+    _VALID_TASKS = {"salvage", "gardening", "guarding", "crafting", "organizing", "gathering", "communal", "healing", "idle"}
     # Which task needs which room built to be useful
     _TASK_REQUIRES_ROOM = {
         "salvage": "junkyard",
@@ -29,6 +30,7 @@ class SkerryMgmtMixin:
         "organizing": "storehouse",
         "gathering": "water_collection",
         "communal": "basic_shelter",
+        "healing": "apothecary",
     }
     # Map room role → NPC task name (for counting workers per room)
     _ROLE_TO_TASK = {
@@ -39,6 +41,7 @@ class SkerryMgmtMixin:
         "organize": "organizing",
         "gather": "gathering",
         "communal": "communal",
+        "healing": "healing",
         "recreation": "recreation",
         "seedcare": "seedcare",
     }
@@ -320,6 +323,14 @@ class SkerryMgmtMixin:
             if room.role == "craft":
                 tool_bonus = 1 + room.tool_level
                 header += f" — Tool Level: {room.tool_level}/3 (+{tool_bonus} Crafts bonus)"
+            elif room.role == "healing":
+                heal_bonus = room.healing_level
+                tier_names = {0: "Apothecary", 1: "Infirmary", 2: "Hospital"}
+                tier_label = tier_names.get(room.healing_level, "Apothecary")
+                if heal_bonus > 0:
+                    header += f" — {tier_label} (+{heal_bonus} Lore bonus)"
+                else:
+                    header += f" — {tier_label}"
             print(header)
             for st in st_defs:
                 # Find who's working on this subtask

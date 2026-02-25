@@ -289,6 +289,18 @@
         "stackable": true,
         "special": "cure_wound"
     },
+    "poultice": {
+        "id": "poultice",
+        "name": "Poultice",
+        "description": "A thick paste of medicinal extracts wrapped in clean fabric. Applied to wounds, it numbs pain and fights infection. Better than bandages alone.",
+        "type": "consumable",
+        "aspects": [],
+        "mote_value": 2,
+        "stat_bonuses": {},
+        "stackable": true,
+        "special": "cure_wound",
+        "treatment_bonus": 1
+    },
     "scattered_notes": {
         "id": "scattered_notes",
         "name": "Scattered Notes",

@@ -611,15 +611,41 @@ class NpcsMixin:
         print()
         invoke_bonus = self._consume_invoke_bonus()
         effective_lore = treater_lore + invoke_bonus
+
+        # Apothecary room bonus
+        room = self.current_room()
+        apoth_bonus = 0
+        if room and room.id == "skerry_apothecary":
+            apoth_bonus = room.healing_level
+            effective_lore += apoth_bonus
+
+        # Cure item bonus (poultice gives +1)
+        cure_item = self.items_db.get(cure, {})
+        item_bonus = cure_item.get("treatment_bonus", 0)
+        effective_lore += item_bonus
+
+        # Hospital (tier 2) reduces severe DC by 1
+        effective_dc = difficulty
+        if room and room.id == "skerry_apothecary" and room.healing_level >= 2 and sev == "severe":
+            effective_dc = max(0, difficulty - 1)
+
         label = f"Lore+{invoke_bonus}" if invoke_bonus else "Lore"
         display.narrate(f"{treater_name} prepares the {cure_name} and gets to work...")
         atk_dice = dice.roll_4df()
         total = sum(atk_dice) + effective_lore
 
         print(f"  {treater_name}: {dice.roll_description(atk_dice, effective_lore, label)}")
-        print(f"  Difficulty: {difficulty} ({['Mediocre', 'Average', 'Fair', 'Good', 'Great'][difficulty]})")
+        if apoth_bonus:
+            print(f"  {room.name} bonus: +{apoth_bonus}")
+        if item_bonus:
+            print(f"  {cure_item.get('name', cure)} bonus: +{item_bonus}")
+        ladder = {0: "Mediocre", 1: "Average", 2: "Fair", 3: "Good", 4: "Great"}
+        if effective_dc != difficulty:
+            print(f"  Difficulty: {effective_dc} ({ladder.get(effective_dc, f'+{effective_dc}')}) (reduced from {difficulty})")
+        else:
+            print(f"  Difficulty: {effective_dc} ({ladder.get(effective_dc, f'+{effective_dc}')})")
 
-        shifts = total - difficulty
+        shifts = total - effective_dc
 
         if shifts >= 0:
             # Success

@@ -116,6 +116,26 @@
         "description": "Layer hide over metal scraps for a patch that won't tear twice.",
         "requires_room": "skerry_workshop"
     },
+    "poultice": {
+        "id": "poultice",
+        "name": "Poultice",
+        "materials": {"luminous_extract": 1, "torn_fabric": 1},
+        "result": "poultice",
+        "difficulty": 2,
+        "skill": "Lore",
+        "description": "Blend luminous extract into a medicinal paste and wrap in clean fabric.",
+        "requires_room": "skerry_apothecary"
+    },
+    "tuber_poultice": {
+        "id": "tuber_poultice",
+        "name": "Tuber Poultice",
+        "materials": {"tuber_skin_compound": 1, "torn_fabric": 1},
+        "result": "poultice",
+        "difficulty": 2,
+        "skill": "Lore",
+        "description": "Render tuber skin compound into a pungent but effective wound paste.",
+        "requires_room": "skerry_apothecary"
+    },
     "spore_broth": {
         "id": "spore_broth",
         "name": "Spore Broth",

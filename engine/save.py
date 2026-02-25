@@ -161,6 +161,7 @@ def _migrate_state(state):
         "skerry_garden": {"role": "garden"},
         "skerry_water": {"role": "gather"},
         "skerry_lookout": {"role": "guard"},
+        "skerry_apothecary": {"role": "healing", "healing_level": 0},
     }
     skerry_data = state.get("skerry", {})
     for room_data in skerry_data.get("rooms", []):
@@ -171,6 +172,7 @@ def _migrate_state(state):
         room_data.setdefault("role", None)
         room_data.setdefault("barracks_spaces", 0)
         room_data.setdefault("tool_level", 0)
+        room_data.setdefault("healing_level", 0)
         # Migrate old "rest" role → "communal"
         if room_data.get("role") == "rest":
             room_data["role"] = "communal"

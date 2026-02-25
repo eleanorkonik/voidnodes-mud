@@ -22,6 +22,7 @@ class Room:
         self.role = data.get("role")
         self.max_workers = data.get("max_workers", 2)
         self.tool_level = data.get("tool_level", 0)
+        self.healing_level = data.get("healing_level", 0)
         self.barracks_spaces = data.get("barracks_spaces", 0)
 
     def discover(self):
@@ -95,6 +96,8 @@ class Room:
             d["max_workers"] = self.max_workers
         if self.tool_level:
             d["tool_level"] = self.tool_level
+        if self.healing_level:
+            d["healing_level"] = self.healing_level
         if self.barracks_spaces:
             d["barracks_spaces"] = self.barracks_spaces
         return d

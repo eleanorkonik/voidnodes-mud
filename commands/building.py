@@ -382,6 +382,18 @@ class BuildingMixin:
             display.seed_speak("they'll haul materials here automatically.")
             display.seed_speak("Type RECIPES to see what you can make, and QUEUE to set priorities.")
 
+        # Apothecary walkthrough on first build
+        if "apothecary" in tmpl.get("structures", []):
+            # Auto-discover apothecary-only recipes
+            discovered = self.state.setdefault("discovered_recipes", [])
+            for recipe_id, recipe in self.recipes_db.items():
+                if recipe.get("requires_room") == "skerry_apothecary" and recipe_id not in discovered:
+                    discovered.append(recipe_id)
+            print()
+            display.seed_speak("Somewhere to tend the wounded. Assign a healer here and they'll")
+            display.seed_speak("brew bandages and tend injuries overnight.")
+            display.seed_speak("UPGRADE APOTHECARY when you have materials to unlock better care.")
+
         # Update skerry state
         self.state["skerry"] = self.skerry.to_dict()
 
@@ -453,3 +465,158 @@ class BuildingMixin:
 
         queue.remove(recipe["id"])
         display.success(f"Removed {recipe['name']} from the craft queue.")
+
+    # ── Upgrade tiers ────────────────────────────────────────────────
+
+    UPGRADE_TIERS = {
+        "apothecary": {
+            "room_id": "skerry_apothecary",
+            "structure": "apothecary",
+            "level_field": "healing_level",
+            "max_level": 2,
+            "tiers": {
+                0: {
+                    "name": "Infirmary",
+                    "cost": {"metal_scraps": 2, "basic_tools": 1},
+                    "dc": 2,
+                    "skill": "Crafts",
+                    "description": "Upgrade with proper tools and metal framing for a sheltered infirmary.",
+                },
+                1: {
+                    "name": "Hospital",
+                    "cost": {"ancient_alloys": 2, "crystal_shards": 1, "bone_needles": 1},
+                    "dc": 4,
+                    "skill": "Crafts",
+                    "description": "Ancient alloys and crystal resonance create a true surgical ward.",
+                },
+            },
+        },
+    }
+
+    def cmd_upgrade(self, args):
+        """UPGRADE <structure> — upgrade a skerry building to the next tier."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "upgrades")
+            return
+        if not args:
+            display.error("Upgrade what? Usage: UPGRADE <structure>")
+            return
+
+        target = " ".join(args).lower()
+
+        # Find matching upgrade definition
+        upgrade_def = None
+        for key, udef in self.UPGRADE_TIERS.items():
+            if target in key or key in target:
+                upgrade_def = udef
+                break
+
+        if not upgrade_def:
+            display.error(f"Nothing called '{target}' can be upgraded.")
+            return
+
+        # Find the room
+        room = self.skerry.get_room(upgrade_def["room_id"])
+        if not room:
+            display.error(f"The {target} hasn't been built yet.")
+            return
+
+        # Also update the game.rooms reference
+        game_room = self.rooms.get(upgrade_def["room_id"])
+
+        current_level = getattr(room, upgrade_def["level_field"], 0)
+        if current_level >= upgrade_def["max_level"]:
+            display.narrate(f"{room.name} is already at maximum upgrade level.")
+            return
+
+        tier = upgrade_def["tiers"].get(current_level)
+        if not tier:
+            display.error("No further upgrades available.")
+            return
+
+        # Check materials
+        char = self.current_character()
+        inv_counts = self._inventory_counts(char)
+        current_room = self.current_room()
+        if current_room:
+            for item_id in current_room.items:
+                inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+
+        missing = []
+        for mat, needed in tier["cost"].items():
+            if inv_counts.get(mat, 0) < needed:
+                mat_name = self.items_db.get(mat, {}).get("name", mat.replace("_", " ").title())
+                missing.append(f"{needed}x {mat_name} (have {inv_counts.get(mat, 0)})")
+
+        if missing:
+            display.info(f"  Upgrade to {tier['name']}: {tier['description']}")
+            display.error(f"  Missing materials: {', '.join(missing)}")
+            return
+
+        # Skill check
+        skill_name = tier["skill"]
+        dc = tier["dc"]
+        invoke_bonus = self._consume_invoke_bonus()
+        skill_val = char.get_skill(skill_name) + invoke_bonus
+        label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
+        total, shifts, dice_result = dice.skill_check(skill_val, dc)
+        print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)}")
+        print(f"  DC: {dc:+d}")
+
+        if shifts < 0:
+            # Fail — lose one material
+            lost_mat = list(tier["cost"].keys())[0]
+            if current_room and lost_mat in current_room.items:
+                current_room.remove_item(lost_mat)
+            else:
+                char.remove_from_inventory(lost_mat)
+            lost_name = self.items_db.get(lost_mat, {}).get("name", lost_mat)
+            display.warning(f"Upgrade failed! Lost 1x {lost_name} in the attempt.")
+            return
+
+        # Consume materials
+        for mat, count in tier["cost"].items():
+            for _ in range(count):
+                if current_room and mat in current_room.items:
+                    current_room.remove_item(mat)
+                else:
+                    char.remove_from_inventory(mat)
+
+        # Apply upgrade
+        new_level = current_level + 1
+        setattr(room, upgrade_def["level_field"], new_level)
+        if game_room:
+            setattr(game_room, upgrade_def["level_field"], new_level)
+
+        # Update room name and description
+        room.name = tier["name"]
+        if game_room:
+            game_room.name = tier["name"]
+
+        tier_descriptions = {
+            "Infirmary": "Metal-framed cots and shelving line the walls. Proper bandaging and poultice-work can happen here.",
+            "Hospital": "Ancient alloy fixtures hum with faint resonance. Crystal-focused light illuminates a surgical table.",
+        }
+        new_desc = tier_descriptions.get(tier["name"], room.description)
+        room.description = new_desc
+        if game_room:
+            game_room.description = new_desc
+
+        display.success(f"Upgraded to {tier['name']}!")
+        display.narrate(f"  {new_desc}")
+
+        tier_hints = {
+            1: "Better facilities mean better care. Poultice-brewing and wound-tending",
+            2: "Surgical care is now possible. Even severe injuries can be treated here.",
+        }
+        hint = tier_hints.get(new_level)
+        if hint:
+            print()
+            display.seed_speak(hint)
+            if new_level == 1:
+                display.seed_speak("will go smoother with a +1 Lore bonus.")
+
+        self._log_event("structure_upgraded", comic_weight=4,
+                        room_name=tier["name"], room_id=upgrade_def["room_id"],
+                        level=new_level)
+        self.state["skerry"] = self.skerry.to_dict()

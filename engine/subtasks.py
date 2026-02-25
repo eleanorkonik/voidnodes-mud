@@ -13,6 +13,11 @@ CRAFTING_MATERIALS = {
     "hide", "bone", "resin", "luminous_moss",
 }
 
+# Healing material IDs — items that should be hauled to the apothecary
+HEALING_MATERIALS = {
+    "luminous_extract", "tuber_skin_compound", "bandages", "poultice",
+}
+
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 _subtask_defs = None
@@ -107,6 +112,31 @@ def _has_delivery_targets(game, room, npc):
     return False
 
 
+def _has_wounded(game, room, npc):
+    """Any character has a consequence that could benefit from tending."""
+    for char_key in ("explorer", "steward"):
+        char_data = game.state.get(char_key, {})
+        cons = char_data.get("consequences", {})
+        if any(v is not None for v in cons.values()):
+            return True
+    return False
+
+
+def _room_has_fabric(game, room, npc):
+    """Room has torn_fabric for brewing bandages."""
+    return "torn_fabric" in room.items
+
+
+def _healing_level_1(game, room, npc):
+    """Apothecary upgraded to infirmary (healing_level >= 1)."""
+    return room.healing_level >= 1
+
+
+def _healing_level_2(game, room, npc):
+    """Apothecary upgraded to hospital (healing_level >= 2)."""
+    return room.healing_level >= 2
+
+
 def _has_perishable_food(game, room, npc):
     return any(e.get("shelf_life", -1) > 0 for e in game.skerry.food_stores)
 
@@ -120,6 +150,10 @@ CONDITIONS = {
     "tools_not_maxed": _tools_not_maxed,
     "has_perishable_food": _has_perishable_food,
     "has_delivery_targets": _has_delivery_targets,
+    "has_wounded": _has_wounded,
+    "room_has_fabric": _room_has_fabric,
+    "healing_level_1": _healing_level_1,
+    "healing_level_2": _healing_level_2,
 }
 
 
@@ -262,8 +296,12 @@ def _handler_haul_materials(game, room, npc, shifts):
     workshop = game.skerry.get_room("skerry_workshop")
     garden = game.skerry.get_room("skerry_garden")
 
+    apothecary = game.skerry.get_room("skerry_apothecary")
+
     if workshop:
         routes.append((CRAFTING_MATERIALS, workshop))
+    if apothecary:
+        routes.append((HEALING_MATERIALS, apothecary))
     if garden:
         specimens_set = set(game.specimens_db.keys()) if hasattr(game, 'specimens_db') else set()
         if specimens_set:
@@ -452,6 +490,100 @@ def _handler_tend_shelves(game, room, npc, shifts):
     return []
 
 
+def _handler_tend_wounds(game, room, npc, shifts):
+    """Help mild consequences heal faster — reduces zone-clear requirement by 1."""
+    from engine import aspects
+    messages = []
+    zones_cleared = game.state.get("zones_cleared", 0)
+    meta = game.state.get("consequence_meta", {})
+    # Check both characters for mild consequences
+    for char_key in ("explorer", "steward"):
+        char_data = game.state.get(char_key, {})
+        cons = char_data.get("consequences", {})
+        mild = cons.get("mild")
+        if not mild:
+            continue
+        meta_key = f"{char_key}_mild"
+        entry = meta.get(meta_key, {})
+        taken_at = entry.get("taken_at", 0)
+        required = aspects.ZONE_CLEARS_REQUIRED["mild"]
+        # Apothecary tier 1+ reduces requirement by 1
+        if room.healing_level >= 1:
+            required = max(0, required - 1)
+        remaining = max(0, required - (zones_cleared - taken_at))
+        char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+        if remaining <= 0:
+            # Heal it
+            cons["mild"] = None
+            meta.pop(meta_key, None)
+            messages.append(f"{char_name}'s mild injury ({mild}) has healed.")
+        else:
+            messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
+    if not messages:
+        messages.append("No injuries to tend. Organized supplies instead.")
+    return messages
+
+
+def _handler_brew_remedies(game, room, npc, shifts):
+    """Auto-craft bandages from torn_fabric in the room."""
+    if "torn_fabric" not in room.items:
+        return []
+    # Consume 2 fabric → 1 bandage (same as recipe)
+    count = sum(1 for i in room.items if i == "torn_fabric")
+    if count >= 2:
+        room.remove_item("torn_fabric")
+        room.remove_item("torn_fabric")
+        room.add_item("bandages")
+        return ["Brewed: Bandages (from 2x Torn Fabric)"]
+    return []
+
+
+def _handler_prepare_poultice(game, room, npc, shifts):
+    """Craft a poultice from plant extracts in the room."""
+    # Check for luminous_extract or tuber_skin_compound + torn_fabric
+    has_fabric = "torn_fabric" in room.items
+    if not has_fabric:
+        return []
+    for extract in ("luminous_extract", "tuber_skin_compound"):
+        if extract in room.items:
+            room.remove_item(extract)
+            room.remove_item("torn_fabric")
+            room.add_item("poultice")
+            extract_name = game.items_db.get(extract, {}).get("name", extract)
+            return [f"Prepared: Poultice (from {extract_name} + Torn Fabric)"]
+    return []
+
+
+def _handler_surgical_care(game, room, npc, shifts):
+    """Auto-treat moderate consequences overnight with a Lore check."""
+    from engine import aspects
+    # Find a character with a treatable moderate consequence
+    for char_key in ("explorer", "steward"):
+        char_data = game.state.get(char_key, {})
+        cons = char_data.get("consequences", {})
+        moderate = cons.get("moderate")
+        if not moderate:
+            continue
+        # Check if eligible for treatment
+        eligible, _ = aspects.can_treat_consequence(
+            type("FakeGame", (), {"state": game.state})(), char_key, "moderate"
+        )
+        if not eligible:
+            continue
+        # Need a cure item in the room
+        cure = aspects.get_cure_for_consequence(moderate)
+        if cure not in room.items:
+            continue
+        # Consume the cure item — Lore check already passed via subtask runner
+        room.remove_item(cure)
+        cons["moderate"] = None
+        meta = game.state.setdefault("consequence_meta", {})
+        meta.pop(f"{char_key}_moderate", None)
+        char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+        return [f"Treated {char_name}'s moderate injury ({moderate}). Fully healed."]
+    return ["No moderate injuries to operate on."]
+
+
 HANDLERS = {
     "water_plants": _handler_water_plants,
     "fertilize_soil": _handler_fertilize_soil,
@@ -471,6 +603,10 @@ HANDLERS = {
     "tidy_up": _handler_tidy_up,
     "create_art": _handler_create_art,
     "tend_shelves": _handler_tend_shelves,
+    "tend_wounds": _handler_tend_wounds,
+    "brew_remedies": _handler_brew_remedies,
+    "prepare_poultice": _handler_prepare_poultice,
+    "surgical_care": _handler_surgical_care,
 }
 
 
