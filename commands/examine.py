@@ -383,13 +383,46 @@ class ExamineMixin:
                 else:
                     print(f"    {display.DIM}—{display.RESET}")
 
+            # Shared inventory counts for upgradable + buildable sections
+            inv_counts = self._inventory_counts(self.steward)
+            room = self.current_room()
+            if room:
+                for item_id in room.items:
+                    inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+            npc_count = len(self.state.get("recruited_npcs", []))
+
+            # Show upgradable structures
+            from commands.building import BuildingMixin
+            upgrade_lines = []
+            for key, udef in BuildingMixin.UPGRADE_TIERS.items():
+                uroom = self.skerry.get_room(udef["room_id"])
+                if not uroom:
+                    continue
+                current_level = getattr(uroom, udef["level_field"], 0)
+                tier = udef["tiers"].get(current_level)
+                if not tier:
+                    continue  # maxed out
+                mat_parts = []
+                can_upgrade = True
+                for k, v in tier["cost"].items():
+                    label = f"{v}x {k.replace('_', ' ')}"
+                    if inv_counts.get(k, 0) >= v:
+                        mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                    else:
+                        mat_parts.append(label)
+                        can_upgrade = False
+                mats = ", ".join(mat_parts)
+                line_name = f"{uroom.name} → {tier['name']}"
+                if can_upgrade:
+                    upgrade_lines.append(f"    {display.BRIGHT_WHITE}{line_name}{display.RESET} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
+                else:
+                    upgrade_lines.append(f"    {line_name} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
+            if upgrade_lines:
+                print(f"\n  {display.BOLD}Upgradable:{display.RESET}")
+                for line in upgrade_lines:
+                    print(line)
+
             if self.skerry.expandable:
-                inv_counts = self._inventory_counts(self.steward)
-                room = self.current_room()
-                if room:
-                    for item_id in room.items:
-                        inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
-                npc_count = len(self.state.get("recruited_npcs", []))
                 print(f"\n  {display.BOLD}Buildable:{display.RESET}")
                 for tmpl in self.skerry.expandable:
                     reqs = tmpl.get("requires", {})
