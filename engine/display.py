@@ -364,7 +364,7 @@ def display_help(phase, seed_name="Tuft"):
         ("LOOK [thing]", "Examine surroundings or a specific thing"),
         ("IH [thing]", "List objects here, or examine something"),
         ("GO <direction>", "Move (NORTH/SOUTH/EAST/WEST/UP/DOWN, or N/S/E/W)"),
-        ("TALK / HI <npc>", "Talk to an NPC"),
+        ("GREET / TALK <npc>", "Greet an NPC (may trigger encounters)"),
         (f"CHECK <target>", f"Check NPC, {seed_name}, skerry, stores, or vault"),
         ("INVENTORY", "Show your inventory"),
         ("STATUS", "Show your character sheet"),

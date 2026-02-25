@@ -407,7 +407,7 @@ class MovementMixin:
                     self.state["_npc_talk_hint_shown"] = True
                     print()
                     display.seed_speak("I sense a survivor here. Someone who knows this place.")
-                    display.seed_speak("TALK to them — they might know something useful.")
+                    display.seed_speak("GREET them — they might know something useful.")
                     break
 
         # Check for aggressive enemies (explorer only) + passive artifact discovery
@@ -417,8 +417,17 @@ class MovementMixin:
             # Steward still gets passive artifact discovery
             self._check_passive_artifact_discovery(target_room)
 
+            # Social compels on skerry room entry (steward phase)
+            if target_room.zone == "skerry" and not self.in_compel:
+                from engine.social import check_social_compel, mark_social_compel_used
+                social_compel = check_social_compel(self)
+                if social_compel:
+                    mark_social_compel_used(self, social_compel["aspect"])
+                    self._present_compel(social_compel)
+                    return
+
         # World seed flavor message occasionally
-        if not self.in_combat and random.random() < 0.3:
+        if not self.in_combat and not self.in_compel and random.random() < 0.3:
             print()
             display.seed_speak(self.seed.communicate(self.seed_name))
 

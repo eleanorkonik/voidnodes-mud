@@ -87,6 +87,8 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.compel_triggered = False  # at most one compel per combat
         self.in_recruit = False
         self.recruit_state = None
+        self.in_social_encounter = False
+        self.social_encounter_state = None
         self.pending_invoke_bonus = 0  # floating +2 from invoke, consumed by next roll
         self.pending_invoke_aspect = None
 
@@ -374,6 +376,11 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                     self._handle_recruit_input(raw.strip())
                     continue
 
+                # Social encounter — intercept raw input before parser
+                if self.in_social_encounter:
+                    self._handle_social_encounter_input(raw.strip())
+                    continue
+
                 # Repeat prefix: "x5 scavenge" or "5x scavenge"
                 repeat, cmd_raw = _parse_repeat_prefix(raw)
 
@@ -394,7 +401,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                     if not self.running:
                         break
                     # Only break repeat chains, not the first execution
-                    if i > 0 and (self.in_combat or self.in_recruit or self.in_compel):
+                    if i > 0 and (self.in_combat or self.in_recruit or self.in_compel or self.in_social_encounter):
                         break
 
                     if repeat > 1 and i > 0:

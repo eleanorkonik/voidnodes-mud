@@ -106,6 +106,14 @@ class WorldSeed:
         elif stage == 4:  # Sun
             self.aspects = ["Reality Plays By Its Rules Here", "Remembers a World That No Longer Exists"]
 
+    def clear_stress_box(self):
+        """Clear the most recently filled stress box. Returns True if one was cleared."""
+        for i in range(len(self.stress) - 1, -1, -1):
+            if self.stress[i]:
+                self.stress[i] = False
+                return True
+        return False
+
     def to_dict(self):
         """Serialize to dict."""
         return {

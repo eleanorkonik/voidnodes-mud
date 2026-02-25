@@ -1,0 +1,181 @@
+{
+    "tool_dispute": {
+        "type": "challenge",
+        "name": "The Tool Dispute",
+        "min_loyalty": 3,
+        "min_npcs": 2,
+        "description": "Two settlers are arguing over the last good wrench.",
+        "steps": [
+            {
+                "skill": "Empathy",
+                "dc": 2,
+                "prompt": "Read the room. What's really going on?",
+                "success_text": "You see it now — this isn't about the wrench. {npc_name} watches you, impressed.",
+                "failure_text": "You try to read the situation, but the tension is too thick.",
+                "success_reward": {"mood_bonus": 1}
+            },
+            {
+                "skill": "Rapport",
+                "dc": 2,
+                "prompt": "Talk them down.",
+                "success_text": "Your words cut through the anger. Both settlers unclench.",
+                "failure_text": "They're too wound up to listen right now.",
+                "success_reward": {"loyalty_bonus": 1}
+            },
+            {
+                "skill": "Crafts",
+                "dc": 1,
+                "prompt": "Maybe you can make a second tool.",
+                "success_text": "You cobble together a workable replacement from scrap.",
+                "failure_text": "The materials aren't cooperating today.",
+                "success_reward": {"item": "basic_tools"}
+            }
+        ],
+        "resolution": {
+            "full_success": "Both settlers thank you. The argument is forgotten.",
+            "partial_success": "Not perfect, but the argument is over. For now.",
+            "failure": "The dispute festers. Nobody's happy."
+        },
+        "failure_penalty": {
+            "miria_stress": 1,
+            "festering_aspect": "Unresolved Dispute"
+        }
+    },
+    "homesick_talk": {
+        "type": "simple",
+        "name": "Homesick",
+        "min_loyalty": 4,
+        "once": true,
+        "description": "{npc_name} is staring at the void with a faraway look.",
+        "skill": "Empathy",
+        "dc": 2,
+        "success_text": "You sit with {npc_name} and listen. Sometimes that's all it takes.",
+        "failure_text": "You try, but the words come out wrong. {npc_name} looks away.",
+        "success_reward": {"loyalty_bonus": 2, "backstory_reveal": true},
+        "failure_penalty": {"mood_penalty": 1}
+    },
+    "skeptic_debate": {
+        "type": "contest",
+        "name": "Prove Your Worth",
+        "npc_specific": ["dax"],
+        "min_loyalty": 2,
+        "once": true,
+        "description": "Dax wants proof the skerry plan isn't doomed.",
+        "npc_skill": "Will",
+        "npc_skill_value": 2,
+        "victories_needed": 3,
+        "tactics": [
+            {
+                "id": "evidence",
+                "name": "Appeal to Evidence",
+                "skill": "Rapport",
+                "flavor": "You lay out the facts — materials gathered, rooms built, people fed."
+            },
+            {
+                "id": "emotion",
+                "name": "Appeal to Emotion",
+                "skill": "Empathy",
+                "flavor": "You speak to what she's really afraid of — being wrong about trusting someone."
+            },
+            {
+                "id": "demonstrate",
+                "name": "Show, Don't Tell",
+                "skill": "Crafts",
+                "flavor": "You pick up the nearest broken thing and fix it."
+            }
+        ],
+        "win_text": "Dax nods once. 'Fine. You might not be an idiot.'",
+        "lose_text": "Dax turns away. 'Come back when you have better answers.'",
+        "win_reward": {"loyalty_bonus": 2, "backstory_reveal": true},
+        "lose_penalty": {
+            "mood_penalty": 1,
+            "festering_aspect": "Doubts About Leadership"
+        }
+    },
+    "lonely_night": {
+        "type": "simple",
+        "name": "Can't Sleep",
+        "npc_specific": ["chris"],
+        "min_loyalty": 1,
+        "once": true,
+        "description": "Chris is sitting alone in the dark, knees drawn up.",
+        "skill": "Empathy",
+        "dc": 1,
+        "success_text": "You sit down next to him. No words needed. After a while, his shoulders stop shaking.",
+        "failure_text": "You try to help, but you say the wrong thing. Chris curls up tighter.",
+        "success_reward": {"loyalty_bonus": 2, "mood_bonus": 1},
+        "failure_penalty": {"mood_penalty": 1}
+    },
+    "scholar_puzzle": {
+        "type": "challenge",
+        "name": "Ancient Inscription",
+        "npc_specific": ["callum"],
+        "min_loyalty": 3,
+        "description": "Callum found an inscription on a piece of salvage. He needs help deciphering it.",
+        "steps": [
+            {
+                "skill": "Notice",
+                "dc": 2,
+                "prompt": "Examine the markings closely.",
+                "success_text": "You spot a pattern Callum missed — the symbols repeat in threes.",
+                "failure_text": "The markings blur together. You can't make sense of them.",
+                "success_reward": {"loyalty_bonus": 1}
+            },
+            {
+                "skill": "Empathy",
+                "dc": 2,
+                "prompt": "Help Callum through his frustration.",
+                "success_text": "You calm him down. He refocuses and sees it clearly now.",
+                "failure_text": "Callum mutters something about amateurs and turns away.",
+                "success_reward": {"mood_bonus": 1}
+            }
+        ],
+        "resolution": {
+            "full_success": "Together, you crack the inscription. Callum is ecstatic.",
+            "partial_success": "You got partway there. Callum will work out the rest.",
+            "failure": "The inscription remains a mystery. Callum is frustrated."
+        },
+        "failure_penalty": {"mood_penalty": 1}
+    },
+    "garden_crisis": {
+        "type": "challenge",
+        "name": "Wilting Garden",
+        "min_loyalty": 3,
+        "description": "Something is wrong with the garden plots. Plants are wilting fast.",
+        "steps": [
+            {
+                "skill": "Notice",
+                "dc": 2,
+                "prompt": "Investigate what's causing the damage.",
+                "success_text": "You find it — a crack in the soil bed is draining nutrients.",
+                "failure_text": "Everything looks the same. You can't pinpoint the problem.",
+                "success_reward": {"mood_bonus": 1}
+            },
+            {
+                "skill": "Crafts",
+                "dc": 2,
+                "prompt": "Repair the damage before more plants die.",
+                "success_text": "You patch the crack and redirect the nutrient flow. The plants perk up.",
+                "failure_text": "Your patch doesn't hold. More soil leaks through.",
+                "success_reward": {"loyalty_bonus": 1}
+            },
+            {
+                "skill": "Empathy",
+                "dc": 1,
+                "prompt": "Reassure the settlers who depend on this food.",
+                "success_text": "Your words steady everyone. They roll up their sleeves to help.",
+                "failure_text": "People look worried. The food situation is getting tense.",
+                "success_reward": {"skerry_mood_bonus": 1}
+            }
+        ],
+        "resolution": {
+            "full_success": "The garden is saved. Everyone breathes easier.",
+            "partial_success": "Some damage, but the garden will recover.",
+            "failure": "The garden is in rough shape. People are anxious."
+        },
+        "failure_penalty": {
+            "miria_stress": 1,
+            "festering_aspect": "Neglected Garden"
+        }
+    }
+}

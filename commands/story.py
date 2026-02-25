@@ -169,9 +169,18 @@ class StoryMixin:
 
         day = self.state["day"]
 
+        # Reset social compel daily tracking
+        self.state["social_compels_today"] = []
+
         # Refresh fate points for both characters
         self.explorer.refresh_fate_points()
         self.steward.refresh_fate_points()
+
+        # Festering aspect mote drain
+        from engine.social import apply_festering_drain
+        drain, drain_msgs = apply_festering_drain(self)
+        for msg in drain_msgs:
+            display.warning(msg)
 
         # World seed growth check
         display.seed_speak(self.seed.communicate(self.seed_name))

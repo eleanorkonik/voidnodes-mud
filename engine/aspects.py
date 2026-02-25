@@ -151,6 +151,14 @@ def collect_invokable_aspects(game, context="combat"):
             for a in _flatten_npc_aspects(npc_data):
                 aspects.append((a, npc_data.get("name", "NPC")))
 
+    elif context == "social":
+        # Social encounter — NPC aspects from encounter state
+        if game.social_encounter_state:
+            npc_id = game.social_encounter_state.get("npc_id")
+            npc_data = game.npcs_db.get(npc_id, {})
+            for a in _flatten_npc_aspects(npc_data):
+                aspects.append((a, npc_data.get("name", npc_id)))
+
     # World seed aspects — only invokable in its room
     if game.seed and room and room.id == "skerry_hollow":
         for a in game.seed.aspects:

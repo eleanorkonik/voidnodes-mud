@@ -1,14 +1,19 @@
-"""NPC domain — talk, say, recruit, follower management."""
+"""NPC domain — greet, say, recruit, follower management, social encounters."""
 
-from engine import display, dice, aspects, recruit
+from engine import display, dice, aspects, recruit, social
 
 
 class NpcsMixin:
     """Mixin providing NPC interaction commands for the Game class."""
 
-    def cmd_talk(self, args):
+    def cmd_greet(self, args):
         if not args:
-            display.error("Talk to whom?")
+            display.error("Greet whom?")
+            return
+
+        # If we're in a social encounter, route to handler
+        if self.in_social_encounter:
+            display.error("You're in the middle of something. Finish the encounter first.")
             return
 
         target = " ".join(args).lower()
@@ -33,28 +38,25 @@ class NpcsMixin:
                 apply_quest_talk_effects(quest_result, self.state, self.rooms, self.current_character())
                 return
 
-            dialogue = npc.get("dialogue", {})
             if npc.get("recruited"):
-                mood = npc.get("mood", "content")
-                if mood == "content" or mood == "happy":
-                    msg = dialogue.get("happy", dialogue.get("idle", "..."))
-                else:
-                    msg = dialogue.get("idle", "...")
+                # Check for eligible encounter
+                enc_id, enc = social.pick_encounter(self, npc_id, npc)
+                if enc:
+                    self._start_encounter(enc_id, enc, npc_id, npc)
+                    return
+
+                # No encounter — contextual greeting (no loyalty gain)
+                msg = social.get_contextual_greeting(npc, npc_id, self)
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
-                # Talking to recruited NPCs boosts loyalty slightly
-                if npc.get("loyalty", 0) < 10:
-                    old_loyalty = npc.get("loyalty", 0)
-                    npc["loyalty"] = min(10, old_loyalty + 1)
-                    display.success(f"  {npc['name']}'s loyalty increases to {npc['loyalty']}.")
-                    self._log_event("npc_talked", comic_weight=1,
-                                    npc_name=npc["name"], npc_id=npc_id,
-                                    loyalty_change=f"{old_loyalty}->{npc['loyalty']}")
+                self._log_event("npc_greeted", comic_weight=1,
+                                npc_name=npc["name"], npc_id=npc_id)
             else:
+                dialogue = npc.get("dialogue", {})
                 msg = dialogue.get("greeting", "They look at you warily.")
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
             return
 
-        # Talk to inactive agent
+        # Greet inactive agent
         agent_id, agent = self._find_agent_in_room(target, room.id)
         if agent:
             dialogue = agent.get("dialogue", {})
@@ -63,6 +65,246 @@ class NpcsMixin:
             return
 
         display.narrate(f"There's nobody called '{target}' here to talk to.")
+
+    # ── Social encounter management ──────────────────────────────
+
+    def _start_encounter(self, enc_id, enc, npc_id, npc):
+        """Start a social encounter — simple resolves inline, others use intercept."""
+        npc_name = npc.get("name", npc_id)
+
+        # Record cooldown/history
+        day = self.state.get("day", 1)
+        if enc.get("once"):
+            npc.setdefault("encounter_history", []).append(enc_id)
+        else:
+            self.state.setdefault("encounter_cooldown", {})[enc_id] = day
+
+        social.display_encounter_header(enc, npc_name)
+
+        if enc["type"] == "simple":
+            success, messages = social.resolve_simple(self, enc, npc_id, npc)
+            for msg in messages:
+                print(msg)
+
+            # Apply rewards/penalties
+            print()
+            if success:
+                reward_msgs = social.apply_reward(self, npc, enc.get("success_reward"))
+                for msg in reward_msgs:
+                    display.success(msg)
+            else:
+                penalty_msgs = social.apply_penalty(self, npc, enc.get("failure_penalty"))
+                for msg in penalty_msgs:
+                    display.warning(msg)
+
+            # Check if this encounter resolves a festering aspect
+            resolves = enc.get("resolves_aspect")
+            if resolves and success:
+                resolve_msgs = social.resolve_festering_aspect(self, resolves)
+                for msg in resolve_msgs:
+                    display.success(msg)
+
+            self._log_event("social_encounter", comic_weight=3,
+                            encounter_id=enc_id, npc_name=npc_name,
+                            encounter_type="simple", success=success)
+
+        elif enc["type"] == "challenge":
+            state = social.create_encounter_state(enc_id, enc, npc_id, npc_name)
+            self.in_social_encounter = True
+            self.social_encounter_state = state
+            social.display_challenge_step(enc, 0)
+
+        elif enc["type"] == "contest":
+            state = social.create_encounter_state(enc_id, enc, npc_id, npc_name)
+            self.in_social_encounter = True
+            self.social_encounter_state = state
+            social.display_contest_round(state)
+
+    def _handle_social_encounter_input(self, raw):
+        """Route input during a social encounter to the appropriate handler."""
+        state = self.social_encounter_state
+        if not state:
+            self.in_social_encounter = False
+            return
+
+        enc_type = state["type"]
+        cmd = raw.lower().strip()
+
+        if enc_type == "challenge":
+            self._handle_challenge_input(cmd, state)
+        elif enc_type == "contest":
+            self._handle_contest_input(cmd, state)
+
+    def _handle_challenge_input(self, cmd, state):
+        """Handle input during a challenge encounter."""
+        enc = state["encounter_def"]
+
+        if cmd in ("attempt", "a", "roll"):
+            step_done, enc_done, messages = social.resolve_challenge_step(self, state, "attempt")
+            for msg in messages:
+                print(msg)
+
+            # Apply per-step rewards
+            step_idx = state["current_step"] - 1  # just incremented
+            step = enc["steps"][step_idx]
+            result = state["step_results"][step_idx]
+            if result and step.get("success_reward"):
+                npc = self.npcs_db.get(state["npc_id"], {})
+                reward_msgs = social.apply_reward(self, npc, step["success_reward"])
+                for msg in reward_msgs:
+                    display.success(msg)
+
+            if enc_done:
+                self._resolve_challenge(state)
+            else:
+                print()
+                social.display_challenge_step(enc, state["current_step"])
+
+        elif cmd.startswith("invoke"):
+            # Let the player use INVOKE — it sets pending_invoke_bonus
+            # Then they still need to ATTEMPT
+            rest = cmd[6:].strip()
+            if rest:
+                self._general_invoke(rest.split())
+            else:
+                char = self.current_character()
+                all_aspects = aspects.collect_invokable_aspects(self, context="social")
+                self._display_invoke_menu(char, all_aspects, "social")
+
+        elif cmd in ("concede", "walk", "leave"):
+            step_done, enc_done, messages = social.resolve_challenge_step(self, state, "concede")
+            for msg in messages:
+                print(msg)
+            if enc_done:
+                self._resolve_challenge(state)
+            else:
+                print()
+                social.display_challenge_step(enc, state["current_step"])
+
+        else:
+            display.error("Type ATTEMPT, INVOKE <aspect>, or CONCEDE.")
+
+    def _resolve_challenge(self, state):
+        """Resolve a completed challenge encounter."""
+        enc = state["encounter_def"]
+        npc_id = state["npc_id"]
+        npc_name = state["npc_name"]
+        npc = self.npcs_db.get(npc_id, {})
+
+        level, text = social.get_challenge_resolution(state)
+        social.display_encounter_resolution(level, text)
+
+        # Apply final rewards/penalties based on outcome
+        if level == "full_success":
+            # All step rewards already applied; check for encounter-level bonus
+            pass
+        elif level == "failure":
+            penalty_msgs = social.apply_penalty(self, npc, enc.get("failure_penalty"))
+            for msg in penalty_msgs:
+                display.warning(msg)
+
+        # Check resolves_aspect
+        resolves = enc.get("resolves_aspect")
+        if resolves and level in ("full_success", "partial_success"):
+            resolve_msgs = social.resolve_festering_aspect(self, resolves)
+            for msg in resolve_msgs:
+                display.success(msg)
+
+        self._log_event("social_encounter", comic_weight=4,
+                        encounter_id=state["encounter_id"], npc_name=npc_name,
+                        encounter_type="challenge", result=level)
+
+        self.in_social_encounter = False
+        self.social_encounter_state = None
+
+    def _handle_contest_input(self, cmd, state):
+        """Handle input during a contest encounter."""
+        enc = state["encounter_def"]
+        tactics = enc.get("tactics", [])
+
+        # Concede
+        if cmd in ("concede", "walk", "leave"):
+            self._resolve_contest(state, conceded=True)
+            return
+
+        # Invoke
+        if cmd.startswith("invoke"):
+            rest = cmd[6:].strip()
+            if rest:
+                self._general_invoke(rest.split())
+            else:
+                char = self.current_character()
+                all_aspects = aspects.collect_invokable_aspects(self, context="social")
+                self._display_invoke_menu(char, all_aspects, "social")
+            return
+
+        # Parse tactic choice (1/2/3 or name)
+        tactic_id = None
+        if cmd.isdigit():
+            idx = int(cmd) - 1
+            if 0 <= idx < len(tactics):
+                tactic_id = tactics[idx]["id"]
+        else:
+            for t in tactics:
+                if cmd in t["name"].lower() or cmd == t["id"]:
+                    tactic_id = t["id"]
+                    break
+
+        if not tactic_id:
+            display.error("Pick a tactic (1/2/3), INVOKE <aspect>, or CONCEDE.")
+            return
+
+        round_done, contest_done, messages = social.resolve_contest_round(self, state, tactic_id)
+        for msg in messages:
+            print(msg)
+
+        if contest_done:
+            self._resolve_contest(state)
+        else:
+            print()
+            social.display_contest_round(state)
+
+    def _resolve_contest(self, state, conceded=False):
+        """Resolve a completed contest encounter."""
+        enc = state["encounter_def"]
+        npc_id = state["npc_id"]
+        npc_name = state["npc_name"]
+        npc = self.npcs_db.get(npc_id, {})
+
+        needed = state["victories_needed"]
+        player_won = not conceded and state["player_wins"] >= needed
+
+        print()
+        if player_won:
+            text = enc.get("win_text", f"{npc_name} is convinced.")
+            display.success(f"  {text}")
+            reward_msgs = social.apply_reward(self, npc, enc.get("win_reward"))
+            for msg in reward_msgs:
+                display.success(msg)
+            # Check resolves_aspect
+            resolves = enc.get("resolves_aspect")
+            if resolves:
+                resolve_msgs = social.resolve_festering_aspect(self, resolves)
+                for msg in resolve_msgs:
+                    display.success(msg)
+        else:
+            if conceded:
+                display.narrate("  You step away from the argument.")
+            text = enc.get("lose_text", f"{npc_name} isn't convinced.")
+            display.warning(f"  {text}")
+            penalty_msgs = social.apply_penalty(self, npc, enc.get("lose_penalty"))
+            for msg in penalty_msgs:
+                display.warning(msg)
+
+        result = "win" if player_won else ("concede" if conceded else "lose")
+        self._log_event("social_encounter", comic_weight=4,
+                        encounter_id=state["encounter_id"], npc_name=npc_name,
+                        encounter_type="contest", result=result,
+                        player_wins=state["player_wins"],
+                        npc_wins=state["npc_wins"])
+
+        self.in_social_encounter = False
+        self.social_encounter_state = None
 
     def cmd_say(self, args):
         if not args:

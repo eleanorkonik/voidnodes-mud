@@ -672,6 +672,10 @@ def run_room_subtasks(game, room, workers):
                 # Salvage yard bonus: salvage_level applies to all salvage subtask checks
                 if room.role == "salvage":
                     skill_val += getattr(room, "salvage_level", 0)
+                # Festering aspect penalty: -1 per active social aspect
+                from engine.social import get_festering_penalty
+                festering_mod = get_festering_penalty(game)
+                skill_val += festering_mod
                 total, shifts, dice_result = dice.skill_check(skill_val, dc)
                 if shifts < 0:
                     # Failed — skip this subtask, continue to next

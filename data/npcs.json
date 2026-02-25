@@ -89,7 +89,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "homesick_talk"],
+        "greet_lines": {}
     },
     "emmy": {
         "name": "Emmy",
@@ -180,7 +182,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "homesick_talk"],
+        "greet_lines": {}
     },
     "dax": {
         "name": "Dax",
@@ -270,7 +274,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "skeptic_debate"],
+        "greet_lines": {}
     },
     "chris": {
         "name": "Chris",
@@ -360,7 +366,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["lonely_night", "homesick_talk"],
+        "greet_lines": {}
     },
     "tilly": {
         "name": "Tilly",
@@ -450,7 +458,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "garden_crisis", "homesick_talk"],
+        "greet_lines": {}
     },
     "callum": {
         "name": "Callum",
@@ -540,7 +550,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["scholar_puzzle", "homesick_talk"],
+        "greet_lines": {}
     },
     "lira": {
         "name": "Lira",
@@ -639,7 +651,9 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "garden_crisis", "homesick_talk"],
+        "greet_lines": {}
     },
     "angya": {
         "name": "Angya",
@@ -730,6 +744,8 @@
         "backstory": {
             "aspects": [],
             "story": ""
-        }
+        },
+        "encounter_pool": ["tool_dispute", "homesick_talk"],
+        "greet_lines": {}
     }
 }
