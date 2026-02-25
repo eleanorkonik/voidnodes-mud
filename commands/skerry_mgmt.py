@@ -3,6 +3,9 @@
 from engine import display, dice, subtasks
 
 
+MOOD_TIERS = ["happy", "content", "restless", "grim", "unhappy", "angry", "crisis"]
+
+
 class SkerryMgmtMixin:
     """Mixin providing skerry management commands for the Game class."""
 
@@ -61,6 +64,24 @@ class SkerryMgmtMixin:
         """Count how many NPCs are settled (housed) in a room."""
         return sum(1 for n in self.npcs_db.values()
                    if n.get("recruited") and n.get("settled_room") == room_id)
+
+    def _downrank_mood(self, npc):
+        """Drop an NPC's mood one tier. If unhappy or worse, also -1 loyalty."""
+        mood = npc.get("mood", "content")
+        try:
+            idx = MOOD_TIERS.index(mood)
+        except ValueError:
+            idx = 1  # default to "content" if unknown mood
+        loyalty_lost = False
+        if idx < len(MOOD_TIERS) - 1:
+            idx += 1
+            npc["mood"] = MOOD_TIERS[idx]
+        # At crisis or dropped to unhappy+: also lose loyalty
+        if idx >= 4:  # unhappy, angry, crisis
+            old_loyalty = npc.get("loyalty", 0)
+            npc["loyalty"] = max(0, old_loyalty - 1)
+            loyalty_lost = old_loyalty > 0
+        return MOOD_TIERS[idx], loyalty_lost
 
     def cmd_settle(self, args):
         """SETTLE <npc> — settle on skerry.  SETTLE <npc> IN <room> — house in a specific room."""
@@ -198,7 +219,20 @@ class SkerryMgmtMixin:
                                 npc_name=npc["name"], npc_id=npc_id,
                                 task=master_task, subtask=subtask_id)
             else:
-                display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
+                new_mood, loyalty_lost = self._downrank_mood(npc)
+                name = npc["name"]
+                if new_mood in ("happy", "content"):
+                    display.narrate(f"You try to assign {name}, but the instructions get muddled. Try again.")
+                elif new_mood == "restless":
+                    display.narrate(f"{name} looks confused by your directions and seems a bit restless. Try again.")
+                elif new_mood == "grim":
+                    display.narrate(f"{name} frowns at your fumbled instructions. Try again.")
+                elif new_mood == "unhappy":
+                    display.narrate(f"{name} is visibly frustrated with the mixed signals. Try again.")
+                else:  # angry or crisis
+                    display.narrate(f"{name} bristles — your authority is slipping. Try again.")
+                if loyalty_lost:
+                    display.warning(f"  {name}'s loyalty wavers.")
             return
 
         # Resolve room-name aliases to tasks
@@ -234,7 +268,20 @@ class SkerryMgmtMixin:
             self._log_event("npc_assigned", comic_weight=2,
                             npc_name=npc["name"], npc_id=npc_id, task=task)
         else:
-            display.narrate(f"You try to assign {npc['name']}, but the instructions get muddled. Try again.")
+            new_mood, loyalty_lost = self._downrank_mood(npc)
+            name = npc["name"]
+            if new_mood in ("happy", "content"):
+                display.narrate(f"You try to assign {name}, but the instructions get muddled. Try again.")
+            elif new_mood == "restless":
+                display.narrate(f"{name} looks confused by your directions and seems a bit restless. Try again.")
+            elif new_mood == "grim":
+                display.narrate(f"{name} frowns at your fumbled instructions. Try again.")
+            elif new_mood == "unhappy":
+                display.narrate(f"{name} is visibly frustrated with the mixed signals. Try again.")
+            else:  # angry or crisis
+                display.narrate(f"{name} bristles — your authority is slipping. Try again.")
+            if loyalty_lost:
+                display.warning(f"  {name}'s loyalty wavers.")
 
     def cmd_organize(self, args):
         display.header("NPC Assignments")
