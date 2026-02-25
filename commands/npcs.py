@@ -586,8 +586,9 @@ class NpcsMixin:
                 print(f"  {display.BOLD}{sev.capitalize()}:{display.RESET} {con}")
                 if has_cure:
                     print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_GREEN}(have){display.RESET} + Lore check ({diff_label})")
-                    if sev == "severe":
-                        display.info(f"    Treatment will downgrade to moderate, not fully heal.")
+                    downgrade_to = {"severe": "moderate", "moderate": "mild"}.get(sev)
+                    if downgrade_to:
+                        display.info(f"    Treatment will downgrade to {downgrade_to}, not fully heal.")
                     treatable.append((sev, con, cure, difficulty))
                 else:
                     print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_RED}(missing){display.RESET} + Lore check ({diff_label})")
@@ -655,48 +656,31 @@ class NpcsMixin:
             if sev == "severe":
                 # Downgrade to moderate
                 char.consequences["severe"] = None
+                char.consequences["moderate"] = con
                 meta = self.state.setdefault("consequence_meta", {})
                 meta.pop(f"{char_key}_severe", None)
-                if char.consequences.get("moderate") is None:
-                    char.consequences["moderate"] = con
-                    meta[f"{char_key}_moderate"] = {
-                        "taken_at": self.state.get("zones_cleared", 0),
-                        "cure": cure,
-                    }
-                    print()
-                    display.success(f"The treatment takes hold. The injury stabilizes.")
-                    display.narrate(f"  {con} downgraded from severe to moderate.")
-                    display.info(f"  Will need another round of treatment to heal further.")
-                else:
-                    # Moderate slot occupied — full heal since there's nowhere to downgrade to
-                    print()
-                    display.success(f"The treatment works. {con} has healed.")
+                meta[f"{char_key}_moderate"] = {
+                    "taken_at": self.state.get("zones_cleared", 0),
+                    "cure": cure,
+                }
+                print()
+                display.success(f"The treatment takes hold. The injury stabilizes.")
+                display.narrate(f"  {con} downgraded from severe to moderate.")
+                display.info(f"  Will need another round of treatment to heal further.")
             elif sev == "moderate":
                 # Downgrade to mild
                 char.consequences["moderate"] = None
+                char.consequences["mild"] = con
                 meta = self.state.setdefault("consequence_meta", {})
                 meta.pop(f"{char_key}_moderate", None)
-                if char.consequences.get("mild") is None:
-                    char.consequences["mild"] = con
-                    meta[f"{char_key}_mild"] = {
-                        "taken_at": self.state.get("zones_cleared", 0),
-                        "cure": "bandages",
-                    }
-                    print()
-                    display.success(f"The treatment takes hold. The injury is mending.")
-                    display.narrate(f"  {con} downgraded from moderate to mild.")
-                    display.info(f"  It will heal on its own after a few zone clears.")
-                else:
-                    # Mild slot occupied — full heal since there's nowhere to downgrade to
-                    print()
-                    display.success(f"The treatment works. {con} has healed.")
-            else:
-                # Full heal for mild (shouldn't normally reach here)
-                char.consequences[sev] = None
-                meta = self.state.setdefault("consequence_meta", {})
-                meta.pop(f"{char_key}_{sev}", None)
+                meta[f"{char_key}_mild"] = {
+                    "taken_at": self.state.get("zones_cleared", 0),
+                    "cure": "bandages",
+                }
                 print()
-                display.success(f"The treatment works. {con} has healed.")
+                display.success(f"The treatment takes hold. The injury is mending.")
+                display.narrate(f"  {con} downgraded from moderate to mild.")
+                display.info(f"  It will heal on its own after a few zone clears.")
         else:
             # Failure — cure item is still consumed
             print()

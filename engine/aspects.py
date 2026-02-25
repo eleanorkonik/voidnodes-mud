@@ -419,6 +419,12 @@ def can_treat_consequence(game, char_key, severity):
         remaining = clears_needed - (zones_cleared - taken_at)
         return False, f"The injury is too fresh. Need {remaining} more zone{'s' if remaining != 1 else ''} cleared before treatment can begin."
 
+    # Check that the downgrade target slot is free
+    _DOWNGRADE_TARGET = {"severe": "moderate", "moderate": "mild"}
+    target_slot = _DOWNGRADE_TARGET.get(severity)
+    if target_slot and cons.get(target_slot) is not None:
+        return False, f"Can't downgrade — {target_slot} slot is already occupied. Heal the {target_slot} injury first."
+
     return True, None
 
 
