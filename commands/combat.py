@@ -77,9 +77,7 @@ class CombatMixin:
             if self._apply_enemy_damage(enemy_data, self.combat_target, shifts, room):
                 return
         elif shifts == 0:
-            display.narrate("  A draw — you gain a momentary edge.")
-            self.combat_boost += 2
-            display.info(f"  (Boost: +2 on your next action)")
+            display.narrate(f"  A draw — neither side gains ground.")
         else:
             display.narrate(f"  You miss. {enemy_data['name']} deflects your strike.")
 
@@ -406,9 +404,7 @@ class CombatMixin:
             if self._apply_enemy_damage(enemy_data, self.combat_target, shifts, room):
                 return
         elif shifts == 0:
-            display.narrate("  A draw despite the invocation — you gain a momentary edge.")
-            self.combat_boost += 2
-            display.info(f"  (Boost: +2 on your next action)")
+            display.narrate("  A draw despite the invocation — neither side gains ground.")
         else:
             display.narrate(f"  Even with the invoke, {enemy_data['name']} deflects your strike.")
 
