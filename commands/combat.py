@@ -571,6 +571,15 @@ class CombatMixin:
             # Show current stress
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
             display.info(f"  Stress: {stress_str}")
+            if not self.state.get("tutorial_stress_done"):
+                self.state["tutorial_stress_done"] = True
+                print()
+                display.seed_speak("You've been hit. Those boxes are stress — they absorb damage.")
+                display.seed_speak("A 1-shift hit fills the first box, 2-shift fills the second,")
+                display.seed_speak("and so on. Stress clears after combat ends.")
+                display.seed_speak("If you can't absorb a hit with stress, you'll take a")
+                display.seed_speak("consequence — a lasting wound. DEFEND to brace for hits,")
+                display.seed_speak("EXPLOIT to find weaknesses, or CONCEDE to retreat.")
         elif shifts == 0:
             display.narrate(f"  {enemy_data['name']} lunges but you deflect it perfectly.")
         else:
