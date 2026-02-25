@@ -154,6 +154,9 @@ class MovementMixin:
 
     def cmd_seek(self, args):
         """Handle SEEK <aspect keywords> [IN VOID] — cross to a void node by its aspect."""
+        if self.state["current_phase"] == "steward":
+            self._wrong_phase_narrate("explorer", "void")
+            return
         if not args:
             # No args — show destinations if at landing pad, else generic error
             room = self.current_room()
@@ -244,6 +247,9 @@ class MovementMixin:
 
     def cmd_enter(self, args):
         """Handle ENTER VOID — legacy command, redirects to SEEK."""
+        if self.state["current_phase"] == "steward":
+            self._wrong_phase_narrate("explorer", "void")
+            return
         if not args or args[0].lower() != "void":
             display.error("Enter what?")
             return

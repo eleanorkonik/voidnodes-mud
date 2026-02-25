@@ -417,6 +417,8 @@ def display_help(phase, seed_name="Tuft"):
         ("ASSIGN <npc> <task>", "Assign an NPC to a task"),
         ("ORGANIZE", "View all NPC assignments"),
         ("TASKS", "Show subtask queues"),
+        ("QUEUE [recipe]", "Set the workshop craft queue"),
+        ("UNQUEUE <recipe>", "Remove from craft queue"),
         ("REST", "Advance the day"),
     ]
     farming = [

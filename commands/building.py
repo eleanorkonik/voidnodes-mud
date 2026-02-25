@@ -7,6 +7,9 @@ class BuildingMixin:
     """Mixin providing building and crafting commands for the Game class."""
 
     def cmd_craft(self, args):
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "building")
+            return
         if not args:
             display.error("Craft what? Type RECIPES to see available recipes.")
             return
@@ -128,6 +131,9 @@ class BuildingMixin:
                             result=None, success=False, material_lost=lost_name)
 
     def cmd_recipes(self, args):
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "building")
+            return
         display.header("Known Recipes")
         discovered = self.state.get("discovered_recipes", [])
         if not discovered:
@@ -408,6 +414,9 @@ class BuildingMixin:
 
     def cmd_queue(self, args):
         """QUEUE [recipe] — Add a recipe to the workshop craft queue, or show current queue."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "building")
+            return
         room = self.current_room()
         if not room or room.id != "skerry_workshop":
             display.error("You need to be in the workshop to manage the craft queue.")
@@ -448,6 +457,9 @@ class BuildingMixin:
 
     def cmd_unqueue(self, args):
         """UNQUEUE <recipe> — Remove a recipe from the workshop craft queue."""
+        if self.state["current_phase"] == "explorer":
+            self._wrong_phase_narrate("steward", "building")
+            return
         room = self.current_room()
         if not room or room.id != "skerry_workshop":
             display.error("You need to be in the workshop to manage the craft queue.")
