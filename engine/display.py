@@ -391,11 +391,11 @@ def display_help(phase, seed_name="Tuft"):
     items = [
         ("TAKE <item>", "Pick up an item"),
         ("DROP <item>", "Put down an item (or DROP ALL for materials)"),
-        ("GIVE <item> TO <npc>", "Give an item to an NPC"),
+        ("GIVE <item> TO <target>", f"Give to NPC, agent, or {seed_name}"),
+        (f"FEED <item>", f"Shorthand for GIVE <item> TO {seed_name}"),
         ("USE <item>", "Use an item"),
         ("WEAR <item>", "Equip clothing or artifact"),
         ("REMOVE <item>", "Unequip something"),
-        (f"FEED <item>", f"Feed an item to {seed_name} for motes"),
         ("KEEP <item>", "Keep an artifact for its stat bonus"),
         ("INVOKE <aspect>", "Spend a fate point for +2 on next action"),
         ("ASPECTS", "Show your aspects"),

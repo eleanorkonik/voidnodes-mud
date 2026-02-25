@@ -57,65 +57,11 @@ class ArtifactsMixin:
             self.state["unloaded_zones"].append(zone_id)
 
     def cmd_feed(self, args):
+        """FEED <item> — shorthand for GIVE <item> TO <seed>."""
         if not args:
             display.error(f"Feed what to {self.seed_name}?")
             return
-
-        target = " ".join(args).lower()
-        char = self.current_character()
-
-        # Check artifacts first
-        art_id, art = self._find_in_db(target, self.artifacts_db)
-        if art and (art_id in char.inventory or self.state.get("artifacts_status", {}).get(art_id) == "discovered"):
-            motes = art["mote_value"]
-            new_total, stage_changed = self.seed.feed(motes)
-            char.remove_from_inventory(art_id)
-            self.state.setdefault("artifacts_status", {})[art_id] = "fed"
-            self._on_artifact_resolved(art_id)
-            self._move_artifact(art_id, None, None)
-
-            if art.get("feed_effect"):
-                display.narrate(self.sub(art["feed_effect"]))
-            else:
-                display.success(f"You feed the {art['name']} to {self.seed_name}. +{motes} motes!")
-
-            if stage_changed:
-                display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
-                display.seed_speak(self.seed.communicate(self.seed_name))
-                self._log_event("seed_growth", comic_weight=5,
-                                new_stage=self.seed.growth_stage,
-                                total_motes=new_total)
-
-            self._log_event("artifact_fed", comic_weight=5,
-                            artifact_id=art_id, artifact_name=art["name"],
-                            motes_gained=motes, total_motes=new_total)
-            display.display_seed(self.seed.to_dict(), name=self.seed_name)
-            return
-
-        # Check regular items
-        item_id, item = self._find_entity(list(char.inventory), target, self.items_db)
-        if item:
-            from engine.masterwork import get_display_name
-            motes = item.get("mote_value", 1)
-            new_total, stage_changed = self.seed.feed(motes)
-            char.remove_from_inventory(item_id)
-
-            feed_name = get_display_name(item_id, self.items_db)
-            display.success(f"You feed {feed_name} to {self.seed_name}. +{motes} motes!")
-            self._log_event("item_fed", comic_weight=2,
-                            item_id=item_id, item_name=feed_name,
-                            motes_gained=motes, total_motes=new_total)
-            if stage_changed:
-                self._log_event("seed_growth", comic_weight=5,
-                                new_stage=self.seed.growth_stage,
-                                total_motes=new_total)
-                display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
-                display.seed_speak(self.seed.communicate(self.seed_name))
-
-            display.display_seed(self.seed.to_dict(), name=self.seed_name)
-            return
-
-        display.narrate(f"You don't have '{target}' to feed.")
+        self.cmd_give(args + ["to", self.seed_name.lower()])
 
     def cmd_keep(self, args):
         if not args:
@@ -158,97 +104,6 @@ class ArtifactsMixin:
                 return
 
         display.narrate(f"No artifact called '{target}' to keep here.")
-
-    def cmd_offer(self, args):
-        """OFFER <item> TO <target> — give an item to someone (feed to seed, or gift to NPC)."""
-        if not args:
-            display.error("Offer what to whom? Usage: OFFER <item> TO <target>")
-            return
-
-        # Split on "to" to get item and target
-        raw = " ".join(args)
-        parts = raw.split(" to ", 1)
-        if len(parts) < 2:
-            display.error("Offer what to whom? Usage: OFFER <item> TO <target>")
-            return
-
-        item_name_str = parts[0].strip().lower()
-        target_name = parts[1].strip().lower()
-
-        # Check if target is the world seed
-        seed_name = self.seed_name.lower()
-        if target_name in (seed_name, "seed", "tuft"):
-            # Skerry-only restriction
-            room = self.current_room()
-            if room and room.zone != "skerry":
-                display.error(f"You need to be near {self.seed_name} on the skerry to offer artifacts.")
-                return
-
-            # Same logic as feeding — check artifacts first, then items
-            char = self.current_character()
-
-            art_id, art = self._find_in_db(item_name_str, self.artifacts_db)
-            if art and (art_id in char.inventory or char.find_worn_by_item(art_id)):
-                # If worn, unequip first (moves to inventory)
-                worn_slot = char.find_worn_by_item(art_id)
-                if worn_slot:
-                    char.remove_worn(worn_slot)
-                motes = art["mote_value"]
-                new_total, stage_changed = self.seed.feed(motes)
-                char.remove_from_inventory(art_id)
-                self.state.setdefault("artifacts_status", {})[art_id] = "fed"
-                self._on_artifact_resolved(art_id)
-                self._move_artifact(art_id, None, None)
-                if not self.state.get("tutorial_complete"):
-                    self.state["tutorial_artifact_resolved"] = True
-
-                if art.get("feed_effect"):
-                    display.narrate(self.sub(art["feed_effect"]))
-                else:
-                    display.success(f"You offer the {art['name']} to {self.seed_name}. +{motes} motes!")
-
-                if stage_changed:
-                    display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
-                    display.seed_speak(self.seed.communicate(self.seed_name))
-                    self._log_event("seed_growth", comic_weight=5,
-                                    new_stage=self.seed.growth_stage,
-                                    total_motes=new_total)
-
-                self._log_event("artifact_fed", comic_weight=5,
-                                artifact_id=art_id, artifact_name=art["name"],
-                                motes_gained=motes, total_motes=new_total)
-                display.display_seed(self.seed.to_dict(), name=self.seed_name)
-                return
-
-            # Check inventory and worn items
-            worn_ids = [wid for wid in char.worn.values() if wid]
-            search_ids = list(char.inventory) + worn_ids
-            item_id, item = self._find_entity(search_ids, item_name_str, self.items_db)
-            if item:
-                # If worn, unequip first (moves to inventory)
-                worn_slot = char.find_worn_by_item(item_id)
-                if worn_slot:
-                    char.remove_worn(worn_slot)
-                motes = item.get("mote_value", 1)
-                new_total, stage_changed = self.seed.feed(motes)
-                char.remove_from_inventory(item_id)
-
-                display.success(f"You offer {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
-                self._log_event("item_fed", comic_weight=2,
-                                item_id=item_id, item_name=item.get("name", item_id),
-                                motes_gained=motes, total_motes=new_total)
-                if stage_changed:
-                    display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
-                    display.seed_speak(self.seed.communicate(self.seed_name))
-
-                display.display_seed(self.seed.to_dict(), name=self.seed_name)
-                return
-
-            display.narrate(f"You don't have '{item_name_str}' to offer.")
-            return
-
-        # Target is an NPC — future functionality
-        display.narrate("They don't seem interested.")
 
     def _locate_artifact(self, art_id):
         """Resolve an artifact's location to (loc_type, zone, room_or_holder).

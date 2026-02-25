@@ -429,7 +429,7 @@ def _advance_to_artifact_or_stash(game):
         print()
         display.seed_speak("You brought something back. Something with power.")
         display.seed_speak(f"KEEP it for the stat bonus,")
-        display.seed_speak(f"OFFER it TO {seed_name.upper()} for motes,")
+        display.seed_speak(f"GIVE it TO {seed_name.upper()} for motes,")
         display.seed_speak(f"or take it to the junkyard for {steward_name} to sort through.")
         game.state["tutorial_step"] = "explorer_artifact"
     else:
@@ -720,7 +720,7 @@ def get_current_hint(step, game_state=None):
         _tutorial_prompt(f"SETTLE {follower_name.upper()}.")
     elif step == "explorer_artifact":
         display.seed_speak(f"What will you do with the artifact?")
-        display.seed_speak(f"KEEP it, OFFER it TO {seed_name.upper()},")
+        display.seed_speak(f"KEEP it, GIVE it TO {seed_name.upper()},")
         display.seed_speak(f"or take it to the junkyard for {steward_name} to sort through.")
     elif step == "explorer_stash":
         display.seed_speak("Drop your salvage at the junkyard.")

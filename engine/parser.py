@@ -41,6 +41,7 @@ COMMAND_ALIASES = {
     "skin": "process",
     "dismantle": "process",
     "salvage": "process",
+    "offer": "give",
 }
 
 # All recognized commands and which phase they're valid in
@@ -87,7 +88,6 @@ COMMANDS = {
     "take":      {"args": "required"},
     "process":   {"args": "required"},
     "ih":        {"args": "optional"},
-    "offer":     {"args": "required"},
     "drop":      {"args": "required"},
     "request":   {"args": "required"},
     "rest":      {"args": "none"},

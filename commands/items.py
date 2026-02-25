@@ -372,14 +372,19 @@ class ItemsMixin:
         display.narrate(f"You don't have '{target}'.")
 
     def cmd_give(self, args):
+        """GIVE <item> TO <target> — unified give/feed command.
+
+        Target can be the world seed (feeds for motes), an NPC (gift/transfer),
+        or the other player agent (inventory transfer).
+        """
         if not args:
-            display.error("Give what to whom? Usage: GIVE <item> TO <name>")
+            display.error(f"Give what to whom? Usage: GIVE <item> TO <name>")
             return
 
         raw = " ".join(args)
         parts = raw.split(" to ", 1)
         if len(parts) < 2:
-            display.error("Give what to whom? Usage: GIVE <item> TO <name>")
+            display.error(f"Give what to whom? Usage: GIVE <item> TO <name>")
             return
 
         item_part = parts[0].strip().lower()
@@ -388,63 +393,156 @@ class ItemsMixin:
         char = self.current_character()
 
         if not item_part:
-            display.error("Give what? Usage: GIVE <item> TO <name>")
+            display.error(f"Give what? Usage: GIVE <item> TO <name>")
             return
 
-        # Find target agent in room
+        # ── Target: world seed ────────────────────────────────────
+        seed_name = self.seed_name.lower()
+        if target_name in (seed_name, "seed", "tuft"):
+            self._give_to_seed(char, item_part)
+            return
+
+        # ── Target: player agent (explorer/steward) ───────────────
         agent_id, agent_data = self._find_agent_in_room(target_name, room.id)
-        if not agent_data:
-            # Also check NPCs
-            npc_id, npc_data = self._find_entity(room.npcs, target_name, self.npcs_db)
-            if not npc_data:
-                display.error(f"There's nobody called '{target_name}' here to give things to.")
-                return
-            # Artifacts — special handling
-            art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
-            if art:
-                char.remove_from_inventory(art_id)
-                self.state.setdefault("artifacts_status", {})[art_id] = "given"
-                self._on_artifact_resolved(art_id)
-                if not self.state.get("tutorial_complete"):
-                    self.state["tutorial_artifact_resolved"] = True
-                display.success(f"You give the {art['name']} to {npc_data['name']}.")
-                return
-
-            # Regular items (including masterwork) — transfer to NPC's room
-            item_id, item = self._find_entity(char.inventory, item_part, self.items_db)
-            if item:
-                char.remove_from_inventory(item_id)
-                # Place in NPC's current room (available for subtask use)
-                npc_room = self.rooms.get(npc_data.get("location", ""))
-                if npc_room:
-                    npc_room.add_item(item_id)
-                item_name = masterwork.get_display_name(item_id, self.items_db)
-
-                if masterwork.is_masterwork(item_id):
-                    # Social bonus: mood boost + loyalty
-                    from commands.skerry_mgmt import MOOD_TIERS
-                    current_mood = npc_data.get("mood", "content")
-                    mood_idx = MOOD_TIERS.index(current_mood) if current_mood in MOOD_TIERS else 1
-                    if mood_idx > 0:
-                        npc_data["mood"] = MOOD_TIERS[mood_idx - 1]
-                    npc_data["loyalty"] = min(10, npc_data.get("loyalty", 0) + 1)
-                    display.success(f"You give {item_name} to {npc_data['name']}.")
-                    display.npc_speak(npc_data["name"], "This is... remarkable work. Thank you.")
-                    display.success(f"  {npc_data['name']}'s mood improves to {npc_data['mood']}. Loyalty +1.")
-                else:
-                    display.success(f"You give {item_name} to {npc_data['name']}.")
-                    display.npc_speak(npc_data["name"], "Thanks. I'll put this to good use.")
-
-                self._log_event("item_given", comic_weight=3 if masterwork.is_masterwork(item_id) else 2,
-                                item_id=item_id, item_name=item_name,
-                                recipient=npc_data["name"],
-                                masterwork=masterwork.is_masterwork(item_id))
-                return
-
-            display.error(f"You don't have anything called '{item_part}'.")
+        if agent_data:
+            self._give_to_agent(char, item_part, agent_data)
             return
 
-        # Determine target character object
+        # ── Target: NPC ───────────────────────────────────────────
+        npc_id, npc_data = self._find_entity(room.npcs, target_name, self.npcs_db)
+        if npc_data:
+            self._give_to_npc(char, item_part, npc_data)
+            return
+
+        # Also check followers at this location
+        follower_id, follower_data = self._find_follower(target_name, room.id)
+        if follower_data:
+            self._give_to_npc(char, item_part, follower_data)
+            return
+
+        display.error(f"There's nobody called '{target_name}' here to give things to.")
+
+    def _give_to_seed(self, char, item_part):
+        """Feed an item to the world seed for motes."""
+        # Artifacts first — they have special feed effects
+        art_id, art = self._find_in_db(item_part, self.artifacts_db)
+        if art and (art_id in char.inventory or self.state.get("artifacts_status", {}).get(art_id) == "discovered"):
+            # If worn, unequip first
+            worn_slot = char.find_worn_by_item(art_id)
+            if worn_slot:
+                char.remove_worn(worn_slot)
+
+            motes = art["mote_value"]
+            new_total, stage_changed = self.seed.feed(motes)
+            char.remove_from_inventory(art_id)
+            self.state.setdefault("artifacts_status", {})[art_id] = "fed"
+            self._on_artifact_resolved(art_id)
+            self._move_artifact(art_id, None, None)
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_artifact_resolved"] = True
+
+            if art.get("feed_effect"):
+                display.narrate(self.sub(art["feed_effect"]))
+            else:
+                display.success(f"You give the {art['name']} to {self.seed_name}. +{motes} motes!")
+
+            if stage_changed:
+                display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
+                display.seed_speak(self.seed.communicate(self.seed_name))
+                self._log_event("seed_growth", comic_weight=5,
+                                new_stage=self.seed.growth_stage,
+                                total_motes=new_total)
+
+            self._log_event("artifact_fed", comic_weight=5,
+                            artifact_id=art_id, artifact_name=art["name"],
+                            motes_gained=motes, total_motes=new_total)
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
+            return
+
+        # Regular items (including masterwork) — check inventory + worn
+        worn_ids = [wid for wid in char.worn.values() if wid]
+        search_ids = list(char.inventory) + worn_ids
+        item_id, item = self._find_entity(search_ids, item_part, self.items_db)
+        if item:
+            motes = item.get("mote_value", 0)
+            if motes <= 0:
+                feed_name = masterwork.get_display_name(item_id, self.items_db)
+                display.seed_speak(f"There's nothing for me in that {feed_name}.")
+                return
+
+            # If worn, unequip first
+            worn_slot = char.find_worn_by_item(item_id)
+            if worn_slot:
+                char.remove_worn(worn_slot)
+
+            new_total, stage_changed = self.seed.feed(motes)
+            char.remove_from_inventory(item_id)
+
+            feed_name = masterwork.get_display_name(item_id, self.items_db)
+            display.success(f"You give {feed_name} to {self.seed_name}. +{motes} motes!")
+            self._log_event("item_fed", comic_weight=2,
+                            item_id=item_id, item_name=feed_name,
+                            motes_gained=motes, total_motes=new_total)
+            if stage_changed:
+                self._log_event("seed_growth", comic_weight=5,
+                                new_stage=self.seed.growth_stage,
+                                total_motes=new_total)
+                display.success(f"\n  \u2727 {self.seed_name.upper()} GROWS STRONGER! \u2727")
+                display.seed_speak(self.seed.communicate(self.seed_name))
+
+            display.display_seed(self.seed.to_dict(), name=self.seed_name)
+            return
+
+        display.narrate(f"You don't have '{item_part}' to give.")
+
+    def _give_to_npc(self, char, item_part, npc_data):
+        """Give an item to an NPC — artifacts resolve, masterwork gives social bonus."""
+        # Artifacts — special handling
+        art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
+        if art:
+            char.remove_from_inventory(art_id)
+            self.state.setdefault("artifacts_status", {})[art_id] = "given"
+            self._on_artifact_resolved(art_id)
+            if not self.state.get("tutorial_complete"):
+                self.state["tutorial_artifact_resolved"] = True
+            display.success(f"You give the {art['name']} to {npc_data['name']}.")
+            return
+
+        # Regular items (including masterwork) — transfer to NPC's room
+        item_id, item = self._find_entity(char.inventory, item_part, self.items_db)
+        if item:
+            char.remove_from_inventory(item_id)
+            # Place in NPC's current room (available for subtask use)
+            npc_room = self.rooms.get(npc_data.get("location", ""))
+            if npc_room:
+                npc_room.add_item(item_id)
+            item_name = masterwork.get_display_name(item_id, self.items_db)
+
+            if masterwork.is_masterwork(item_id):
+                # Social bonus: mood boost + loyalty
+                from commands.skerry_mgmt import MOOD_TIERS
+                current_mood = npc_data.get("mood", "content")
+                mood_idx = MOOD_TIERS.index(current_mood) if current_mood in MOOD_TIERS else 1
+                if mood_idx > 0:
+                    npc_data["mood"] = MOOD_TIERS[mood_idx - 1]
+                npc_data["loyalty"] = min(10, npc_data.get("loyalty", 0) + 1)
+                display.success(f"You give {item_name} to {npc_data['name']}.")
+                display.npc_speak(npc_data["name"], "This is... remarkable work. Thank you.")
+                display.success(f"  {npc_data['name']}'s mood improves to {npc_data['mood']}. Loyalty +1.")
+            else:
+                display.success(f"You give {item_name} to {npc_data['name']}.")
+                display.npc_speak(npc_data["name"], "Thanks. I'll put this to good use.")
+
+            self._log_event("item_given", comic_weight=3 if masterwork.is_masterwork(item_id) else 2,
+                            item_id=item_id, item_name=item_name,
+                            recipient=npc_data["name"],
+                            masterwork=masterwork.is_masterwork(item_id))
+            return
+
+        display.error(f"You don't have anything called '{item_part}'.")
+
+    def _give_to_agent(self, char, item_part, agent_data):
+        """Transfer an item to the other player agent (explorer/steward)."""
         target_role = agent_data.get("role")
         target_char = self.steward if target_role == "steward" else self.explorer
 
@@ -467,9 +565,10 @@ class ItemsMixin:
 
         char.remove_from_inventory(item_id)
         target_char.add_to_inventory(item_id)
-        display.success(f"You give {item['name']} to {agent_data['name']}.")
+        give_name = masterwork.get_display_name(item_id, self.items_db)
+        display.success(f"You give {give_name} to {agent_data['name']}.")
         self._log_event("item_given", comic_weight=2,
-                        item_id=item_id, item_name=item["name"],
+                        item_id=item_id, item_name=give_name,
                         recipient=agent_data["name"])
 
     # ── Inventory Capacity ─────────────────────────────────────────
