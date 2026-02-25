@@ -655,20 +655,43 @@ class NpcsMixin:
             if sev == "severe":
                 # Downgrade to moderate
                 char.consequences["severe"] = None
-                char.consequences["moderate"] = con
-                # Update metadata — moderate now tracks from current zone clears
                 meta = self.state.setdefault("consequence_meta", {})
                 meta.pop(f"{char_key}_severe", None)
-                meta[f"{char_key}_moderate"] = {
-                    "taken_at": self.state.get("zones_cleared", 0),
-                    "cure": cure,
-                }
-                print()
-                display.success(f"The treatment takes hold. The injury stabilizes.")
-                display.narrate(f"  {con} downgraded from severe to moderate.")
-                display.info(f"  Will need another round of treatment to fully heal.")
+                if char.consequences.get("moderate") is None:
+                    char.consequences["moderate"] = con
+                    meta[f"{char_key}_moderate"] = {
+                        "taken_at": self.state.get("zones_cleared", 0),
+                        "cure": cure,
+                    }
+                    print()
+                    display.success(f"The treatment takes hold. The injury stabilizes.")
+                    display.narrate(f"  {con} downgraded from severe to moderate.")
+                    display.info(f"  Will need another round of treatment to heal further.")
+                else:
+                    # Moderate slot occupied — full heal since there's nowhere to downgrade to
+                    print()
+                    display.success(f"The treatment works. {con} has healed.")
+            elif sev == "moderate":
+                # Downgrade to mild
+                char.consequences["moderate"] = None
+                meta = self.state.setdefault("consequence_meta", {})
+                meta.pop(f"{char_key}_moderate", None)
+                if char.consequences.get("mild") is None:
+                    char.consequences["mild"] = con
+                    meta[f"{char_key}_mild"] = {
+                        "taken_at": self.state.get("zones_cleared", 0),
+                        "cure": "bandages",
+                    }
+                    print()
+                    display.success(f"The treatment takes hold. The injury is mending.")
+                    display.narrate(f"  {con} downgraded from moderate to mild.")
+                    display.info(f"  It will heal on its own after a few zone clears.")
+                else:
+                    # Mild slot occupied — full heal since there's nowhere to downgrade to
+                    print()
+                    display.success(f"The treatment works. {con} has healed.")
             else:
-                # Full heal for moderate
+                # Full heal for mild (shouldn't normally reach here)
                 char.consequences[sev] = None
                 meta = self.state.setdefault("consequence_meta", {})
                 meta.pop(f"{char_key}_{sev}", None)
