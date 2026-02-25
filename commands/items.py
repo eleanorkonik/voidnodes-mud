@@ -659,13 +659,22 @@ class ItemsMixin:
             display.info("  Drop something to make room.")
             return False
 
+        # Require confirmation before spending FP
+        pending = getattr(self, '_overflow_confirmed', None)
+        if pending != item_id:
+            display.info(f"  {size.capitalize()} slots full ({used[size]}/{capacity[size]}). Push through? (1 FP + {skill_name} vs DC {dc})")
+            display.info(f"  GET it again to push through, or DROP something first.")
+            self._overflow_confirmed = item_id
+            return False
+        self._overflow_confirmed = None
+
         char.spend_fate_point()
         invoke_bonus = self._consume_invoke_bonus()
         skill_val = char.get_skill(skill_name) + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, dc)
 
         label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
-        display.info(f"  {size.capitalize()} slots full ({used[size]}/{capacity[size]}). Pushing through... (1 FP spent)")
+        display.info(f"  Pushing through... (1 FP spent)")
         print(f"  {label}: {dice.roll_description(dice_result, skill_val, label)} vs DC {dc}")
 
         if shifts >= 0:

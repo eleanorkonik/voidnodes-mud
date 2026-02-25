@@ -350,6 +350,26 @@ class StoryMixin:
                 self.steward.apply_damage(1)
                 self.explorer.apply_damage(1)
 
+        # ── Reposition everyone for the new day ──
+        # Steward wakes up in the barracks
+        self.state["steward_location"] = "skerry_shelter"
+
+        # NPCs go to their task rooms (or settled rooms, or central clearing)
+        for npc_id in self.state.get("recruited_npcs", []):
+            npc = self.npcs_db.get(npc_id, {})
+            task = npc.get("assignment", "idle")
+            if task and task != "idle":
+                required_structure = self._TASK_REQUIRES_ROOM.get(task)
+                if required_structure:
+                    for r in self.skerry.get_all_rooms():
+                        if required_structure in r.structures:
+                            npc["location"] = r.id
+                            break
+            elif npc.get("settled_room"):
+                npc["location"] = npc["settled_room"]
+            else:
+                npc["location"] = "skerry_central"
+
         self._log_event("day_transition", comic_weight=1,
                         day_number=day,
                         population=2 + len(self.state.get("recruited_npcs", [])))

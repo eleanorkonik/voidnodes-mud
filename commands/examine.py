@@ -692,6 +692,16 @@ class ExamineMixin:
                 display.info(f"  Skills: {skills_str}")
             return
 
+        # Check inactive player character (e.g., Miria when playing Sevarik)
+        agent_id, agent = self._find_agent_in_room(target, room.id if room else "")
+        if agent:
+            role = agent.get("role", "")
+            char = self.explorer if role == "explorer" else self.steward
+            ck = "explorer" if role == "explorer" else "steward"
+            display.display_character_sheet(char, char_key=ck,
+                                            consequence_meta=self.state.get("consequence_meta", {}))
+            return
+
         display.narrate(f"Nothing called '{target}' to probe here.")
 
     def cmd_scavenge(self, args):

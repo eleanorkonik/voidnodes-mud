@@ -113,7 +113,6 @@ def collect_invokable_aspects(game, context="combat"):
 
     Returns:
         List of (aspect_text, source_label) tuples.
-        Zone aspects are excluded (always present, too broad).
     """
     aspects = []
     char = game.current_character()
@@ -127,6 +126,11 @@ def collect_invokable_aspects(game, context="combat"):
     if room:
         for a in room.aspects:
             aspects.append((a, "room"))
+
+        # Zone aspect
+        zone_aspect = game._get_zone_aspect(room)
+        if zone_aspect:
+            aspects.append((zone_aspect, "zone"))
 
     # Context-specific sources
     if context == "combat":
@@ -319,7 +323,7 @@ def resolve_compel_accept(game, compel):
         if taken_out:
             messages.append("TAKEN_OUT")
     elif effect == "lose_turn":
-        pass  # accept_text covers the narrative; enemy free attack handled by caller
+        messages.append("  (You lose your next action — the enemy strikes.)")
     elif effect == "enemy_boost":
         game.enemy_compel_boost = 2
 

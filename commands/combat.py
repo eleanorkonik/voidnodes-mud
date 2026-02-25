@@ -331,8 +331,6 @@ class CombatMixin:
 
     def _display_invoke_menu(self, char, all_aspects, context):
         """Show available aspects and effects for invocation."""
-        effects = aspects.COMBAT_EFFECTS if context == "combat" else aspects.RECRUIT_EFFECTS
-
         print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP each — you have {char.fate_points})")
         print()
 
@@ -355,15 +353,25 @@ class CombatMixin:
                 print(f"    {display.DIM}\u2717 {a} ({source}){display.RESET}")
 
         print()
-        effect_parts = []
-        for keyword, info in effects.items():
-            effect_parts.append(f"{display.BOLD}{keyword}{display.RESET} ({info['desc']})")
-        print(f"  Effects:  {'  \u00b7  '.join(effect_parts)}")
-        print()
         if context == "combat":
+            effect_parts = []
+            for keyword, info in aspects.COMBAT_EFFECTS.items():
+                effect_parts.append(f"{display.BOLD}{keyword}{display.RESET} ({info['desc']})")
+            print(f"  Effects:  {'  \u00b7  '.join(effect_parts)}")
+            print()
             print(f"  {display.DIM}INVOKE <aspect> [ATTACK|DEFEND|SETUP]{display.RESET}")
-        else:
+        elif context == "recruit":
+            effect_parts = []
+            for keyword, info in aspects.RECRUIT_EFFECTS.items():
+                effect_parts.append(f"{display.BOLD}{keyword}{display.RESET} ({info['desc']})")
+            print(f"  Effects:  {'  \u00b7  '.join(effect_parts)}")
+            print()
             print(f"  {display.DIM}INVOKE <aspect> [PUSH|COUNTER|RESTORE]{display.RESET}")
+        else:
+            # Social encounters (challenge/contest): invoke is just +2 to next roll
+            print(f"  Effect: {display.BOLD}+2{display.RESET} on your next roll")
+            print()
+            print(f"  {display.DIM}INVOKE <aspect>{display.RESET}")
         print()
 
     def _invoke_attack(self, invoked_aspect):

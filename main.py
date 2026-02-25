@@ -435,6 +435,10 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
 
     def handle_command(self, cmd, args):
         """Route a parsed command to its handler."""
+        # Clear overflow confirmation if doing anything other than picking up the same item
+        if cmd != "take":
+            self._overflow_confirmed = None
+
         # Handle hyphenated commands that can't be method names
         if cmd == "cross-pollinate":
             self._handle_cross_pollinate(args)

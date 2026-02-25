@@ -542,6 +542,10 @@ def restore_tiles(state, count=3):
     restore_list = random.sample(list(eliminated), min(count, len(eliminated)))
     for tile in restore_list:
         eliminated.discard(tile)
+        # Restore the color's counter if it was deleted when the color hit 0
+        color = state["board"][tile[0]][tile[1]]
+        if color not in state["counters"]:
+            state["counters"][color] = MAX_COUNTER
     display.info(f"  Restored {len(restore_list)} tile{'s' if len(restore_list) != 1 else ''} to the board.")
 
 
