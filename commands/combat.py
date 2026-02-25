@@ -545,9 +545,11 @@ class CombatMixin:
                 self._seed_extraction()
                 return
             # Track and display consequences
+            took_consequence = False
             for sev in ["mild", "moderate", "severe"]:
                 if self.explorer.consequences.get(sev) == "Pending":
                     self.combat_consequences_taken += 1
+                    took_consequence = True
                     # Name the consequence based on enemy
                     con_text = f"Wounded by {enemy_data['name']}"
                     self.explorer.consequences[sev] = con_text
@@ -556,6 +558,16 @@ class CombatMixin:
                     self._log_event("consequence_taken", comic_weight=4,
                                     severity=sev, description=con_text,
                                     source=enemy_data.get("name", "unknown"))
+            if took_consequence and not self.state.get("tutorial_consequence_done"):
+                self.state["tutorial_consequence_done"] = True
+                print()
+                display.seed_speak("That's a consequence — a wound that lasts beyond this fight.")
+                display.seed_speak("Stress clears when combat ends, but consequences stay.")
+                display.seed_speak("Mild heals on its own after a zone clear. Moderate and severe")
+                display.seed_speak("need treatment: bring the right cure item to the apothecary")
+                display.seed_speak("and REQUEST TREATMENT.")
+                display.seed_speak("You can also CONCEDE to end a fight on your terms — you'll")
+                display.seed_speak("get a Fate Point for each consequence you took.")
             # Show current stress
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
             display.info(f"  Stress: {stress_str}")

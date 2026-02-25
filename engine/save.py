@@ -121,6 +121,7 @@ def _migrate_state(state):
     state.setdefault("tutorial_exploit_done", False)
     state.setdefault("tutorial_quest_done", False)
     state.setdefault("tutorial_settle_done", False)
+    state.setdefault("tutorial_consequence_done", False)
     state.setdefault("quests", {})
     # Healing system fields
     state.setdefault("zones_cleared", 0)
