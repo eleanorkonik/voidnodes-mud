@@ -16,7 +16,7 @@ from engine import display
 # (char, ANSI code, label, conversational topic)
 RECRUIT_COLORS = [
     ("R", "\033[91m", "Red",    "Safety"),
-    ("G", "\033[92m", "Green",  "Growth"),
+    ("G", "\033[38;5;48m", "Green",  "Growth"),
     ("B", "\033[94m", "Blue",   "Community"),
     ("Y", "\033[93m", "Yellow", "Purpose"),
     ("O", "\033[38;5;208m", "Orange", "Stability"),
@@ -321,7 +321,7 @@ def calculate_threshold(base_threshold, shifts, grid_size):
 # ANSI color map for board tiles
 _COLOR_ANSI = {
     "R": "\033[91m",          # bright red
-    "G": "\033[92m",          # bright green
+    "G": "\033[38;5;48m",     # bright green (256-color, vivid)
     "B": "\033[94m",          # bright blue
     "Y": "\033[93m",          # bright yellow
     "O": "\033[38;5;208m",    # bright orange
@@ -329,7 +329,7 @@ _COLOR_ANSI = {
 
 _COLOR_DIM = {
     "R": "\033[31m",          # dim red
-    "G": "\033[32m",          # dim green
+    "G": "\033[38;5;35m",     # dim green (256-color, distinct from grey)
     "B": "\033[34m",          # dim blue
     "Y": "\033[33m",          # dim yellow
     "O": "\033[38;5;130m",    # dim orange
