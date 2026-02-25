@@ -500,6 +500,54 @@ class BuildingMixin:
                 },
             },
         },
+        "shelter": {
+            "room_id": "skerry_shelter",
+            "structure": "basic_shelter",
+            "level_field": "shelter_level",
+            "max_level": 2,
+            "tiers": {
+                0: {
+                    "name": "Barracks",
+                    "cost": {"metal_scraps": 3, "torn_fabric": 2},
+                    "dc": 2,
+                    "skill": "Crafts",
+                    "description": "Metal framing and fabric partitions — room for more people.",
+                    "apply": {"barracks_spaces": 4, "max_workers": 3},
+                },
+                1: {
+                    "name": "Commons",
+                    "cost": {"ancient_alloys": 1, "crystal_shards": 1, "torn_fabric": 2},
+                    "dc": 3,
+                    "skill": "Crafts",
+                    "description": "Proper quarters with shared space. Feels like a real home.",
+                    "apply": {"barracks_spaces": 6, "max_workers": 4},
+                },
+            },
+        },
+        "junkyard": {
+            "room_id": "skerry_junkyard",
+            "structure": "junkyard",
+            "level_field": "salvage_level",
+            "max_level": 2,
+            "tiers": {
+                0: {
+                    "name": "Salvage Yard",
+                    "cost": {"metal_scraps": 2, "rope": 1},
+                    "dc": 1,
+                    "skill": "Crafts",
+                    "description": "Sorting bins and a proper workspace — faster, cleaner salvage.",
+                    "apply": {"max_workers": 2},
+                },
+                1: {
+                    "name": "Reclamation Hub",
+                    "cost": {"ancient_alloys": 1, "basic_tools": 1, "wire": 1},
+                    "dc": 3,
+                    "skill": "Crafts",
+                    "description": "Precision tools and magnetic sorting. Nothing gets wasted.",
+                    "apply": {"max_workers": 3},
+                },
+            },
+        },
     }
 
     def cmd_upgrade(self, args):
@@ -597,33 +645,64 @@ class BuildingMixin:
         if game_room:
             setattr(game_room, upgrade_def["level_field"], new_level)
 
+        # Apply stat changes (barracks_spaces, max_workers, etc.)
+        for attr, val in tier.get("apply", {}).items():
+            setattr(room, attr, val)
+            if game_room:
+                setattr(game_room, attr, val)
+
         # Update room name and description
         room.name = tier["name"]
         if game_room:
             game_room.name = tier["name"]
 
-        tier_descriptions = {
+        _TIER_DESCRIPTIONS = {
             "Infirmary": "Metal-framed cots and shelving line the walls. Proper bandaging and poultice-work can happen here.",
             "Hospital": "Ancient alloy fixtures hum with faint resonance. Crystal-focused light illuminates a surgical table.",
+            "Barracks": "Metal-framed bunks line both walls, separated by fabric curtains. The ceiling is higher now, braced with riveted girders. Room for more people, and almost enough privacy.",
+            "Commons": "Alloy-reinforced walls hold in warmth. Crystal sconces cast steady light over a shared table, bunks with actual mattresses, and a corner someone has already claimed for cards.",
+            "Salvage Yard": "Sorting bins of bent metal line the perimeter, each labeled by material type. A sturdy workbench sits in the center, its surface scored with cut marks. The chaos is organized now.",
+            "Reclamation Hub": "Magnetic racks hum faintly, pulling ferrous scraps into sorted channels. A precision cutting station gleams under crystal-focused light. Nothing that enters here goes to waste.",
         }
-        new_desc = tier_descriptions.get(tier["name"], room.description)
+        new_desc = _TIER_DESCRIPTIONS.get(tier["name"], room.description)
         room.description = new_desc
         if game_room:
             game_room.description = new_desc
 
+        # Update room aspect if defined for this tier
+        _TIER_ASPECTS = {
+            "Barracks": ["Cramped but Sturdy"],
+            "Commons": ["Feels Like Home"],
+            "Salvage Yard": ["Everything in Its Place"],
+            "Reclamation Hub": ["Nothing Goes to Waste"],
+            "Infirmary": ["A Steady Hand Heals"],
+            "Hospital": ["Where Even the Worst Can Be Mended"],
+        }
+        new_aspects = _TIER_ASPECTS.get(tier["name"])
+        if new_aspects:
+            room.aspects = new_aspects
+            if game_room:
+                game_room.aspects = new_aspects
+
         display.success(f"Upgraded to {tier['name']}!")
         display.narrate(f"  {new_desc}")
 
-        tier_hints = {
-            1: "Better facilities mean better care. Poultice-brewing and wound-tending",
-            2: "Surgical care is now possible. Even severe injuries can be treated here.",
+        _TIER_HINTS = {
+            ("apothecary", 1): ("Better facilities mean better care. Poultice-brewing and wound-tending",
+                                "will go smoother with a +1 Lore bonus."),
+            ("apothecary", 2): ("Surgical care is now possible. Even severe injuries can be treated here.",),
+            ("shelter", 1): ("More beds, sturdier walls. Your people can rest properly now.",),
+            ("shelter", 2): ("A real home. Morale will hold steadier with proper quarters.",),
+            ("junkyard", 1): ("Better sorting means better yields. Your salvagers get a +1 bonus now.",),
+            ("junkyard", 2): ("Precision reclamation. +2 bonus to salvage work — nothing wasted.",),
         }
-        hint = tier_hints.get(new_level)
-        if hint:
+        # Find which upgrade key we're working with
+        upgrade_key = next(k for k, v in self.UPGRADE_TIERS.items() if v is upgrade_def)
+        hints = _TIER_HINTS.get((upgrade_key, new_level))
+        if hints:
             print()
-            display.seed_speak(hint)
-            if new_level == 1:
-                display.seed_speak("will go smoother with a +1 Lore bonus.")
+            for line in hints:
+                display.seed_speak(line)
 
         self._log_event("structure_upgraded", comic_weight=4,
                         room_name=tier["name"], room_id=upgrade_def["room_id"],

@@ -154,7 +154,7 @@ def _migrate_state(state):
         "skerry_central": {"role": None},
         "skerry_shelter": {"role": "communal", "barracks_spaces": 2},
         "skerry_hollow": {"role": None},
-        "skerry_junkyard": {"role": "salvage"},
+        "skerry_junkyard": {"role": "salvage", "salvage_level": 0},
         "skerry_landing": {"role": None},
         "skerry_storehouse": {"role": "organize"},
         "skerry_workshop": {"role": "craft", "tool_level": 0},
@@ -173,6 +173,8 @@ def _migrate_state(state):
         room_data.setdefault("barracks_spaces", 0)
         room_data.setdefault("tool_level", 0)
         room_data.setdefault("healing_level", 0)
+        room_data.setdefault("salvage_level", 0)
+        room_data.setdefault("shelter_level", 0)
         # Migrate old "rest" role → "communal"
         if room_data.get("role") == "rest":
             room_data["role"] = "communal"

@@ -331,6 +331,14 @@ class SkerryMgmtMixin:
                     header += f" — {tier_label} (+{heal_bonus} Lore bonus)"
                 else:
                     header += f" — {tier_label}"
+            elif room.role == "salvage" and room.salvage_level > 0:
+                tier_names = {1: "Salvage Yard", 2: "Reclamation Hub"}
+                tier_label = tier_names.get(room.salvage_level, "")
+                header += f" — {tier_label} (+{room.salvage_level} salvage bonus)"
+            elif room.role == "communal" and room.shelter_level > 0:
+                tier_names = {1: "Barracks", 2: "Commons"}
+                tier_label = tier_names.get(room.shelter_level, "")
+                header += f" — {tier_label} ({room.barracks_spaces} beds)"
             print(header)
             for st in st_defs:
                 # Find who's working on this subtask

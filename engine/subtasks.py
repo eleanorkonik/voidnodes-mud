@@ -242,7 +242,7 @@ def _handler_sort_salvage(game, room, npc, shifts):
         item = game.items_db.get(item_id, {})
         if item.get("type") == "remnants":
             process_dc = item.get("process_dc", 1)
-            skill_val = _npc_skill(npc, "Crafts")
+            skill_val = _npc_skill(npc, "Crafts") + getattr(room, "salvage_level", 0)
             total, proc_shifts, dice_result = dice.skill_check(skill_val, process_dc)
             room.remove_item(item_id)
             remnant_name = item.get("name", item_id)
@@ -656,6 +656,9 @@ def run_room_subtasks(game, room, workers):
                 from engine.masterwork import is_masterwork
                 if any(is_masterwork(item_id) for item_id in room.items):
                     skill_val += 1
+                # Salvage yard bonus: salvage_level applies to all salvage subtask checks
+                if room.role == "salvage":
+                    skill_val += getattr(room, "salvage_level", 0)
                 total, shifts, dice_result = dice.skill_check(skill_val, dc)
                 if shifts < 0:
                     # Failed — skip this subtask, continue to next

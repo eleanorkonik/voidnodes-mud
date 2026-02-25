@@ -303,6 +303,62 @@ class ExamineMixin:
                 print(f"  Materials on hand: {', '.join(mat_parts)}")
             return
 
+        if target in ("shelter", "barracks", "commons"):
+            shelter = self.skerry.get_room("skerry_shelter")
+            if not shelter:
+                display.error("No shelter exists.")
+                return
+            display.header(shelter.name)
+            tier_names = {0: "Basic Shelter", 1: "Barracks", 2: "Commons"}
+            tier_label = tier_names.get(shelter.shelter_level, "Basic Shelter")
+            print(f"  Tier: {tier_label} (Level {shelter.shelter_level}/2)")
+            print(f"  Beds: {shelter.barracks_spaces}  |  Max workers: {shelter.max_workers}")
+            from commands.building import BuildingMixin
+            shelter_tiers = BuildingMixin.UPGRADE_TIERS.get("shelter", {})
+            next_tier = shelter_tiers.get("tiers", {}).get(shelter.shelter_level)
+            if next_tier:
+                cost_str = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
+                                    for k, v in next_tier["cost"].items())
+                apply_info = next_tier.get("apply", {})
+                beds = apply_info.get("barracks_spaces", shelter.barracks_spaces)
+                print(f"  Next upgrade: {next_tier['name']} ({beds} beds) — needs: {cost_str} ({next_tier['skill']} DC {next_tier['dc']})")
+            else:
+                print(f"  {display.DIM}Fully upgraded.{display.RESET}")
+            return
+
+        if target in ("junkyard", "salvage yard", "reclamation hub", "salvage"):
+            junkyard = self.skerry.get_room("skerry_junkyard")
+            if not junkyard:
+                display.error("No junkyard exists.")
+                return
+            display.header(junkyard.name)
+            tier_names = {0: "Junkyard", 1: "Salvage Yard", 2: "Reclamation Hub"}
+            tier_label = tier_names.get(junkyard.salvage_level, "Junkyard")
+            print(f"  Tier: {tier_label} (Level {junkyard.salvage_level}/2)")
+            salvage_bonus = junkyard.salvage_level
+            if salvage_bonus > 0:
+                print(f"  Salvage bonus: +{salvage_bonus}")
+            print(f"  Max workers: {junkyard.max_workers}")
+            from commands.building import BuildingMixin
+            junk_tiers = BuildingMixin.UPGRADE_TIERS.get("junkyard", {})
+            next_tier = junk_tiers.get("tiers", {}).get(junkyard.salvage_level)
+            if next_tier:
+                cost_str = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
+                                    for k, v in next_tier["cost"].items())
+                print(f"  Next upgrade: {next_tier['name']} — needs: {cost_str} ({next_tier['skill']} DC {next_tier['dc']})")
+            else:
+                print(f"  {display.DIM}Fully upgraded.{display.RESET}")
+            # Show items in junkyard
+            if junkyard.items:
+                from collections import Counter
+                counts = Counter(junkyard.items)
+                mat_parts = []
+                for item_id, count in counts.items():
+                    name = self.items_db.get(item_id, {}).get("name", item_id.replace("_", " ").title())
+                    mat_parts.append(f"{count}x {name}")
+                print(f"  Materials on hand: {', '.join(mat_parts)}")
+            return
+
         if target in ("apothecary", "infirmary", "hospital"):
             healing_room = self.skerry.get_room("skerry_apothecary")
             if not healing_room:
