@@ -441,7 +441,7 @@ class NpcsMixin:
             total_tiles = state["grid_size"] ** 2
             all_visited = len(state["visited"]) == total_tiles
             if all_visited and not state["eliminated"]:
-                base_loyalty = 10
+                base_loyalty = min(10, base_loyalty + 3)
                 npc["mood"] = "happy"
                 backstory = npc.get("backstory", {})
                 backstory_aspects = backstory.get("aspects", [])
