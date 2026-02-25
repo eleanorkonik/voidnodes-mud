@@ -85,7 +85,11 @@
                 "A flat look. That argument died and he's not going to resurrect it for you."
             ]
         },
-        "originZone": "tutorial"
+        "originZone": "tutorial",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "emmy": {
         "name": "Emmy",
@@ -172,7 +176,11 @@
                 "The excitement dims in her eyes. You let that thread go too long."
             ]
         },
-        "originZone": "debris_field"
+        "originZone": "debris_field",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "dax": {
         "name": "Dax",
@@ -258,7 +266,11 @@
                 "'You lost me.' Back to the console. That thread is welded shut."
             ]
         },
-        "originZone": "debris_field"
+        "originZone": "debris_field",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "chris": {
         "name": "Chris",
@@ -344,7 +356,11 @@
                 "He takes a step back. You let something important go cold."
             ]
         },
-        "originZone": "coral_thicket"
+        "originZone": "coral_thicket",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "tilly": {
         "name": "Tilly",
@@ -430,7 +446,11 @@
                 "Her expression closes off. You let that one wither on the vine."
             ]
         },
-        "originZone": "coral_thicket"
+        "originZone": "coral_thicket",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "callum": {
         "name": "Callum",
@@ -516,7 +536,11 @@
                 "'You had something there, but you didn't develop it.' An academic's disappointment."
             ]
         },
-        "originZone": "frozen_wreck"
+        "originZone": "frozen_wreck",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "lira": {
         "name": "Lira",
@@ -611,7 +635,11 @@
                 "A flat look over her spectacles. You let that hypothesis die untested."
             ]
         },
-        "originZone": "verdant_wreck"
+        "originZone": "verdant_wreck",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     },
     "angya": {
         "name": "Angya",
@@ -698,6 +726,10 @@
                 "A disgusted headshake. Words wasted. That door is shut."
             ]
         },
-        "originZone": "frozen_wreck"
+        "originZone": "frozen_wreck",
+        "backstory": {
+            "aspects": [],
+            "story": ""
+        }
     }
 }

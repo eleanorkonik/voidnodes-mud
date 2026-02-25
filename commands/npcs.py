@@ -435,15 +435,45 @@ class NpcsMixin:
                 # Requires no tiles eliminated (no conversational threads lost)
                 base_loyalty = max(base_loyalty, 7)
                 npc["mood"] = "happy"
-                display.success(f"  Bonus: A perfect conversation. {npc_name} is genuinely fired up.")
+                display.success(f"  Bonus: An exceptional conversation. {npc_name} is genuinely fired up.")
+
+            # True perfect: every tile visited, zero eliminations
+            total_tiles = state["grid_size"] ** 2
+            all_visited = len(state["visited"]) == total_tiles
+            if all_visited and not state["eliminated"]:
+                base_loyalty = 10
+                npc["mood"] = "happy"
+                backstory = npc.get("backstory", {})
+                backstory_aspects = backstory.get("aspects", [])
+                backstory_story = backstory.get("story", "")
+                if backstory_aspects or backstory_story:
+                    print()
+                    display.success(f"  A flawless conversation. {npc_name} trusts you completely.")
+                    if backstory_story:
+                        display.narrate(f"  {npc_name} hesitates, then speaks quietly:")
+                        display.npc_speak(npc_name, backstory_story)
+                    if backstory_aspects:
+                        # Reveal first backstory aspect
+                        aspect_text = backstory_aspects[0]
+                        npc.setdefault("aspects", {}).setdefault("other", [])
+                        if aspect_text not in npc["aspects"]["other"]:
+                            npc["aspects"]["other"].append(aspect_text)
+                        npc.setdefault("revealed_backstory", [])
+                        if aspect_text not in npc["revealed_backstory"]:
+                            npc["revealed_backstory"].append(aspect_text)
+                        display.success(f"  New aspect revealed: {display.aspect_text(aspect_text)}")
+                else:
+                    display.success(f"  A flawless conversation. {npc_name} trusts you completely.")
 
             npc["loyalty"] = base_loyalty
             display.info(f"  Score: {state['score']}/{state['threshold']} (+{over} over par, variant: {seed_hex})")
 
-            self._log_event("recruit_success", comic_weight=5,
+            flawless = all_visited and not state["eliminated"]
+            self._log_event("recruit_success", comic_weight=7 if flawless else 5,
                             npc_name=npc_name, npc_id=npc_id,
                             loyalty=npc["loyalty"], score=state["score"],
                             threshold=state["threshold"], over_par=over,
+                            flawless=flawless,
                             variant=seed_hex.lower())
 
             if not self.state.get("tutorial_complete"):
