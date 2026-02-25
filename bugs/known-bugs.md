@@ -8,11 +8,6 @@
 
 We should have a dedicated room for healing.
 
-### QUESTION: Do masterworks matter?
-
-Crafted: Rope!
-Masterwork! You crafted it with exceptional quality.
-
 ### QUESTION: What happens if empathy skill fails when assigning ppl?
 
 > assign lira workshop
@@ -72,6 +67,10 @@ Code already shows zone aspects in room display — was working correctly.
 ### FIXED: Beds not filled properly in CHECK SKERRY
 
 Emmy showed 0/1 beds in junkyard despite being settled; Sevarik/Miria showed 0/2 in shelter. Settled NPC counting wasn't reading `settled_room` correctly.
+
+### FIXED: Do masterworks matter?
+
+Masterwork items (4+ shifts when crafting) now have social value: ✦ visual prefix, NPC gift system (mood boost + loyalty +1), and room enhancement (+1 to NPC subtask checks when a masterwork item is in the room). 3 shifts still gives a bonus normal item. Food recipes keep 2x yield at both tiers.
 
 ### FIXED: Workshop purpose / material distribution unclear
 

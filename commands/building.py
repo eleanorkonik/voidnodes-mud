@@ -1,6 +1,6 @@
 """Building domain — craft, recipes, build, and build-site helpers."""
 
-from engine import display, dice, parser, tutorial, farming
+from engine import display, dice, parser, tutorial, farming, masterwork
 
 
 class BuildingMixin:
@@ -98,16 +98,25 @@ class BuildingMixin:
             result_info = self.items_db.get(result_id, {})
             display.success(f"Crafted: {result_info.get('name', result_id)}!")
 
-            masterwork = shifts >= 3
-            if masterwork:
-                display.success("Masterwork! You crafted it with exceptional quality.")
-                # Bonus: extra item or better version
+            # Bonus tiers: 3 shifts = extra normal item, 4+ = masterwork bonus
+            is_food = recipe.get("recipe_type") == "food" or recipe.get("from_stores")
+            is_masterwork = False
+            if shifts >= 4 and not is_food:
+                is_masterwork = True
+                mw_id = masterwork.masterwork_id(result_id)
+                char.add_to_inventory(mw_id)
+                mw_name = masterwork.get_display_name(mw_id, self.items_db)
+                display.success("Masterwork! Your hands remembered something precise.")
+                display.success(f"  Bonus: {mw_name}")
+                display.info("  Masterwork items can be gifted to NPCs or placed in workrooms.")
+            elif shifts >= 3:
+                display.success("Excellent work! You got enough out of the materials for a second one.")
                 char.add_to_inventory(result_id)
                 display.success(f"  Bonus: crafted a second {result_info.get('name', result_id)}!")
             self._log_event("item_crafted", comic_weight=3,
                             recipe=recipe.get("name", target),
                             result=result_info.get("name", result_id),
-                            masterwork=masterwork)
+                            masterwork=is_masterwork)
         else:
             # Fail — lose some materials
             lost_mat = list(recipe["materials"].keys())[0]

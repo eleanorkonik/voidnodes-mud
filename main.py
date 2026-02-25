@@ -518,11 +518,34 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         return text.replace("{seed_name}", self.seed_name)
 
     def _find_entity(self, entity_ids, target, db):
-        """Find an entity by name or id from a list. Returns (id, data) or (None, None)."""
+        """Find an entity by name or id from a list. Returns (id, data) or (None, None).
+
+        Handles masterwork prefix: "masterwork:rope" looks up "rope" in db,
+        and "masterwork rope" as a target matches masterwork items.
+        """
+        from engine.masterwork import is_masterwork, base_id
+        # Normalize "masterwork rope" → match against masterwork items
+        mw_target = None
+        if target.startswith("masterwork "):
+            mw_target = target[len("masterwork "):]
+
         for eid in entity_ids:
-            edata = db.get(eid, {})
-            if target in edata.get("name", "").lower() or target == eid:
-                return eid, edata
+            bid = base_id(eid)
+            edata = db.get(bid) or db.get(eid, {})
+            ename = edata.get("name", "").lower()
+
+            if is_masterwork(eid):
+                # Match "masterwork rope", "rope", or the full id
+                if mw_target and (mw_target in ename or mw_target == bid):
+                    return eid, edata
+                if target in ename or target == eid or target == bid:
+                    return eid, edata
+            else:
+                # Normal item — skip if player specifically asked for masterwork
+                if mw_target:
+                    continue
+                if target in ename or target == eid:
+                    return eid, edata
         return None, None
 
     def _find_follower(self, target, room_id):

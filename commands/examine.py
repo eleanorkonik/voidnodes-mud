@@ -2,7 +2,7 @@
 
 import random
 
-from engine import display, dice, aspects, map_renderer, farming
+from engine import display, dice, aspects, map_renderer, farming, masterwork
 
 
 class ExamineMixin:
@@ -85,8 +85,12 @@ class ExamineMixin:
         # Look at item in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
         if item:
-            display.header(item["name"])
-            display.narrate(f"  {item.get('description', '')}")
+            name = masterwork.get_display_name(item_id, self.items_db)
+            display.header(name)
+            if masterwork.is_masterwork(item_id) and item.get("masterwork_desc"):
+                display.narrate(f"  {item['masterwork_desc']}")
+            else:
+                display.narrate(f"  {item.get('description', '')}")
             return
 
         # Look at room feature (interactable objects — roots, consoles, etc.)
@@ -123,8 +127,12 @@ class ExamineMixin:
         # Look at item in inventory
         item_id, item = self._find_entity(char.inventory, target, self.items_db)
         if item:
-            display.header(item["name"])
-            display.narrate(f"  {item.get('description', '')}")
+            name = masterwork.get_display_name(item_id, self.items_db)
+            display.header(name)
+            if masterwork.is_masterwork(item_id) and item.get("masterwork_desc"):
+                display.narrate(f"  {item['masterwork_desc']}")
+            else:
+                display.narrate(f"  {item.get('description', '')}")
             if item.get("stat_bonuses"):
                 bonuses = ", ".join(f"+{v} {k}" for k, v in item["stat_bonuses"].items())
                 display.info(f"  Bonuses (if kept): {bonuses}")
@@ -177,10 +185,13 @@ class ExamineMixin:
         # No args — show focused list of interactable things (no room desc, no exits)
         has_contents = False
 
-        # Items (including specimens)
+        # Items (including specimens and masterwork)
         if room.items:
             for item_id in room.items:
-                if item_id in self.items_db:
+                if masterwork.is_masterwork(item_id):
+                    mw_name = masterwork.get_display_name(item_id, self.items_db)
+                    print(f"  {display.BRIGHT_WHITE}{display.BOLD}{mw_name}{display.RESET}")
+                elif item_id in self.items_db:
                     print(f"  {display.item_name(self.items_db[item_id]['name'])}")
                 elif item_id in self.specimens_db:
                     spec = self.specimens_db[item_id]
@@ -510,16 +521,24 @@ class ExamineMixin:
         # Check items in room
         item_id, item = self._find_entity(room.items, target, self.items_db)
         if item:
-            display.header(item["name"])
-            display.narrate(self.sub(item["description"]))
+            name = masterwork.get_display_name(item_id, self.items_db)
+            display.header(name)
+            if masterwork.is_masterwork(item_id) and item.get("masterwork_desc"):
+                display.narrate(self.sub(item["masterwork_desc"]))
+            else:
+                display.narrate(self.sub(item["description"]))
             display.info(f"  Mote value: {item.get('mote_value', 1)}")
             return
 
         # Check inventory items
         inv_item_id, inv_item = self._find_entity(list(char.inventory), target, self.items_db)
         if inv_item:
-            display.header(inv_item["name"])
-            display.narrate(self.sub(inv_item["description"]))
+            name = masterwork.get_display_name(inv_item_id, self.items_db)
+            display.header(name)
+            if masterwork.is_masterwork(inv_item_id) and inv_item.get("masterwork_desc"):
+                display.narrate(self.sub(inv_item["masterwork_desc"]))
+            else:
+                display.narrate(self.sub(inv_item["description"]))
             if inv_item.get("aspects"):
                 for a in inv_item["aspects"]:
                     print(f"    {display.aspect_text(a)}")

@@ -95,13 +95,15 @@ class ArtifactsMixin:
         # Check regular items
         item_id, item = self._find_entity(list(char.inventory), target, self.items_db)
         if item:
+            from engine.masterwork import get_display_name
             motes = item.get("mote_value", 1)
             new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(item_id)
 
-            display.success(f"You feed {item.get('name', item_id)} to {self.seed_name}. +{motes} motes!")
+            feed_name = get_display_name(item_id, self.items_db)
+            display.success(f"You feed {feed_name} to {self.seed_name}. +{motes} motes!")
             self._log_event("item_fed", comic_weight=2,
-                            item_id=item_id, item_name=item.get("name", item_id),
+                            item_id=item_id, item_name=feed_name,
                             motes_gained=motes, total_motes=new_total)
             if stage_changed:
                 self._log_event("seed_growth", comic_weight=5,

@@ -121,11 +121,18 @@ def display_room(room, game_state):
         from collections import Counter
         # Count items by ID for stacking
         item_counts = Counter(room.items)
+        from engine.masterwork import is_masterwork, base_id as mw_base_id
         item_strs = []
         for item_id, count in item_counts.items():
             if item_id in artifacts:
                 name = artifacts[item_id]["name"]
                 item_strs.append(f"{BRIGHT_WHITE}{BOLD}{name}{RESET} {DIM}(artifact){RESET}")
+            elif is_masterwork(item_id):
+                bid = mw_base_id(item_id)
+                base_data = items.get(bid, {})
+                name = f"✦ {base_data.get('name', bid.replace('_', ' ').title())}"
+                label = f"{BRIGHT_WHITE}{BOLD}{name}{RESET}"
+                item_strs.append(f"{label} x{count}" if count > 1 else label)
             elif item_id in items:
                 name = items[item_id]["name"]
                 label = item_name(name)
@@ -224,6 +231,9 @@ def _get_zone_aspect(room, game_state):
 
 def _lookup_name(item_id, items_db, artifacts_db):
     """Look up an item name from items_db or artifacts_db, with fallback."""
+    from engine.masterwork import is_masterwork, base_id, get_display_name
+    if is_masterwork(item_id):
+        return get_display_name(item_id, items_db)
     if item_id in items_db:
         return items_db[item_id]["name"]
     if artifacts_db and item_id in artifacts_db:
@@ -272,11 +282,21 @@ def display_inventory(character, items_db, artifacts_db=None, specimens_db=None)
     for item_id in character.inventory:
         counts[item_id] = counts.get(item_id, 0) + 1
 
+    from engine.masterwork import is_masterwork, base_id as mw_base_id
+
     for item_id, count in counts.items():
         if item_id in artifacts_db:
             art = artifacts_db[item_id]
             motes = art.get("mote_value", 0)
             print(f"  {BRIGHT_WHITE}{BOLD}{art['name']}{RESET} {DIM}({motes} motes){RESET}")
+        elif is_masterwork(item_id):
+            bid = mw_base_id(item_id)
+            base_data = items_db.get(bid, {})
+            name = f"✦ {base_data.get('name', bid.replace('_', ' ').title())}"
+            if count > 1:
+                print(f"  {BRIGHT_WHITE}{BOLD}{name}{RESET} x{count}")
+            else:
+                print(f"  {BRIGHT_WHITE}{BOLD}{name}{RESET}")
         elif item_id in specimens_db:
             spec = specimens_db[item_id]
             if count > 1:
@@ -370,6 +390,8 @@ def display_help(phase, seed_name="Tuft"):
     ]
     items = [
         ("TAKE <item>", "Pick up an item"),
+        ("DROP <item>", "Put down an item (or DROP ALL for materials)"),
+        ("GIVE <item> TO <npc>", "Give an item to an NPC"),
         ("USE <item>", "Use an item"),
         ("WEAR <item>", "Equip clothing or artifact"),
         ("REMOVE <item>", "Unequip something"),

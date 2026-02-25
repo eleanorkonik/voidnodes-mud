@@ -1,6 +1,6 @@
 """Items domain — take, drop, wear, remove, use, give, inventory."""
 
-from engine import display, dice
+from engine import display, dice, masterwork
 from models.character import BODY_SLOTS
 
 STACK_SIZE = 5
@@ -34,8 +34,9 @@ class ItemsMixin:
             picked = []
             skipped = []
             for item_id in list(room.items):
-                is_fixture = self.items_db.get(item_id, {}).get("type") == "fixture"
-                is_takeable = item_id in self.items_db or item_id in self.specimens_db
+                bid = masterwork.base_id(item_id)
+                is_fixture = self.items_db.get(bid, {}).get("type") == "fixture"
+                is_takeable = bid in self.items_db or item_id in self.specimens_db
                 if is_takeable and not is_fixture:
                     if self._can_take_item(char, item_id, allow_overflow=False):
                         room.remove_item(item_id)
@@ -52,7 +53,7 @@ class ItemsMixin:
             counts = {}
             for mid in picked:
                 spec = self.specimens_db.get(mid)
-                name = spec["name"] if spec else self.items_db.get(mid, {}).get("name", mid)
+                name = spec["name"] if spec else masterwork.get_display_name(mid, self.items_db)
                 counts[name] = counts.get(name, 0) + 1
             for name, count in counts.items():
                 if count > 1:
@@ -108,9 +109,10 @@ class ItemsMixin:
                 return
             room.remove_item(item_id)
             char.add_to_inventory(item_id)
-            display.success(f"You pick up {item.get('name', item_id)}.")
+            take_name = masterwork.get_display_name(item_id, self.items_db)
+            display.success(f"You pick up {take_name}.")
             self._log_event("item_taken", comic_weight=1,
-                            item_id=item_id, item_name=item.get("name", item_id))
+                            item_id=item_id, item_name=take_name)
             # Tutorial nudge: first time picking up remnants with tools
             if item.get("type") == "remnants" and "basic_tools" in char.inventory:
                 if not self.state.get("tutorial_process_shown"):
@@ -132,14 +134,15 @@ class ItemsMixin:
         if target in ("all", "materials"):
             dropped = []
             for item_id in list(char.inventory):
-                if self.items_db.get(item_id, {}).get("type") == "material":
+                bid = masterwork.base_id(item_id)
+                if self.items_db.get(bid, {}).get("type") == "material":
                     char.remove_from_inventory(item_id)
                     room.add_item(item_id)
                     dropped.append(item_id)
             if dropped:
                 counts = {}
                 for mid in dropped:
-                    name = self.items_db.get(mid, {}).get("name", mid)
+                    name = masterwork.get_display_name(mid, self.items_db)
                     counts[name] = counts.get(name, 0) + 1
                 display.narrate("You pile your salvage on the ground.")
                 for name, count in counts.items():
@@ -156,9 +159,10 @@ class ItemsMixin:
         if item:
             char.remove_from_inventory(item_id)
             room.add_item(item_id)
-            display.success(f"You set down the {item['name']}.")
+            drop_name = masterwork.get_display_name(item_id, self.items_db)
+            display.success(f"You set down the {drop_name}.")
             self._log_event("item_dropped", comic_weight=1,
-                            item_id=item_id, item_name=item["name"])
+                            item_id=item_id, item_name=drop_name)
             return
 
         # Check specimens
@@ -395,7 +399,7 @@ class ItemsMixin:
             if not npc_data:
                 display.error(f"There's nobody called '{target_name}' here to give things to.")
                 return
-            # For NPCs, just accept artifacts for tutorial purposes
+            # Artifacts — special handling
             art_id, art = self._find_entity(char.inventory, item_part, self.artifacts_db)
             if art:
                 char.remove_from_inventory(art_id)
@@ -405,6 +409,38 @@ class ItemsMixin:
                     self.state["tutorial_artifact_resolved"] = True
                 display.success(f"You give the {art['name']} to {npc_data['name']}.")
                 return
+
+            # Regular items (including masterwork) — transfer to NPC's room
+            item_id, item = self._find_entity(char.inventory, item_part, self.items_db)
+            if item:
+                char.remove_from_inventory(item_id)
+                # Place in NPC's current room (available for subtask use)
+                npc_room = self.rooms.get(npc_data.get("location", ""))
+                if npc_room:
+                    npc_room.add_item(item_id)
+                item_name = masterwork.get_display_name(item_id, self.items_db)
+
+                if masterwork.is_masterwork(item_id):
+                    # Social bonus: mood boost + loyalty
+                    from commands.skerry_mgmt import MOOD_TIERS
+                    current_mood = npc_data.get("mood", "content")
+                    mood_idx = MOOD_TIERS.index(current_mood) if current_mood in MOOD_TIERS else 1
+                    if mood_idx > 0:
+                        npc_data["mood"] = MOOD_TIERS[mood_idx - 1]
+                    npc_data["loyalty"] = min(10, npc_data.get("loyalty", 0) + 1)
+                    display.success(f"You give {item_name} to {npc_data['name']}.")
+                    display.npc_speak(npc_data["name"], "This is... remarkable work. Thank you.")
+                    display.success(f"  {npc_data['name']}'s mood improves to {npc_data['mood']}. Loyalty +1.")
+                else:
+                    display.success(f"You give {item_name} to {npc_data['name']}.")
+                    display.npc_speak(npc_data["name"], "Thanks. I'll put this to good use.")
+
+                self._log_event("item_given", comic_weight=3 if masterwork.is_masterwork(item_id) else 2,
+                                item_id=item_id, item_name=item_name,
+                                recipient=npc_data["name"],
+                                masterwork=masterwork.is_masterwork(item_id))
+                return
+
             display.error(f"You don't have anything called '{item_part}'.")
             return
 
@@ -440,11 +476,14 @@ class ItemsMixin:
 
     def _get_item_size(self, item_id):
         """Get the size of an item ('small', 'medium', or 'large'). Default 'small'."""
-        item = self.items_db.get(item_id) or self.artifacts_db.get(item_id) or self.specimens_db.get(item_id) or {}
+        bid = masterwork.base_id(item_id)
+        item = self.items_db.get(bid) or self.artifacts_db.get(item_id) or self.specimens_db.get(item_id) or {}
         return item.get("size", "small")
 
     def _is_item_stackable(self, item_id):
-        """Check if an item is stackable."""
+        """Check if an item is stackable. Masterwork items never stack."""
+        if masterwork.is_masterwork(item_id):
+            return False
         item = self.items_db.get(item_id) or self.artifacts_db.get(item_id) or self.specimens_db.get(item_id) or {}
         return item.get("stackable", False)
 

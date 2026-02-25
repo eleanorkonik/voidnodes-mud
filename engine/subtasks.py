@@ -652,6 +652,10 @@ def run_room_subtasks(game, room, workers):
             dc = st.get("dc", 0)
             if skill_name:
                 skill_val = _npc_skill(npc, skill_name)
+                # Masterwork room enhancement: +1 if any masterwork item is in the room
+                from engine.masterwork import is_masterwork
+                if any(is_masterwork(item_id) for item_id in room.items):
+                    skill_val += 1
                 total, shifts, dice_result = dice.skill_check(skill_val, dc)
                 if shifts < 0:
                     # Failed — skip this subtask, continue to next
