@@ -563,9 +563,10 @@ class CombatMixin:
                 print()
                 display.seed_speak("That's a consequence — a wound that lasts beyond this fight.")
                 display.seed_speak("Stress clears when combat ends, but consequences stay.")
-                display.seed_speak("Mild heals on its own after a zone clear. Moderate and severe")
-                display.seed_speak("need treatment: bring the right cure item to the apothecary")
-                display.seed_speak("and REQUEST TREATMENT.")
+                display.seed_speak("Mild heals on its own after a few zone clears.")
+                display.seed_speak("Moderate and severe need a cure item (like bandages) and a")
+                display.seed_speak("Lore check — type REQUEST TREATMENT when you have one.")
+                display.seed_speak("Building an apothecary later will make treatment easier.")
                 display.seed_speak("You can also CONCEDE to end a fight on your terms — you'll")
                 display.seed_speak("get a Fate Point for each consequence you took.")
             # Show current stress
@@ -575,11 +576,11 @@ class CombatMixin:
                 self.state["tutorial_stress_done"] = True
                 print()
                 display.seed_speak("You've been hit. Those boxes are stress — they absorb damage.")
-                display.seed_speak("A 1-shift hit fills the first box, 2-shift fills the second,")
-                display.seed_speak("and so on. Stress clears after combat ends.")
-                display.seed_speak("If you can't absorb a hit with stress, you'll take a")
-                display.seed_speak("consequence — a lasting wound. DEFEND to brace for hits,")
-                display.seed_speak("EXPLOIT to find weaknesses, or CONCEDE to retreat.")
+                display.seed_speak("A 1-shift hit fills the first box, 2-shift the second, etc.")
+                display.seed_speak("Stress clears automatically when combat ends — no treatment needed.")
+                display.seed_speak("If you can't absorb a hit with stress, you take a consequence")
+                display.seed_speak("instead — a lasting wound. DEFEND to brace for incoming hits,")
+                display.seed_speak("EXPLOIT to find weaknesses, or CONCEDE to leave on your terms.")
         elif shifts == 0:
             display.narrate(f"  {enemy_data['name']} lunges but you deflect it perfectly.")
         else:
