@@ -544,13 +544,14 @@ class CombatMixin:
                                 details="Taken out by enemy attack")
                 self._seed_extraction()
                 return
-            # Track consequences for concede calculation
+            # Track and display consequences
             for sev in ["mild", "moderate", "severe"]:
                 if self.explorer.consequences.get(sev) == "Pending":
                     self.combat_consequences_taken += 1
                     # Name the consequence based on enemy
                     con_text = f"Wounded by {enemy_data['name']}"
                     self.explorer.consequences[sev] = con_text
+                    display.warning(f"  You take a {sev} consequence: {con_text}")
                     self._record_consequence("explorer", sev, con_text)
                     self._log_event("consequence_taken", comic_weight=4,
                                     severity=sev, description=con_text,
