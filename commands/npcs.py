@@ -54,6 +54,10 @@ class NpcsMixin:
                 dialogue = npc.get("dialogue", {})
                 msg = dialogue.get("greeting", "They look at you warily.")
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
+                # First time greeting any unrecruited NPC — seed hints about RECRUIT
+                if not self.state.get("_recruit_hint_shown"):
+                    self.state["_recruit_hint_shown"] = True
+                    self._seed_recruit_hint(npc["name"])
             return
 
         # Greet inactive agent
@@ -344,8 +348,10 @@ class NpcsMixin:
                             apply_quest_talk_effects(result, self.state, self.rooms, self.current_character())
                             # Clear the pending question
                             self.state.pop("pending_npc_question", None)
-                            # Seed RECRUIT hint
-                            self._seed_recruit_hint()
+                            # Seed RECRUIT hint (only if not already shown)
+                            if not self.state.get("_recruit_hint_shown"):
+                                self.state["_recruit_hint_shown"] = True
+                                self._seed_recruit_hint(npc.get("name"))
                             return
                         else:
                             # Unrecognized answer
@@ -359,14 +365,15 @@ class NpcsMixin:
         # No pending question — generic speech
         display.narrate(f'{char.name} says: "{" ".join(args)}"')
 
-    def _seed_recruit_hint(self):
-        """World seed hints about RECRUIT after Lira conversation."""
+    def _seed_recruit_hint(self, npc_name=None):
+        """World seed hints about RECRUIT after greeting an unrecruited NPC."""
         cap = self.skerry.population_cap()
         current = 2 + len(self.state.get("recruited_npcs", []))
         remaining = cap - current
         print()
         display.seed_speak(f"We have space for {remaining} more at the skerry.")
-        display.seed_speak("RECRUIT her, and I can bring her safely home with you.")
+        them = npc_name if npc_name else "them"
+        display.seed_speak(f"RECRUIT {them}, and I can bring them safely home with you.")
 
     def cmd_recruit(self, args):
         if self.state["current_phase"] == "steward":
