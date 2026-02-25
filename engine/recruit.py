@@ -17,8 +17,8 @@ from engine import display
 RECRUIT_COLORS = [
     ("R", "\033[91m", "Red",    "Safety"),
     ("G", "\033[38;5;48m", "Green",  "Growth"),
-    ("B", "\033[94m", "Blue",   "Community"),
-    ("Y", "\033[93m", "Yellow", "Purpose"),
+    ("B", "\033[38;5;75m", "Blue",   "Community"),
+    ("Y", "\033[38;5;220m", "Yellow", "Purpose"),
     ("O", "\033[38;5;208m", "Orange", "Stability"),
 ]
 
@@ -322,16 +322,16 @@ def calculate_threshold(base_threshold, shifts, grid_size):
 _COLOR_ANSI = {
     "R": "\033[91m",          # bright red
     "G": "\033[38;5;48m",     # bright green (256-color, vivid)
-    "B": "\033[94m",          # bright blue
-    "Y": "\033[93m",          # bright yellow
+    "B": "\033[38;5;75m",     # bright blue (256-color, vivid sky blue)
+    "Y": "\033[38;5;220m",    # bright yellow (256-color, vivid gold)
     "O": "\033[38;5;208m",    # bright orange
 }
 
 _COLOR_DIM = {
     "R": "\033[31m",          # dim red
     "G": "\033[38;5;35m",     # dim green (256-color, distinct from grey)
-    "B": "\033[34m",          # dim blue
-    "Y": "\033[33m",          # dim yellow
+    "B": "\033[38;5;68m",     # dim blue (256-color, steel blue)
+    "Y": "\033[38;5;178m",    # dim yellow (256-color, dark gold)
     "O": "\033[38;5;130m",    # dim orange
 }
 
