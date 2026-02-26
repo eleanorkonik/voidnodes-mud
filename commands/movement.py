@@ -443,7 +443,7 @@ class MovementMixin:
                     "garden": "A garden! PLANT specimens here, and ASSIGN someone to tend the plots.",
                     "guard": "A lookout post. ASSIGN someone to watch for threats.",
                     "storage": "The storehouse. CHECK STORES to see food supplies, CHECK VAULT for seeds.",
-                    "healing": "An apothecary. REQUEST TREATMENT for injuries, or ASSIGN a healer.",
+                    "healing": "An apothecary. HEAL for injuries, or ASSIGN a healer.",
                 }
                 hint = _BUILDING_HINTS.get(target_room.role)
                 if hint:

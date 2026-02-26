@@ -89,6 +89,7 @@ COMMANDS = {
     "process":   {"args": "required"},
     "ih":        {"args": "optional"},
     "drop":      {"args": "required"},
+    "heal":      {"args": "optional"},
     "request":   {"args": "required"},
     "rest":      {"args": "none"},
     "craft":     {"args": "required"},

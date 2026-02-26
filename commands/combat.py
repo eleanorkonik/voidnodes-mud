@@ -573,7 +573,7 @@ class CombatMixin:
                 display.seed_speak("Stress clears when combat ends, but consequences stay.")
                 display.seed_speak("Mild heals on its own after a few zone clears.")
                 display.seed_speak("Moderate and severe need a cure item (like bandages) and a")
-                display.seed_speak("Lore check — type REQUEST TREATMENT when you have one.")
+                display.seed_speak("Lore check — type HEAL when you have one.")
                 display.seed_speak("Building an apothecary later will make treatment easier.")
                 display.seed_speak("You can also CONCEDE to end a fight on your terms — you'll")
                 display.seed_speak("get a Fate Point for each consequence you took.")

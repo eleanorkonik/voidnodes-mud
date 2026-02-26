@@ -398,7 +398,7 @@ def display_help(phase, seed_name="Tuft"):
     ]
     items = [
         ("TAKE <item>", "Pick up an item"),
-        ("DROP <item>", "Put down an item (or DROP ALL for materials)"),
+        ("DROP <item>", "Put down an item (DROP ALL / DROP MATERIALS / DROP SPECIMENS)"),
         ("GIVE <item> TO <target>", f"Give to NPC, agent, or {seed_name}"),
         (f"FEED <item>", f"Shorthand for GIVE <item> TO {seed_name}"),
         ("USE <item>", "Use an item"),
@@ -409,7 +409,9 @@ def display_help(phase, seed_name="Tuft"):
         ("ASPECTS", "Show your aspects"),
         ("CRAFT <recipe>", "Craft an item from materials"),
         ("RECIPES", "List known recipes"),
-        ("REQUEST TREATMENT", "Treat injuries (needs cure item + Lore)"),
+        ("HEAL", "Treat your own injuries (needs cure item + Lore)"),
+        ("HEAL <name>", "Treat someone else's injuries"),
+        ("REQUEST HEAL FROM <name>", "Ask an NPC to treat you"),
     ]
     settlement = [
         ("BUILD <structure>", "Build a skerry structure"),

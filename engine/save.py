@@ -102,6 +102,13 @@ def _migrate_state(state):
         state["seed"] = state.pop("tuft")
     if "bonded_with_tuft" in state:
         state["bonded_with_seed"] = state.pop("bonded_with_tuft")
+    # Fix world seed starting at stage 0 — should be stage 1 (Tendril)
+    seed = state.get("seed", {})
+    if seed.get("growth_stage", 0) == 0 and seed.get("total_motes_fed", 0) < 30:
+        seed["growth_stage"] = 1
+        seed["total_motes_fed"] = max(seed.get("total_motes_fed", 0), 30)
+        seed["aspects"] = ["Putting Down Roots Whether You Like It or Not", "Always Hungry, Never Full"]
+        seed["stress"] = [False, False, False]
     # Add new fields with defaults
     state.setdefault("explorer_name", "Sevarik")
     state.setdefault("steward_name", "Miria")
@@ -272,7 +279,7 @@ def new_game_state():
     items = load_data_file("items.json")
     artifacts = load_data_file("artifacts.json")
     recipes = load_data_file("recipes.json")
-    seed_data = load_data_file("tuft.json")  # data file keeps its name
+    seed_data = load_data_file("world_seed.json")
     events = load_data_file("events.json")
 
     # Build room lookup from zones

@@ -154,6 +154,29 @@ class ItemsMixin:
                 display.narrate("You don't have any materials to drop.")
             return
 
+        if target == "specimens":
+            dropped = []
+            for item_id in list(char.inventory):
+                spec = self.specimens_db.get(item_id)
+                if spec:
+                    char.remove_from_inventory(item_id)
+                    room.add_item(item_id)
+                    dropped.append(item_id)
+            if dropped:
+                counts = {}
+                for mid in dropped:
+                    name = self.specimens_db[mid]["name"]
+                    counts[name] = counts.get(name, 0) + 1
+                display.narrate("You set your specimens down carefully.")
+                for name, count in counts.items():
+                    if count > 1:
+                        display.info(f"  {display.item_name(name)} x{count}")
+                    else:
+                        display.info(f"  {display.item_name(name)}")
+            else:
+                display.narrate("You don't have any specimens to drop.")
+            return
+
         if target == "all":
             kept_artifact = self.state.get("kept_artifact")
             dropped = []

@@ -792,67 +792,45 @@ class NpcsMixin:
             if skerry_central and npc_id in skerry_central.npcs:
                 skerry_central.remove_npc(npc_id)
 
-    def cmd_request(self, args):
-        """REQUEST TREATMENT [FROM <name>] — treat a consequence with Lore + cure item."""
-        if not args:
-            display.error("Request what? Usage: REQUEST TREATMENT [FROM <name>]")
-            return
+    # ── Healing / Treatment ──────────────────────────────────────
 
-        raw = " ".join(args).lower()
-
-        # Must start with "treatment"
-        if not raw.startswith("treatment"):
-            display.error("Request what? Usage: REQUEST TREATMENT [FROM <name>]")
-            return
-
+    def _resolve_healer(self, healer_name):
+        """Resolve a healer by name. Returns (display_name, lore_skill) or (None, None)."""
         char = self.current_character()
         phase = self.state.get("current_phase", "explorer")
         char_key = "explorer" if phase == "explorer" else "steward"
 
-        # Figure out the treater
-        treater_name = None
-        treater_lore = None
-        remainder = raw[len("treatment"):].strip()
-        if remainder.startswith("from "):
-            treater_name = remainder[5:].strip()
+        # Check if it's the other player character
+        other_key = "steward" if char_key == "explorer" else "explorer"
+        other_name = self.state.get(f"{other_key}_name", "").lower()
+        if healer_name == other_name:
+            other_char_data = self.state.get(other_key, {})
+            lore = other_char_data.get("skills", {}).get("Lore", 0)
+            return self.state.get(f"{other_key}_name"), lore
 
-        if treater_name:
-            # Check if it's the other player character
-            other_key = "steward" if char_key == "explorer" else "explorer"
-            other_name = self.state.get(f"{other_key}_name", "").lower()
-            if treater_name == other_name:
-                other_char_data = self.state.get(other_key, {})
-                treater_lore = other_char_data.get("skills", {}).get("Lore", 0)
-                treater_name = self.state.get(f"{other_key}_name")
-            else:
-                # Check NPCs at this location
-                room = self.current_room()
-                npc_pool = list(room.npcs or [])
-                # Also check followers
-                for npc_id, npc in self.npcs_db.items():
-                    if npc.get("following") and npc.get("location") == room.id and npc_id not in npc_pool:
-                        npc_pool.append(npc_id)
-                npc_id, npc_data = self._find_entity(npc_pool, treater_name, self.npcs_db)
-                if npc_data:
-                    treater_lore = npc_data.get("skills", {}).get("Lore", 0)
-                    treater_name = npc_data.get("name", npc_id)
-                else:
-                    display.error(f"There's nobody called '{treater_name}' here to treat you.")
-                    return
-        else:
-            # Self-treatment — use own Lore
-            treater_lore = char.get_skill("Lore")
-            treater_name = char.name
+        # Check NPCs at this location
+        room = self.current_room()
+        npc_pool = list(room.npcs or [])
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following") and npc.get("location") == room.id and npc_id not in npc_pool:
+                npc_pool.append(npc_id)
+        npc_id, npc_data = self._find_entity(npc_pool, healer_name, self.npcs_db)
+        if npc_data:
+            return npc_data.get("name", npc_id), npc_data.get("skills", {}).get("Lore", 0)
 
+        return None, None
+
+    def _perform_treatment(self, patient, patient_key, treater_name, treater_lore):
+        """Core healing logic: assess injuries, roll Lore, apply recovery."""
         # Check what consequences need treatment
         consequences = []
         for sev in ["severe", "moderate", "mild"]:
-            con = char.consequences.get(sev)
+            con = patient.consequences.get(sev)
             if con:
                 consequences.append((sev, con))
 
         if not consequences:
-            display.narrate(f"{char.name} has no injuries to treat.")
+            display.narrate(f"{patient.name} has no injuries to treat.")
             return
 
         # Show status and find treatable consequences
@@ -861,24 +839,23 @@ class NpcsMixin:
         meta = self.state.get("consequence_meta", {})
         zones_cleared = self.state.get("zones_cleared", 0)
         for sev, con in consequences:
-            eligible, reason = aspects.can_treat_consequence(self, char_key, sev)
+            eligible, reason = aspects.can_treat_consequence(self, patient_key, sev)
             cure = aspects.get_cure_for_consequence(con)
             cure_name = self.items_db.get(cure, {}).get("name", cure) if cure else "unknown"
 
-            meta_key = f"{char_key}_{sev}"
+            meta_key = f"{patient_key}_{sev}"
             entry = meta.get(meta_key, {})
             recovery = entry.get("recovery", 0)
             eff_sev = aspects._effective_severity(sev, recovery)
             recovering_suffix = "*" if recovery > 0 else ""
 
             if eff_sev == "mild" or eff_sev is None:
-                # Mild-equivalent: healing on its own
                 taken_at = entry.get("taken_at", 0)
                 remaining = max(0, aspects.ZONE_CLEARS_REQUIRED["mild"] - (zones_cleared - taken_at))
                 print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}")
                 display.info(f"    Healing on its own. {remaining} zone clear{'s' if remaining != 1 else ''} remaining.")
             elif eligible:
-                has_cure = cure in char.inventory
+                has_cure = cure in patient.inventory
                 difficulty = aspects.TREATMENT_DIFFICULTY[eff_sev]
                 ladder = {0: "Mediocre", 1: "Average", 2: "Fair", 3: "Good", 4: "Great"}
                 diff_label = ladder.get(difficulty, f"+{difficulty}")
@@ -905,8 +882,8 @@ class NpcsMixin:
         # Treat the most severe treatable consequence
         sev, con, cure, difficulty = treatable[0]
 
-        # Consume cure item
-        char.remove_from_inventory(cure)
+        # Consume cure item from patient's inventory
+        patient.remove_from_inventory(cure)
         cure_name = self.items_db.get(cure, {}).get("name", cure)
 
         # Roll Lore check
@@ -927,7 +904,7 @@ class NpcsMixin:
         effective_lore += item_bonus
 
         # Compute effective severity for DC
-        meta_key = f"{char_key}_{sev}"
+        meta_key = f"{patient_key}_{sev}"
         entry = meta.get(meta_key, {})
         recovery = entry.get("recovery", 0)
         eff_sev = aspects._effective_severity(sev, recovery)
@@ -956,9 +933,8 @@ class NpcsMixin:
         shifts = total - effective_dc
 
         if shifts >= 0:
-            # Success — increment recovery counter (consequence stays in its slot)
             self._log_event("treatment_given", comic_weight=3,
-                            target=char.name, treater=treater_name,
+                            target=patient.name, treater=treater_name,
                             severity=sev, consequence=con, success=True)
             meta = self.state.setdefault("consequence_meta", {})
             entry = meta.setdefault(meta_key, {})
@@ -971,8 +947,7 @@ class NpcsMixin:
                 display.narrate(f"  {con} is now healing on its own.")
                 display.info(f"  It will clear after a few zone clears.")
             elif next_eff is None:
-                # Fully healed (shouldn't normally happen — mild-equiv auto-heals)
-                char.consequences[sev] = None
+                patient.consequences[sev] = None
                 meta.pop(meta_key, None)
                 display.success(f"The treatment takes hold. {con} has fully healed.")
             else:
@@ -980,7 +955,82 @@ class NpcsMixin:
                 display.narrate(f"  {con} is recovering (effective severity: {next_eff}).")
                 display.info(f"  Will need another round of treatment to heal further.")
         else:
-            # Failure — cure item is still consumed
             print()
             display.warning(f"The treatment doesn't take. The {cure_name} is used up, but the injury persists.")
             display.info(f"  (Failed by {abs(shifts)} — try again with better aspects or a more skilled healer.)")
+
+    def cmd_heal(self, args):
+        """HEAL [<name>] — treat your own injuries, or heal someone else."""
+        char = self.current_character()
+        phase = self.state.get("current_phase", "explorer")
+        char_key = "explorer" if phase == "explorer" else "steward"
+
+        if not args:
+            # HEAL — self-heal
+            self._perform_treatment(char, char_key, char.name, char.get_skill("Lore"))
+            return
+
+        # HEAL <name> — heal another character
+        target_name = " ".join(args).lower()
+
+        # Check if target is the other player character
+        other_key = "steward" if char_key == "explorer" else "explorer"
+        other_name = self.state.get(f"{other_key}_name", "").lower()
+        if target_name == other_name:
+            other_char = self.steward if other_key == "steward" else self.explorer
+            self._perform_treatment(other_char, other_key, char.name, char.get_skill("Lore"))
+            return
+
+        # Check NPCs/followers at this location
+        room = self.current_room()
+        npc_pool = list(room.npcs or [])
+        for npc_id, npc in self.npcs_db.items():
+            if npc.get("following") and npc.get("location") == room.id and npc_id not in npc_pool:
+                npc_pool.append(npc_id)
+        npc_id, npc_data = self._find_entity(npc_pool, target_name, self.npcs_db)
+        if npc_data:
+            display.narrate(f"NPCs don't take consequences the way you do. {npc_data['name']} appreciates the thought.")
+            return
+
+        display.error(f"There's nobody called '{target_name}' here to heal.")
+
+    def cmd_request(self, args):
+        """REQUEST HEAL FROM <name> — ask an NPC to treat your injuries.
+
+        Also accepts REQUEST TREATMENT FROM <name> for backward compatibility.
+        """
+        if not args:
+            display.error("Request what? Usage: REQUEST HEAL FROM <name>")
+            return
+
+        raw = " ".join(args).lower()
+
+        # Accept both "treatment" and "heal" as the noun
+        if raw.startswith("treatment"):
+            remainder = raw[len("treatment"):].strip()
+        elif raw.startswith("heal"):
+            remainder = raw[len("heal"):].strip()
+        else:
+            display.error("Request what? Usage: REQUEST HEAL FROM <name>")
+            return
+
+        # Bare REQUEST TREATMENT / REQUEST HEAL (no FROM) → redirect
+        if not remainder.startswith("from "):
+            display.narrate("To heal yourself, use HEAL. To ask someone, use REQUEST HEAL FROM <name>.")
+            return
+
+        healer_name = remainder[5:].strip()
+        if not healer_name:
+            display.error("Request healing from whom? Usage: REQUEST HEAL FROM <name>")
+            return
+
+        char = self.current_character()
+        phase = self.state.get("current_phase", "explorer")
+        char_key = "explorer" if phase == "explorer" else "steward"
+
+        resolved_name, treater_lore = self._resolve_healer(healer_name)
+        if resolved_name is None:
+            display.error(f"There's nobody called '{healer_name}' here to treat you.")
+            return
+
+        self._perform_treatment(char, char_key, resolved_name, treater_lore)

@@ -59,7 +59,7 @@ data/
   zones.json         # 3 void zones with rooms (~26KB)
   skerry.json        # Home base structure
   events.json        # Random steward-phase events
-  tuft.json          # Starting world seed config
+  world_seed.json    # Starting world seed config
 saves/               # Player save files (JSON)
 systems/             # Unused (commands live in mixin files)
 proselytize.jsx      # React prototype for recruit minigame UI
@@ -92,7 +92,7 @@ Grid-based persuasion minigame. Navigate colored tiles (N/S/E/W), each color = c
 ## Commands
 
 ### Universal (all phases)
-`LOOK` / `GO` / `INVENTORY` / `STATUS` / `CHECK` seed / `HELP` / `SAVE` / `DONE` / `QUIT` / `TALK` / `USE` / `WEAR` / `REMOVE` / `MAP` / `GIVE` / `SWITCH` / `OFFER` / `DROP` / `IH`
+`LOOK` / `GO` / `INVENTORY` / `STATUS` / `CHECK` seed / `HELP` / `SAVE` / `DONE` / `QUIT` / `TALK` / `USE` / `WEAR` / `REMOVE` / `MAP` / `GIVE` / `SWITCH` / `OFFER` / `DROP` / `HEAL` / `IH`
 
 ### Explorer-only
 `ATTACK` / `DEFEND` / `INVOKE` / `EXPLOIT` / `CONCEDE` / `SCAVENGE` / `PROBE` / `FEED` / `KEEP` / `RECRUIT` / `RETREAT` / `ENTER` / `SEEK` / `TAKE`
