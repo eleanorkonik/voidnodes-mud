@@ -2,6 +2,8 @@
 
 Ideas for expanding the mote economy and world seed growth progression. Not yet built — just design notes.
 
+mechanically, motes are meant to be sort of a limiter on the things the world seed can do. narratively, they come from "stories." artifacts are kinda like mote-sinks -- think the ruby slippers of oz, and how so much of the significant and "weight" of teh story is caught up in that iconic item. but it also makes sense that the stories created in the skerry can also create motes. 
+
 ## Passive Mote Generation
 
 - **A. NPC "tend seed" subtask** — 1-3 motes/day based on skill + room bonuses
