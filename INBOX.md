@@ -10,7 +10,6 @@ Ideas, playtest notes, and feature requests to be shaped into plan files.
 ## Deploy / Publish
 
 - Push the game to Vercel as a free app
-- Push void notes repo to public
 
 ## Personal
 
