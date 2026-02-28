@@ -91,6 +91,10 @@ saves/           # Your save files (gitignored)
 
 The game is pure Python 3 stdlib with no external dependencies. All content (NPCs, zones, items, recipes) is data-driven via JSON files, so it's easy to mod.
 
+## Status
+
+This game was built mostly by [Claude](https://claude.ai) (Anthropic's AI) with direction from a human who loves MUDs and tabletop RPGs. It's very much a work in progress — expect rough edges, incomplete features, and the occasional bug. Contributions and feedback welcome!
+
 ## License
 
 MIT — do whatever you want with it. See [LICENSE](LICENSE) for details.
