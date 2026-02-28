@@ -1,1 +1,0 @@
-right now, healing comes from REQUEST TREATMENT which is a weird syntax for self-healing. brainstorm some ways we can change the syntax, but have it work for self or from npc. Like "HEAL" vs "REQUEST HEAL" (similar to syntax to REQUEST <item> from NPC) maybe? but maybe there's someting better we could do. 
