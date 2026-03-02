@@ -18,10 +18,7 @@ Plan files: `.claude/plans/voidnodes-queue/`
 Raw ideas, not yet shaped into plans.
 
 - NPC spawn randomness — zones need spawn range indicators (1-2, 1-5, 5-10)
-- Deploy to Vercel as free app
-- good-night skill reviews voidnodes for refactoring opportunities
 - Mountain brine spring zone — `mountain-brine-spring.md` (fiction seed, no plan yet)
-- Show the game to Alec
 
 ## Bug Fixes
 
