@@ -417,22 +417,24 @@ class ExamineMixin:
                 print(f"  {display.npc_name(room.name)}")
                 if room.role:
                     # Who lives here
-                    settled_names = [n["name"] for n in self.npcs_db.values()
-                                     if n.get("recruited") and n.get("settled_room") == room.id]
+                    settled_npcs = [n for n in self.npcs_db.values()
+                                    if n.get("recruited") and n.get("settled_room") == room.id]
+                    settled_labels = [f"{n['name']} ({n.get('mood', 'content')})" for n in settled_npcs]
                     # Explorer and steward live in the basic shelter
                     if room.id == "skerry_shelter":
-                        settled_names = [self.explorer.name, self.steward.name] + settled_names
-                    beds = f"{len(settled_names)}/{room.max_workers}"
-                    if settled_names:
-                        print(f"    {display.DIM}Residents:{display.RESET} {', '.join(settled_names)} {display.DIM}({beds}){display.RESET}")
+                        settled_labels = [self.explorer.name, self.steward.name] + settled_labels
+                    beds = f"{len(settled_labels)}/{room.max_workers}"
+                    if settled_labels:
+                        print(f"    {display.DIM}Residents:{display.RESET} {', '.join(settled_labels)} {display.DIM}({beds}){display.RESET}")
                     else:
                         print(f"    {display.DIM}Residents: — ({beds} beds){display.RESET}")
                     # Who's working on this room's task
                     task_for_role = self._role_to_task(room.role)
-                    worker_names = [n["name"] for n in self.npcs_db.values()
-                                    if n.get("recruited") and n.get("assignment") == task_for_role]
-                    if worker_names:
-                        print(f"    {display.DIM}Working:{display.RESET}   {', '.join(worker_names)}")
+                    worker_npcs = [n for n in self.npcs_db.values()
+                                   if n.get("recruited") and n.get("assignment") == task_for_role]
+                    worker_labels = [f"{n['name']} ({n.get('mood', 'content')})" for n in worker_npcs]
+                    if worker_labels:
+                        print(f"    {display.DIM}Working:{display.RESET}   {', '.join(worker_labels)}")
                     else:
                         print(f"    {display.DIM}Working:   —{display.RESET}")
                 elif room.id == "skerry_landing":
@@ -443,17 +445,19 @@ class ExamineMixin:
                     print(f"    {display.DIM}—{display.RESET}")
 
             # Show unsettled NPCs
-            unsettled = [n["name"] for n in self.npcs_db.values()
+            unsettled = [n for n in self.npcs_db.values()
                          if n.get("recruited") and not n.get("settled_room")]
             if unsettled:
-                print(f"\n  {display.BRIGHT_YELLOW}Unsettled:{display.RESET} {', '.join(unsettled)}")
+                labels = [f"{n['name']} ({n.get('mood', 'content')})" for n in unsettled]
+                print(f"\n  {display.BRIGHT_YELLOW}Unsettled:{display.RESET} {', '.join(labels)}")
                 print(f"  {display.DIM}Use SETTLE <name> IN <room> to assign them a bed.{display.RESET}")
 
             # Show idle NPCs
-            idle = [n["name"] for n in self.npcs_db.values()
+            idle = [n for n in self.npcs_db.values()
                     if n.get("recruited") and n.get("assignment", "idle") == "idle"]
             if idle:
-                print(f"\n  {display.BRIGHT_YELLOW}Idle:{display.RESET} {', '.join(idle)}")
+                labels = [f"{n['name']} ({n.get('mood', 'content')})" for n in idle]
+                print(f"\n  {display.BRIGHT_YELLOW}Idle:{display.RESET} {', '.join(labels)}")
                 print(f"  {display.DIM}Use ASSIGN <name> <task> to put them to work.{display.RESET}")
 
             # Shared inventory counts for upgradable + buildable sections
