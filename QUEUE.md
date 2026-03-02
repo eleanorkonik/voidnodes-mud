@@ -21,7 +21,7 @@ Raw ideas, not yet shaped into plans.
 
 ## Bug Fixes
 
-- [ ] **DROP SPECIMENS** — `drop-specimen.md`. DROP ALL / DROP MATERIALS doesn't handle specimens.
+- [x] **DROP SPECIMENS** — DROP MATERIALS now includes specimens.
 
 ## Independent Features
 
