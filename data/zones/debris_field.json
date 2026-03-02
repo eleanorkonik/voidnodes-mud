@@ -9,6 +9,8 @@
         "wire",
         "torn_fabric"
     ],
+    "npc_pool": ["emmy", "dax", "varis"],
+    "npc_spawn_range": [1, 3],
     "entry_room": "df_entrance",
     "rooms": [
         {
@@ -48,9 +50,7 @@
                 "wire",
                 "torn_fabric"
             ],
-            "npcs": [
-                "emmy"
-            ],
+            "npcs": [],
             "enemies": [
                 "rat_swarm"
             ],
@@ -93,9 +93,7 @@
             "items": [
                 "basic_tools"
             ],
-            "npcs": [
-                "dax"
-            ],
+            "npcs": [],
             "enemies": [],
             "discovered": false
         },

@@ -11,6 +11,8 @@
         "preserved_food",
         "cryo_pod_specimen"
     ],
+    "npc_pool": ["callum", "angya"],
+    "npc_spawn_range": [1, 2],
     "entry_room": "fw_entrance",
     "rooms": [
         {
@@ -70,9 +72,7 @@
             "items": [
                 "crystal_shards"
             ],
-            "npcs": [
-                "callum"
-            ],
+            "npcs": [],
             "enemies": [],
             "discovered": false
         },
@@ -115,9 +115,7 @@
                 "ancient_alloys",
                 "crystal_shards"
             ],
-            "npcs": [
-                "angya"
-            ],
+            "npcs": [],
             "enemies": [],
             "discovered": false
         },

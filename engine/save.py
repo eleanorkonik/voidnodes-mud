@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 from pathlib import Path
 
 SAVE_DIR = Path(__file__).parent.parent / "saves"
@@ -270,6 +271,29 @@ def _load_zones():
     return zones
 
 
+def _spawn_zone_npcs(zones, npcs, all_rooms):
+    """Randomly select which NPCs spawn per zone. Zones without npc_pool spawn all NPCs as before."""
+    for zone_id, zone in zones.items():
+        pool = zone.get("npc_pool")
+        spawn_range = zone.get("npc_spawn_range")
+        if not pool or not spawn_range:
+            continue
+        n = random.randint(spawn_range[0], spawn_range[1])
+        chosen = random.sample(pool, n)
+        for npc_id in chosen:
+            npc = npcs.get(npc_id)
+            if not npc:
+                continue
+            room_id = npc.get("location")
+            if room_id and room_id in all_rooms:
+                all_rooms[room_id].setdefault("npcs", []).append(npc_id)
+        for npc_id in pool:
+            if npc_id not in chosen:
+                npc = npcs.get(npc_id)
+                if npc:
+                    npc["location"] = None
+
+
 def new_game_state():
     """Create a fresh game state from data files."""
     characters = load_data_file("characters.json")
@@ -291,6 +315,9 @@ def new_game_state():
     # Add skerry rooms
     for room in skerry["rooms"]:
         all_rooms[room["id"]] = room
+
+    # Randomly select NPCs per zone
+    _spawn_zone_npcs(zones, npcs, all_rooms)
 
     # Build enemy lookup from zones
     enemies_db = {}

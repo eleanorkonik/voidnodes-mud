@@ -12,6 +12,8 @@
         "luminous_spore",
         "resin"
     ],
+    "npc_pool": ["chris", "tilly"],
+    "npc_spawn_range": [1, 2],
     "entry_room": "ct_entrance",
     "rooms": [
         {
@@ -51,9 +53,7 @@
                 "resin",
                 "reef_grain"
             ],
-            "npcs": [
-                "chris"
-            ],
+            "npcs": [],
             "enemies": [],
             "discovered": false
         },
@@ -117,9 +117,7 @@
                 "luminous_spore",
                 "coral_fragments"
             ],
-            "npcs": [
-                "tilly"
-            ],
+            "npcs": [],
             "enemies": [
                 "thorn_crawler_alpha"
             ],

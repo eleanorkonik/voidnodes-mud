@@ -2,7 +2,7 @@
     "varis": {
         "name": "Varis",
         "desc": "Lean and sharp-featured, with dark eyes set deep beneath a heavy brow. His black hair is cropped close to the skull, and his sun-darkened skin is pulled tight over prominent cheekbones. His hands are large-knuckled and callused, with long fingers that move with deliberate economy.",
-        "location": null,
+        "location": "df_hull_breach",
         "recruited": false,
         "aspects": {
             "high_concept": "Mysterious Wanderer Who Knows the Void",
@@ -85,7 +85,7 @@
                 "A flat look. That argument died and he's not going to resurrect it for you."
             ]
         },
-        "originZone": "tutorial",
+        "originZone": "debris_field",
         "backstory": {
             "aspects": [],
             "story": ""

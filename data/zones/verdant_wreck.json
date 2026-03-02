@@ -11,6 +11,8 @@
         "moss_leaf",
         "torn_fabric"
     ],
+    "npc_pool": ["lira"],
+    "npc_spawn_range": [1, 1],
     "entry_room": "vw_airlock",
     "rooms": [
         {
@@ -104,9 +106,7 @@
                 "Wild Growth"
             ],
             "items": [],
-            "npcs": [
-                "lira"
-            ],
+            "npcs": [],
             "enemies": [],
             "discovered": false
         },
