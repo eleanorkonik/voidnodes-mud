@@ -29,7 +29,7 @@ No dependency on the feature sequence. Can be done anytime.
 
 - [ ] **CONFIDE Command** — `confide-backstory.md`. Loyalty threshold + rapport check → hidden aspect reveals.
 - [ ] **Loyalty Rapport Unlock** — `loyalty-rapport-unlock.md`. Related to CONFIDE — once-per-day rapport check at loyalty threshold.
-- [ ] **Steward Rapport Checks** — `steward-rapport-checks.md`. ~80% done: CHECK <NPC> shows mood, but CHECK SKERRY needs mood tier column.
+- [x] **Steward Rapport Checks** — CHECK <NPC> and CHECK SKERRY both show mood tiers.
 - [ ] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them. Healing exists, greying doesn't.
 - [ ] **Wound/Stress/Rescue** — `wound-stress-rescue.md`. Multiple consequences per slot, severe wounds trigger rescue mechanic.
 - [ ] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Currently 1 per zone; need 2 more each + randomized spawning.
