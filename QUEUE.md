@@ -17,7 +17,6 @@ Plan files: `.claude/plans/voidnodes-queue/`
 
 Raw ideas, not yet shaped into plans.
 
-- NPC spawn randomness — zones need spawn range indicators (1-2, 1-5, 5-10)
 - Mountain brine spring zone — `mountain-brine-spring.md` (fiction seed, no plan yet)
 
 ## Bug Fixes
@@ -65,3 +64,4 @@ Major multi-phase work. Not building unless Eleanor says go.
 - [x] **Inventory Slots** — `archive/inventory-slots.md`
 - [x] **Social Encounters (GREET)** — `archive/peaceful-greeting-forest.md`
 - [x] **Festering Compels on Room Entry** — `archive/festering-compel-sneak-attack.md`
+- [x] **NPC Spawn Randomness** — zones roll random NPC subsets each new game
