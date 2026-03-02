@@ -29,12 +29,10 @@ No dependency on the feature sequence. Can be done anytime.
 
 - [ ] **CONFIDE Command** — `confide-backstory.md`. Loyalty threshold + rapport check → hidden aspect reveals.
 - [ ] **Loyalty Rapport Unlock** — `loyalty-rapport-unlock.md`. Related to CONFIDE — once-per-day rapport check at loyalty threshold.
-- [ ] **Steward Rapport Checks** — `steward-rapport-checks.md`. Encourage talking to all NPCs, expand CHECK SKERRY with mood details.
-- [ ] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them.
-- [ ] **HEAL Syntax** — `request-treatment.md`. Replace REQUEST TREATMENT with HEAL / HEAL <name>.
-- [ ] **Early Game Mote Drain** — `early-game-mote-drain.md`. Population cost drains motes early; self-sustaining later.
+- [ ] **Steward Rapport Checks** — `steward-rapport-checks.md`. ~80% done: CHECK <NPC> shows mood, but CHECK SKERRY needs mood tier column.
+- [ ] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them. Healing exists, greying doesn't.
 - [ ] **Wound/Stress/Rescue** — `wound-stress-rescue.md`. Multiple consequences per slot, severe wounds trigger rescue mechanic.
-- [ ] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Randomize loot across 3 options so players can't predict.
+- [ ] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Currently 1 per zone; need 2 more each + randomized spawning.
 
 ## Infrastructure
 
@@ -66,3 +64,5 @@ Major multi-phase work. Not building unless Eleanor says go.
 - [x] **Festering Compels on Room Entry** — `archive/festering-compel-sneak-attack.md`
 - [x] **NPC Spawn Randomness** — zones roll random NPC subsets each new game
 - [x] **DROP SPECIMENS** — was already working (DROP ALL, DROP SPECIMENS, DROP <name>)
+- [x] **HEAL Syntax** — HEAL / HEAL <name> already implemented alongside REQUEST TREATMENT
+- [x] **Early Game Mote Drain** — festering aspects drain 1 mote/day + population-based food consumption
