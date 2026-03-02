@@ -30,8 +30,8 @@ No dependency on the feature sequence. Can be done anytime.
 - [ ] **CONFIDE Command** — `confide-backstory.md`. Loyalty threshold + rapport check → hidden aspect reveals.
 - [ ] **Loyalty Rapport Unlock** — `loyalty-rapport-unlock.md`. Related to CONFIDE — once-per-day rapport check at loyalty threshold.
 - [x] **Steward Rapport Checks** — CHECK <NPC> and CHECK SKERRY both show mood tiers.
-- [ ] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them. Healing exists, greying doesn't.
-- [ ] **Wound/Stress/Rescue** — `wound-stress-rescue.md`. Multiple consequences per slot, severe wounds trigger rescue mechanic.
+- [x] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them. Healing exists, greying doesn't.
+- [x] **Wound/Stress/Rescue** — `wound-stress-rescue.md`. Multiple consequences per slot, severe wounds trigger rescue mechanic.
 - [ ] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Currently 1 per zone; need 2 more each + randomized spawning.
 
 ## Infrastructure
@@ -66,3 +66,4 @@ Major multi-phase work. Not building unless Eleanor says go.
 - [x] **DROP SPECIMENS** — was already working (DROP ALL, DROP SPECIMENS, DROP <name>)
 - [x] **HEAL Syntax** — HEAL / HEAL <name> already implemented alongside REQUEST TREATMENT
 - [x] **Early Game Mote Drain** — festering aspects drain 1 mote/day + population-based food consumption
+- [x] **Bandage Wounds + Wound/Stress/Rescue** — combined rework: no slot cap, invoke scaling (fresh 1/2/extract, greyed 0/1/2), natural healing (3 clears/tier unbandaged, 1 bandaged), severe = extraction
