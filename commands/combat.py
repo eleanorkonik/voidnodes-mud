@@ -531,14 +531,17 @@ class CombatMixin:
         if self.enemy_compel_boost > 0:
             enemy_fight += self.enemy_compel_boost
             self.enemy_compel_boost = 0
-        # Enemy invoke: once per combat, 50% chance, +2 from non-greyed wound
+        # Enemy invoke: once per combat, 50% chance, bonus scales by wound severity
         if not self.enemy_has_invoked:
             invoke_target = aspects.get_enemy_invoke_target(self.explorer)
             if invoke_target and random.random() < 0.5:
-                sev, idx, wound_text = invoke_target
+                sev, idx, wound_text, greyed, bonus = invoke_target
                 self.enemy_has_invoked = True
-                enemy_fight += 2
-                display.warning(f"  {enemy_data['name']} exploits your wound — {wound_text}!")
+                enemy_fight += bonus
+                if greyed:
+                    display.warning(f"  {enemy_data['name']} presses your old wound — {wound_text}! (+{bonus})")
+                else:
+                    display.warning(f"  {enemy_data['name']} exploits your wound — {wound_text}! (+{bonus})")
         player_fight = self.explorer.get_skill("Fight")
         defend_bonus = 2 if self.defending else 0
         player_defense = player_fight + defend_bonus
@@ -553,7 +556,7 @@ class CombatMixin:
 
         if shifts > 0:
             display.warning(f"  {enemy_data['name']} hits you for {shifts} shifts!")
-            taken_out = self.explorer.apply_damage(shifts)
+            taken_out, severity_used = self.explorer.apply_damage(shifts)
             if taken_out:
                 display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
                 display.narrate(f"  {self.seed_name} reaches across the void...")
@@ -562,8 +565,9 @@ class CombatMixin:
                                 details="Taken out by enemy attack")
                 self._seed_extraction()
                 return
-            # Track and display consequences
+            # Track and display consequences, check for severe → extraction
             took_consequence = False
+            severe_taken = False
             for sev in ["mild", "moderate", "severe"]:
                 for i, entry in enumerate(self.explorer.consequences.get(sev, [])):
                     if entry.get("text") == "Pending":
@@ -576,15 +580,30 @@ class CombatMixin:
                         self._log_event("consequence_taken", comic_weight=4,
                                         severity=sev, description=con_text,
                                         source=enemy_data.get("name", "unknown"))
+                        if sev == "severe":
+                            severe_taken = True
+            # Fresh severe consequence → Tuft pulls Sevarik back
+            if severe_taken:
+                print()
+                display.error(f"  The wound is too deep. {self.seed_name} won't let you stay.")
+                display.narrate(f"  {self.seed_name} reaches across the void...")
+                self._log_event("combat_defeat", comic_weight=4,
+                                target=enemy_data.get("name", "unknown"),
+                                details="Severe wound — emergency extraction")
+                # Grey the severe wound (post-extraction it becomes bandaged)
+                for entry in self.explorer.consequences.get("severe", []):
+                    if entry.get("text") and not entry.get("greyed"):
+                        entry["greyed"] = True
+                self._seed_extraction()
+                return
             if took_consequence and not self.state.get("tutorial_consequence_done"):
                 self.state["tutorial_consequence_done"] = True
                 print()
                 display.seed_speak("That's a consequence — a wound that lasts beyond this fight.")
                 display.seed_speak("Stress clears when combat ends, but consequences stay.")
-                display.seed_speak("Mild heals on its own after a few zone clears.")
-                display.seed_speak("Moderate and severe need a cure item (like bandages) and a")
-                display.seed_speak("Lore check — type HEAL when you have one.")
-                display.seed_speak("Building an apothecary later will make treatment easier.")
+                display.seed_speak("All wounds heal naturally over zone clears.")
+                display.seed_speak("Bandaging (HEAL) is optional but strategic — it speeds")
+                display.seed_speak("up recovery and makes it harder for enemies to exploit.")
                 display.seed_speak("You can also CONCEDE to end a fight on your terms — you'll")
                 display.seed_speak("get a Fate Point for each consequence you took.")
             # Show current stress
@@ -669,7 +688,7 @@ class CombatMixin:
                 # Environmental: take stress, no FP gain
                 display.narrate(compel["accept_text"])
                 stress_amount = compel.get("stress", 1)
-                taken_out = char.apply_damage(stress_amount)
+                taken_out, _ = char.apply_damage(stress_amount)
                 stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
                 display.info(f"  ({stress_amount} stress — {stress_str})")
                 if taken_out:

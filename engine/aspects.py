@@ -317,7 +317,7 @@ def resolve_compel_accept(game, compel):
     effect = compel["accept_effect"]
     if effect == "take_stress":
         stress_amount = compel.get("stress", 1)
-        taken_out = char.apply_damage(stress_amount)
+        taken_out, _ = char.apply_damage(stress_amount)
         stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
         messages.append(f"  ({stress_amount} stress — {stress_str})")
         if taken_out:
@@ -352,12 +352,13 @@ TREATMENT_DIFFICULTY = {
     "severe": 4,     # Great (+4)
 }
 
-# Zone clears required before treatment (also used for auto-heal at mild-equiv)
-ZONE_CLEARS_REQUIRED = {
-    "mild": 3,       # auto-clears after 3 zone clears
-    "moderate": 0,   # treatable immediately with item + check
-    "severe": 3,     # gated behind 3 zone clears before treatment
-}
+# Natural recovery rates: zone clears per severity tier downgrade
+NATURAL_HEAL_RATE = 3      # unbandaged: 3 clears per tier
+BANDAGED_HEAL_RATE = 1     # bandaged (greyed): 1 clear per tier
+
+# Invoke bonuses when enemies exploit wounds
+FRESH_INVOKE_BONUS = {"mild": 1, "moderate": 2}    # severe = extraction, never invoked fresh
+GREYED_INVOKE_BONUS = {"mild": 0, "moderate": 1, "severe": 2}
 
 # Severity tiers in order for effective_severity lookup
 _SEVERITY_TIERS = ["severe", "moderate", "mild"]
@@ -398,17 +399,18 @@ def get_cure_for_consequence(consequence_text):
 
 
 def check_auto_heal(game):
-    """Check if any consequences at mild-equivalent should auto-clear.
+    """Natural recovery: all wounds heal over zone clears. Bandaging speeds it up.
 
-    Iterates ALL consequence slots (list entries). A consequence is mild-equivalent
-    when its effective severity (original severity shifted by recovery steps) is "mild".
-    Greyed consequences are auto-heal candidates too.
+    On each zone clear, check each wound. If enough clears have passed for the
+    current effective severity tier, increment recovery (downgrade one tier) and
+    reset taken_at. When effective severity passes mild → remove the wound.
 
-    Returns list of (character_key, original_severity, consequence_text) that were cleared.
+    Returns list of (character_key, original_severity, consequence_text, event_type)
+    where event_type is "cleared" (fully healed) or "downgraded" (tier reduced).
     """
     zones_cleared = game.state.get("zones_cleared", 0)
     meta = game.state.get("consequence_meta", {})
-    cleared = []
+    results = []
 
     for char_key in ("explorer", "steward"):
         char_data = game.state.get(char_key)
@@ -432,19 +434,37 @@ def check_auto_heal(game):
                 recovery = meta_entry.get("recovery", 0)
                 eff_sev = _effective_severity(sev, recovery)
 
-                # Only auto-heal if effective severity is "mild"
-                if eff_sev != "mild":
-                    continue
-
-                taken_at = meta_entry.get("taken_at", 0)
-                if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
+                if eff_sev is None:
+                    # Already past mild — clean up stale entry
                     entries.pop(i)
                     meta.pop(meta_key, None)
-                    # Shift meta keys for entries above this index
                     _reindex_meta(meta, char_key, sev, i)
-                    cleared.append((char_key, sev, con_text))
+                    results.append((char_key, sev, con_text, "cleared"))
+                    continue
 
-    return cleared
+                # Determine heal rate based on greyed status
+                greyed = entry.get("greyed", False)
+                heal_rate = BANDAGED_HEAL_RATE if greyed else NATURAL_HEAL_RATE
+
+                taken_at = meta_entry.get("taken_at", 0)
+                if zones_cleared - taken_at >= heal_rate:
+                    # Advance recovery one tier
+                    new_recovery = recovery + 1
+                    new_eff = _effective_severity(sev, new_recovery)
+
+                    if new_eff is None:
+                        # Fully healed — remove wound
+                        entries.pop(i)
+                        meta.pop(meta_key, None)
+                        _reindex_meta(meta, char_key, sev, i)
+                        results.append((char_key, sev, con_text, "cleared"))
+                    else:
+                        # Downgraded — update meta, reset timer
+                        meta_entry["recovery"] = new_recovery
+                        meta_entry["taken_at"] = zones_cleared
+                        results.append((char_key, sev, con_text, "downgraded"))
+
+    return results
 
 
 def _reindex_meta(meta, char_key, severity, removed_index):
@@ -465,11 +485,10 @@ check_mild_auto_heal = check_auto_heal
 
 
 def can_treat_consequence(game, char_key, severity, index=0):
-    """Check if a consequence entry is eligible for treatment.
+    """Check if a consequence entry is eligible for treatment (bandaging).
 
-    Uses the treat-in-place model: consequences stay in their original slot
-    and recover through treatment steps (recovery counter). Effective severity
-    determines DC and zone-clear gates.
+    Treatment is optional but strategic: it greys the wound (reducing invoke
+    bonus) and switches to faster healing rate. Available for moderate+ wounds.
 
     Returns (eligible, reason_if_not).
     """
@@ -486,23 +505,19 @@ def can_treat_consequence(game, char_key, severity, index=0):
     if not entry_data.get("text"):
         return False, f"No {severity} consequence to treat."
 
+    # Already greyed (bandaged) — no further treatment needed
+    if entry_data.get("greyed"):
+        return False, "This injury is already bandaged."
+
     meta = game.state.get("consequence_meta", {})
     meta_key = f"{char_key}_{severity}_{index}"
     meta_entry = meta.get(meta_key, {})
     recovery = meta_entry.get("recovery", 0)
     eff_sev = _effective_severity(severity, recovery)
 
-    # Already at mild-equivalent — heals on its own
+    # Already at mild-equivalent — heals on its own quickly enough
     if eff_sev == "mild" or eff_sev is None:
-        return False, "This injury is healing on its own."
-
-    # Zone-clear gate based on effective severity
-    zones_cleared = game.state.get("zones_cleared", 0)
-    taken_at = meta_entry.get("taken_at", 0)
-    clears_needed = ZONE_CLEARS_REQUIRED.get(eff_sev, 0)
-    if clears_needed > 0 and (zones_cleared - taken_at) < clears_needed:
-        remaining = clears_needed - (zones_cleared - taken_at)
-        return False, f"The injury is too fresh. Need {remaining} more zone{'s' if remaining != 1 else ''} cleared before treatment can begin."
+        return False, "This injury is minor — it will heal on its own."
 
     return True, None
 
@@ -553,15 +568,23 @@ def get_treatment_aspects(game):
 
 
 def get_enemy_invoke_target(character):
-    """Pick a random non-greyed consequence for enemy invoke.
+    """Pick a consequence for enemy invoke, weighted by bonus.
 
-    Returns (severity, index, text) or None.
+    Fresh wounds: mild +1, moderate +2, severe = extraction (not invoked).
+    Greyed wounds: mild +0 (skip), moderate +1, severe +2.
+
+    Returns (severity, index, text, greyed, bonus) or None.
     """
     candidates = []
     for sev in ("mild", "moderate", "severe"):
         for i, entry in enumerate(character.consequences.get(sev, [])):
-            if not entry.get("greyed"):
-                candidates.append((sev, i, entry["text"]))
+            greyed = entry.get("greyed", False)
+            if greyed:
+                bonus = GREYED_INVOKE_BONUS.get(sev, 0)
+            else:
+                bonus = FRESH_INVOKE_BONUS.get(sev, 0)
+            if bonus > 0:
+                candidates.append((sev, i, entry["text"], greyed, bonus))
     return random.choice(candidates) if candidates else None
 
 

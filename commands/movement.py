@@ -525,12 +525,13 @@ class MovementMixin:
 
                 if hit_shifts > 0:
                     display.warning(f"  Ambush! {enemy_data['name']} hits for {hit_shifts} shifts!")
-                    taken_out = self.explorer.apply_damage(hit_shifts)
+                    taken_out, _ = self.explorer.apply_damage(hit_shifts)
                     if taken_out:
                         display.error(f"\n  ═══ {self.explorer.name.upper()} IS TAKEN OUT! ═══")
                         display.narrate(f"  {self.seed_name} reaches across the void...")
                         self._seed_extraction()
                         return
+                    severe_taken = False
                     for sev in ["mild", "moderate", "severe"]:
                         for i, entry in enumerate(self.explorer.consequences.get(sev, [])):
                             if entry.get("text") == "Pending":
@@ -541,6 +542,16 @@ class MovementMixin:
                                 self._log_event("consequence_taken", comic_weight=4,
                                                 severity=sev, description=con_text,
                                                 source=enemy_data.get("name", "unknown"))
+                                if sev == "severe":
+                                    severe_taken = True
+                    if severe_taken:
+                        display.error(f"  The wound is too deep. {self.seed_name} won't let you stay.")
+                        display.narrate(f"  {self.seed_name} reaches across the void...")
+                        for entry in self.explorer.consequences.get("severe", []):
+                            if entry.get("text") and not entry.get("greyed"):
+                                entry["greyed"] = True
+                        self._seed_extraction()
+                        return
                     stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
                     display.info(f"  Stress: {stress_str}")
                 else:

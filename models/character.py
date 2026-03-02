@@ -1,7 +1,6 @@
 """Character model — skills, aspects, stress, consequences, fate points."""
 
 BODY_SLOTS = ["head", "torso", "legs", "feet", "hands"]
-CONSEQUENCE_SLOT_MAX = 1  # one entry per severity; overflow cascades to worse severity
 
 
 class Character:
@@ -75,58 +74,42 @@ class Character:
         return shifts
 
     def take_consequence(self, shifts):
-        """Try to absorb shifts with a consequence. Returns remaining shifts.
+        """Try to absorb shifts with a consequence. Returns (remaining_shifts, severity_used).
 
         Consequences: mild (-2), moderate (-4), severe (-6).
-        If the natural severity slot is full, overflow to the next MORE severe
-        slot (mild full → moderate, moderate full → severe, severe full → taken out).
+        Wounds stack at natural severity — no slot cap, no overflow cascade.
         """
         consequence_values = {"mild": 2, "moderate": 4, "severe": 6}
         severities = ["mild", "moderate", "severe"]
 
         # Find the natural severity (lowest that can absorb all shifts)
-        start_idx = 0
-        for i, sev in enumerate(severities):
-            if consequence_values[sev] >= shifts:
-                start_idx = i
-                break
-        else:
-            # Shifts exceed even severe — need partial absorption
-            start_idx = 0
-
-        # From natural severity onward, find first empty slot
-        for sev in severities[start_idx:]:
-            if len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
-                self.consequences[sev].append({"text": "Pending", "greyed": False})
-                return 0
-
-        # Also check slots below natural severity for partial absorption
         for sev in severities:
-            if len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
+            if consequence_values[sev] >= shifts:
                 self.consequences[sev].append({"text": "Pending", "greyed": False})
-                return max(0, shifts - consequence_values[sev])
+                return (0, sev)
 
-        # All slots full — can't absorb
-        return shifts
+        # Shifts exceed even severe — take severe for partial absorption
+        self.consequences["severe"].append({"text": "Pending", "greyed": False})
+        return (max(0, shifts - consequence_values["severe"]), "severe")
 
     def apply_damage(self, shifts):
-        """Apply damage: try stress first, then consequences. Returns True if taken out."""
+        """Apply damage: try stress first, then consequences.
+
+        Returns (taken_out: bool, severity_used: str|None).
+        severity_used is the consequence tier taken (if any), for extraction checks.
+        """
         if shifts <= 0:
-            return False
+            return False, None
 
         remaining = self.take_stress(shifts)
         if remaining > 0:
-            remaining = self.take_consequence(remaining)
-        return remaining > 0  # Taken out if shifts remain
+            remaining, severity_used = self.take_consequence(remaining)
+            return remaining > 0, severity_used
+        return False, None
 
     def is_taken_out(self):
-        """Check if character has no way to absorb any more hits."""
-        all_stress_full = all(self.stress)
-        all_consequences_full = all(
-            len(self.consequences[sev]) >= CONSEQUENCE_SLOT_MAX
-            for sev in ("mild", "moderate", "severe")
-        )
-        return all_stress_full and all_consequences_full
+        """Check if all stress boxes are full (consequences always have room now)."""
+        return all(self.stress)
 
     def clear_stress(self):
         """Clear all stress boxes (happens after a conflict ends)."""
@@ -154,14 +137,12 @@ class Character:
         self.fate_points = max(self.fate_points, self.refresh)
 
     def get_all_aspects(self):
-        """Return all character aspects as a flat list."""
+        """Return all character aspects as a flat list (including greyed wounds)."""
         aspects = [self.aspects["high_concept"], self.aspects["trouble"]]
         aspects.extend(self.aspects.get("other", []))
-        # Add non-greyed consequence aspects
         for severity, entries in self.consequences.items():
             for entry in entries:
-                if not entry.get("greyed"):
-                    aspects.append(f"{entry['text']} ({severity})")
+                aspects.append(f"{entry['text']} ({severity})")
         return aspects
 
     def add_to_inventory(self, item_id):

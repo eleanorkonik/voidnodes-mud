@@ -12,13 +12,13 @@ class ArtifactsMixin:
         from commands.movement import MovementMixin
         if art_id in MovementMixin._ZONE_ARTIFACTS.values():
             self.state["zones_cleared"] = self.state.get("zones_cleared", 0) + 1
-            cleared = aspects.check_auto_heal(self)
-            for char_key, original_sev, consequence_text in cleared:
+            results = aspects.check_auto_heal(self)
+            for char_key, original_sev, consequence_text, event_type in results:
                 char_name = self.state.get(f"{char_key}_name", char_key.title())
-                if original_sev == "mild":
-                    display.success(f"  {char_name}'s mild injury ({consequence_text}) has healed with time.")
+                if event_type == "cleared":
+                    display.success(f"  {char_name}'s {original_sev} injury ({consequence_text}) has fully healed.")
                 else:
-                    display.success(f"  {char_name}'s {original_sev} injury ({consequence_text}) has fully recovered.")
+                    display.info(f"  {char_name}'s {original_sev} injury ({consequence_text}) is improving.")
 
             # Unload the cleared zone's rooms and enemies from runtime
             zone_id = None

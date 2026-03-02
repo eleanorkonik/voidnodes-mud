@@ -480,12 +480,12 @@ def _handler_tend_shelves(game, room, npc, shifts):
 
 
 def _handler_tend_wounds(game, room, npc, shifts):
-    """Help mild-equivalent consequences heal faster — reduces zone-clear requirement by 1."""
+    """Help consequences heal faster — apothecary reduces zone-clear requirement by 1."""
     from engine import aspects
     messages = []
     zones_cleared = game.state.get("zones_cleared", 0)
     meta = game.state.get("consequence_meta", {})
-    # Check both characters for mild-equivalent consequences (any slot)
+    # Check both characters for all consequences
     for char_key in ("explorer", "steward"):
         char_data = game.state.get(char_key, {})
         cons = char_data.get("consequences", {})
@@ -502,22 +502,31 @@ def _handler_tend_wounds(game, room, npc, shifts):
                 meta_entry = meta.get(meta_key, {})
                 recovery = meta_entry.get("recovery", 0)
                 eff_sev = aspects._effective_severity(sev, recovery)
-                if eff_sev != "mild":
+                if eff_sev is None:
                     continue
-                taken_at = meta_entry.get("taken_at", 0)
-                required = aspects.ZONE_CLEARS_REQUIRED["mild"]
+                greyed = entry_data.get("greyed", False)
+                heal_rate = aspects.BANDAGED_HEAL_RATE if greyed else aspects.NATURAL_HEAL_RATE
                 # Apothecary tier 1+ reduces requirement by 1
                 if room.healing_level >= 1:
-                    required = max(0, required - 1)
-                remaining = max(0, required - (zones_cleared - taken_at))
+                    heal_rate = max(0, heal_rate - 1)
+                taken_at = meta_entry.get("taken_at", 0)
+                remaining = max(0, heal_rate - (zones_cleared - taken_at))
                 char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
                 if remaining <= 0:
-                    entries.pop(i)
-                    meta.pop(meta_key, None)
-                    aspects._reindex_meta(meta, char_key, sev, i)
-                    messages.append(f"{char_name}'s injury ({con_text}) has healed.")
+                    # Advance recovery one tier
+                    new_recovery = recovery + 1
+                    new_eff = aspects._effective_severity(sev, new_recovery)
+                    if new_eff is None:
+                        entries.pop(i)
+                        meta.pop(meta_key, None)
+                        aspects._reindex_meta(meta, char_key, sev, i)
+                        messages.append(f"{char_name}'s injury ({con_text}) has healed.")
+                    else:
+                        meta_entry["recovery"] = new_recovery
+                        meta_entry["taken_at"] = zones_cleared
+                        messages.append(f"{char_name}'s {con_text} is improving (now {new_eff}).")
                 else:
-                    messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
+                    messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until next recovery step.")
     if not messages:
         messages.append("No injuries to tend. Organized supplies instead.")
     return messages

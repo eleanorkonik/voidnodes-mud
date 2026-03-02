@@ -463,7 +463,7 @@ def apply_penalty(game, npc, penalty_dict, char=None):
 
     if "miria_stress" in penalty_dict:
         amount = penalty_dict["miria_stress"]
-        taken_out = char.apply_damage(amount)
+        taken_out, _ = char.apply_damage(amount)
         stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
         messages.append(f"  {char.name} takes {amount} stress. ({stress_str})")
         if taken_out:

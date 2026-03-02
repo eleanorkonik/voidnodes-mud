@@ -850,36 +850,42 @@ class NpcsMixin:
             recovery = meta_entry.get("recovery", 0)
             eff_sev = aspects._effective_severity(sev, recovery)
             recovering_suffix = "*" if recovery > 0 else ""
-            greyed_suffix = f" {display.DIM}(greyed){display.RESET}" if greyed else ""
+            bandaged_suffix = f" {display.DIM}(bandaged){display.RESET}" if greyed else ""
 
-            if eff_sev == "mild" or eff_sev is None:
-                taken_at = meta_entry.get("taken_at", 0)
-                remaining = max(0, aspects.ZONE_CLEARS_REQUIRED["mild"] - (zones_cleared - taken_at))
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
-                display.info(f"    Healing on its own. {remaining} zone clear{'s' if remaining != 1 else ''} remaining.")
+            # Calculate healing progress
+            heal_rate = aspects.BANDAGED_HEAL_RATE if greyed else aspects.NATURAL_HEAL_RATE
+            taken_at = meta_entry.get("taken_at", 0)
+            clears_to_next = max(0, heal_rate - (zones_cleared - taken_at))
+
+            if eff_sev is None:
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{bandaged_suffix}")
+                display.info(f"    Nearly healed.")
             elif eligible:
                 has_cure = cure in patient.inventory
                 difficulty = aspects.TREATMENT_DIFFICULTY[eff_sev]
                 ladder = {0: "Mediocre", 1: "Average", 2: "Fair", 3: "Good", 4: "Great"}
                 diff_label = ladder.get(difficulty, f"+{difficulty}")
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
+                invoke_bonus = aspects.FRESH_INVOKE_BONUS.get(eff_sev, 0)
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{bandaged_suffix}")
+                print(f"    Healing naturally ({clears_to_next} clear{'s' if clears_to_next != 1 else ''} to next tier). Enemies exploit for +{invoke_bonus}.")
                 if has_cure:
-                    print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_GREEN}(have){display.RESET} + Lore check ({diff_label})")
-                    next_eff = aspects._effective_severity(sev, recovery + 1)
-                    if next_eff == "mild":
-                        display.info(f"    Treatment will stabilize injury — it will then heal on its own.")
-                    elif next_eff:
-                        display.info(f"    Treatment will reduce effective severity to {next_eff}.")
+                    print(f"    Bandage: {display.item_name(cure_name)} {display.BRIGHT_GREEN}(have){display.RESET} + Lore check ({diff_label})")
+                    display.info(f"    Bandaging speeds healing 3x and reduces enemy exploit bonus.")
                     treatable.append((sev, idx, con, cure, difficulty))
                 else:
-                    print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_RED}(missing){display.RESET} + Lore check ({diff_label})")
+                    print(f"    Bandage: {display.item_name(cure_name)} {display.BRIGHT_RED}(missing){display.RESET} + Lore check ({diff_label})")
             else:
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
-                display.info(f"    {reason}")
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{bandaged_suffix}")
+                if greyed and eff_sev:
+                    greyed_bonus = aspects.GREYED_INVOKE_BONUS.get(eff_sev, 0)
+                    bonus_str = f" Enemies exploit for +{greyed_bonus}." if greyed_bonus > 0 else ""
+                    display.info(f"    Healing ({clears_to_next} clear{'s' if clears_to_next != 1 else ''} to next tier).{bonus_str}")
+                elif reason:
+                    display.info(f"    {reason}")
 
         if not treatable:
-            if any(sev != "mild" for sev, _, _ in consequences):
-                display.narrate("No consequences are ready for treatment right now.")
+            if any(not entry_data.get("greyed") for _, _, entry_data in consequences):
+                display.narrate("No consequences need bandaging right now.")
             return
 
         # Treat the most severe treatable consequence
