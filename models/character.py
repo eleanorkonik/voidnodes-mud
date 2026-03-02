@@ -1,7 +1,7 @@
 """Character model — skills, aspects, stress, consequences, fate points."""
 
 BODY_SLOTS = ["head", "torso", "legs", "feet", "hands"]
-CONSEQUENCE_SLOT_MAX = 2  # max entries per severity level
+CONSEQUENCE_SLOT_MAX = 1  # one entry per severity; overflow cascades to worse severity
 
 
 class Character:
@@ -78,19 +78,29 @@ class Character:
         """Try to absorb shifts with a consequence. Returns remaining shifts.
 
         Consequences: mild (-2), moderate (-4), severe (-6).
-        Each severity holds up to CONSEQUENCE_SLOT_MAX entries.
-        If target severity is full, cascade up to next severity.
+        If the natural severity slot is full, overflow to the next MORE severe
+        slot (mild full → moderate, moderate full → severe, severe full → taken out).
         """
         consequence_values = {"mild": 2, "moderate": 4, "severe": 6}
         severities = ["mild", "moderate", "severe"]
 
-        # First pass: find lowest severity that can absorb all shifts and has room
-        for sev in severities:
-            if consequence_values[sev] >= shifts and len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
+        # Find the natural severity (lowest that can absorb all shifts)
+        start_idx = 0
+        for i, sev in enumerate(severities):
+            if consequence_values[sev] >= shifts:
+                start_idx = i
+                break
+        else:
+            # Shifts exceed even severe — need partial absorption
+            start_idx = 0
+
+        # From natural severity onward, find first empty slot
+        for sev in severities[start_idx:]:
+            if len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
                 self.consequences[sev].append({"text": "Pending", "greyed": False})
                 return 0
 
-        # Second pass: partial absorption — use any severity with room
+        # Also check slots below natural severity for partial absorption
         for sev in severities:
             if len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
                 self.consequences[sev].append({"text": "Pending", "greyed": False})
