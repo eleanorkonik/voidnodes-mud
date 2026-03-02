@@ -400,9 +400,9 @@ def get_cure_for_consequence(consequence_text):
 def check_auto_heal(game):
     """Check if any consequences at mild-equivalent should auto-clear.
 
-    Iterates ALL consequence slots. A consequence is mild-equivalent when
-    its effective severity (original severity shifted by recovery steps) is "mild".
-    Original mild consequences (recovery=0) also qualify.
+    Iterates ALL consequence slots (list entries). A consequence is mild-equivalent
+    when its effective severity (original severity shifted by recovery steps) is "mild".
+    Greyed consequences are auto-heal candidates too.
 
     Returns list of (character_key, original_severity, consequence_text) that were cleared.
     """
@@ -417,34 +417,55 @@ def check_auto_heal(game):
         cons = char_data.get("consequences", {})
 
         for sev in ["severe", "moderate", "mild"]:
-            con_text = cons.get(sev)
-            if not con_text:
+            entries = cons.get(sev, [])
+            if not isinstance(entries, list):
                 continue
+            # Iterate in reverse to safely remove by index
+            for i in range(len(entries) - 1, -1, -1):
+                entry = entries[i]
+                con_text = entry.get("text", "")
+                if not con_text:
+                    continue
 
-            meta_key = f"{char_key}_{sev}"
-            entry = meta.get(meta_key, {})
-            recovery = entry.get("recovery", 0)
-            eff_sev = _effective_severity(sev, recovery)
+                meta_key = f"{char_key}_{sev}_{i}"
+                meta_entry = meta.get(meta_key, {})
+                recovery = meta_entry.get("recovery", 0)
+                eff_sev = _effective_severity(sev, recovery)
 
-            # Only auto-heal if effective severity is "mild"
-            if eff_sev != "mild":
-                continue
+                # Only auto-heal if effective severity is "mild"
+                if eff_sev != "mild":
+                    continue
 
-            taken_at = entry.get("taken_at", 0)
-            if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
-                cons[sev] = None
-                meta.pop(meta_key, None)
-                cleared.append((char_key, sev, con_text))
+                taken_at = meta_entry.get("taken_at", 0)
+                if zones_cleared - taken_at >= ZONE_CLEARS_REQUIRED["mild"]:
+                    entries.pop(i)
+                    meta.pop(meta_key, None)
+                    # Shift meta keys for entries above this index
+                    _reindex_meta(meta, char_key, sev, i)
+                    cleared.append((char_key, sev, con_text))
 
     return cleared
+
+
+def _reindex_meta(meta, char_key, severity, removed_index):
+    """After removing an entry at removed_index, shift higher-indexed meta keys down."""
+    i = removed_index + 1
+    while True:
+        old_key = f"{char_key}_{severity}_{i}"
+        new_key = f"{char_key}_{severity}_{i - 1}"
+        if old_key in meta:
+            meta[new_key] = meta.pop(old_key)
+            i += 1
+        else:
+            break
 
 
 # Keep old name as alias for any callers we might miss
 check_mild_auto_heal = check_auto_heal
 
 
-def can_treat_consequence(game, char_key, severity):
-    """Check if a consequence is eligible for treatment.
+def can_treat_consequence(game, char_key, severity, index=0):
+    """Check if a consequence entry is eligible for treatment.
 
     Uses the treat-in-place model: consequences stay in their original slot
     and recover through treatment steps (recovery counter). Effective severity
@@ -457,14 +478,18 @@ def can_treat_consequence(game, char_key, severity):
         return False, "Character not found."
 
     cons = char_data.get("consequences", {})
-    consequence_text = cons.get(severity)
-    if not consequence_text:
+    entries = cons.get(severity, [])
+    if not isinstance(entries, list) or index >= len(entries):
+        return False, f"No {severity} consequence to treat."
+
+    entry_data = entries[index]
+    if not entry_data.get("text"):
         return False, f"No {severity} consequence to treat."
 
     meta = game.state.get("consequence_meta", {})
-    meta_key = f"{char_key}_{severity}"
-    entry = meta.get(meta_key, {})
-    recovery = entry.get("recovery", 0)
+    meta_key = f"{char_key}_{severity}_{index}"
+    meta_entry = meta.get(meta_key, {})
+    recovery = meta_entry.get("recovery", 0)
     eff_sev = _effective_severity(severity, recovery)
 
     # Already at mild-equivalent — heals on its own
@@ -473,7 +498,7 @@ def can_treat_consequence(game, char_key, severity):
 
     # Zone-clear gate based on effective severity
     zones_cleared = game.state.get("zones_cleared", 0)
-    taken_at = entry.get("taken_at", 0)
+    taken_at = meta_entry.get("taken_at", 0)
     clears_needed = ZONE_CLEARS_REQUIRED.get(eff_sev, 0)
     if clears_needed > 0 and (zones_cleared - taken_at) < clears_needed:
         remaining = clears_needed - (zones_cleared - taken_at)
@@ -525,6 +550,19 @@ def get_treatment_aspects(game):
             aspects.append((a, artifact.get("name", kept)))
 
     return aspects
+
+
+def get_enemy_invoke_target(character):
+    """Pick a random non-greyed consequence for enemy invoke.
+
+    Returns (severity, index, text) or None.
+    """
+    candidates = []
+    for sev in ("mild", "moderate", "severe"):
+        for i, entry in enumerate(character.consequences.get(sev, [])):
+            if not entry.get("greyed"):
+                candidates.append((sev, i, entry["text"]))
+    return random.choice(candidates) if candidates else None
 
 
 def resolve_compel_refuse(game, compel):

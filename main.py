@@ -508,10 +508,10 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
 
     # ── Shared helpers ─────────────────────────────────────────────
 
-    def _record_consequence(self, char_key, severity, consequence_text):
+    def _record_consequence(self, char_key, severity, index, consequence_text):
         """Track consequence metadata for the healing system."""
         meta = self.state.setdefault("consequence_meta", {})
-        meta_key = f"{char_key}_{severity}"
+        meta_key = f"{char_key}_{severity}_{index}"
         meta[meta_key] = {
             "taken_at": self.state.get("zones_cleared", 0),
             "cure": aspects.get_cure_for_consequence(consequence_text),

@@ -467,18 +467,22 @@ def apply_penalty(game, npc, penalty_dict, char=None):
         stress_str = "".join("[X]" if s else "[ ]" for s in char.stress)
         messages.append(f"  {char.name} takes {amount} stress. ({stress_str})")
         if taken_out:
-            # Generate a social consequence
+            # Generate a social consequence — find "Pending" entries in list
             for sev in ["mild", "moderate", "severe"]:
-                if char.consequences.get(sev) == "Pending":
-                    social_cons = random.choice([
-                        "Compassion Fatigue",
-                        "Everyone's Disappointed",
-                        "Burned Out",
-                        "Doubting Herself",
-                    ])
-                    char.consequences[sev] = social_cons
-                    messages.append(f"  {char.name} takes a {sev} consequence: {social_cons}")
-                    break
+                for entry in char.consequences.get(sev, []):
+                    if entry.get("text") == "Pending":
+                        social_cons = random.choice([
+                            "Compassion Fatigue",
+                            "Everyone's Disappointed",
+                            "Burned Out",
+                            "Doubting Herself",
+                        ])
+                        entry["text"] = social_cons
+                        messages.append(f"  {char.name} takes a {sev} consequence: {social_cons}")
+                        break
+                else:
+                    continue
+                break
 
     if "festering_aspect" in penalty_dict:
         aspect_name = penalty_dict["festering_aspect"]

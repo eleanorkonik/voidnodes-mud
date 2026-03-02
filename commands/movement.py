@@ -532,14 +532,15 @@ class MovementMixin:
                         self._seed_extraction()
                         return
                     for sev in ["mild", "moderate", "severe"]:
-                        if self.explorer.consequences.get(sev) == "Pending":
-                            self.combat_consequences_taken += 1
-                            con_text = f"Ambushed by {enemy_data['name']}"
-                            self.explorer.consequences[sev] = con_text
-                            self._record_consequence("explorer", sev, con_text)
-                            self._log_event("consequence_taken", comic_weight=4,
-                                            severity=sev, description=con_text,
-                                            source=enemy_data.get("name", "unknown"))
+                        for i, entry in enumerate(self.explorer.consequences.get(sev, [])):
+                            if entry.get("text") == "Pending":
+                                self.combat_consequences_taken += 1
+                                con_text = f"Ambushed by {enemy_data['name']}"
+                                entry["text"] = con_text
+                                self._record_consequence("explorer", sev, i, con_text)
+                                self._log_event("consequence_taken", comic_weight=4,
+                                                severity=sev, description=con_text,
+                                                source=enemy_data.get("name", "unknown"))
                     stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
                     display.info(f"  Stress: {stress_str}")
                 else:

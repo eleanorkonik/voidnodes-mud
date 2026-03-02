@@ -821,13 +821,13 @@ class NpcsMixin:
         return None, None
 
     def _perform_treatment(self, patient, patient_key, treater_name, treater_lore):
-        """Core healing logic: assess injuries, roll Lore, apply recovery."""
+        """Core healing logic: assess injuries, roll Lore, apply recovery + greying."""
         # Check what consequences need treatment
         consequences = []
         for sev in ["severe", "moderate", "mild"]:
-            con = patient.consequences.get(sev)
-            if con:
-                consequences.append((sev, con))
+            for i, entry in enumerate(patient.consequences.get(sev, [])):
+                if entry.get("text"):
+                    consequences.append((sev, i, entry))
 
         if not consequences:
             display.narrate(f"{patient.name} has no injuries to treat.")
@@ -838,28 +838,31 @@ class NpcsMixin:
         treatable = []
         meta = self.state.get("consequence_meta", {})
         zones_cleared = self.state.get("zones_cleared", 0)
-        for sev, con in consequences:
-            eligible, reason = aspects.can_treat_consequence(self, patient_key, sev)
+        for sev, idx, entry_data in consequences:
+            con = entry_data["text"]
+            greyed = entry_data.get("greyed", False)
+            eligible, reason = aspects.can_treat_consequence(self, patient_key, sev, idx)
             cure = aspects.get_cure_for_consequence(con)
             cure_name = self.items_db.get(cure, {}).get("name", cure) if cure else "unknown"
 
-            meta_key = f"{patient_key}_{sev}"
-            entry = meta.get(meta_key, {})
-            recovery = entry.get("recovery", 0)
+            meta_key = f"{patient_key}_{sev}_{idx}"
+            meta_entry = meta.get(meta_key, {})
+            recovery = meta_entry.get("recovery", 0)
             eff_sev = aspects._effective_severity(sev, recovery)
             recovering_suffix = "*" if recovery > 0 else ""
+            greyed_suffix = f" {display.DIM}(greyed){display.RESET}" if greyed else ""
 
             if eff_sev == "mild" or eff_sev is None:
-                taken_at = entry.get("taken_at", 0)
+                taken_at = meta_entry.get("taken_at", 0)
                 remaining = max(0, aspects.ZONE_CLEARS_REQUIRED["mild"] - (zones_cleared - taken_at))
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}")
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
                 display.info(f"    Healing on its own. {remaining} zone clear{'s' if remaining != 1 else ''} remaining.")
             elif eligible:
                 has_cure = cure in patient.inventory
                 difficulty = aspects.TREATMENT_DIFFICULTY[eff_sev]
                 ladder = {0: "Mediocre", 1: "Average", 2: "Fair", 3: "Good", 4: "Great"}
                 diff_label = ladder.get(difficulty, f"+{difficulty}")
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}")
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
                 if has_cure:
                     print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_GREEN}(have){display.RESET} + Lore check ({diff_label})")
                     next_eff = aspects._effective_severity(sev, recovery + 1)
@@ -867,20 +870,20 @@ class NpcsMixin:
                         display.info(f"    Treatment will stabilize injury — it will then heal on its own.")
                     elif next_eff:
                         display.info(f"    Treatment will reduce effective severity to {next_eff}.")
-                    treatable.append((sev, con, cure, difficulty))
+                    treatable.append((sev, idx, con, cure, difficulty))
                 else:
                     print(f"    Needs: {display.item_name(cure_name)} {display.BRIGHT_RED}(missing){display.RESET} + Lore check ({diff_label})")
             else:
-                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}")
+                print(f"  {display.BOLD}{sev.capitalize()}{recovering_suffix}:{display.RESET} {con}{greyed_suffix}")
                 display.info(f"    {reason}")
 
         if not treatable:
-            if any(sev != "mild" for sev, _ in consequences):
+            if any(sev != "mild" for sev, _, _ in consequences):
                 display.narrate("No consequences are ready for treatment right now.")
             return
 
         # Treat the most severe treatable consequence
-        sev, con, cure, difficulty = treatable[0]
+        sev, treat_idx, con, cure, difficulty = treatable[0]
 
         # Consume cure item from patient's inventory
         patient.remove_from_inventory(cure)
@@ -904,9 +907,9 @@ class NpcsMixin:
         effective_lore += item_bonus
 
         # Compute effective severity for DC
-        meta_key = f"{patient_key}_{sev}"
-        entry = meta.get(meta_key, {})
-        recovery = entry.get("recovery", 0)
+        meta_key = f"{patient_key}_{sev}_{treat_idx}"
+        meta_entry = meta.get(meta_key, {})
+        recovery = meta_entry.get("recovery", 0)
         eff_sev = aspects._effective_severity(sev, recovery)
 
         # Hospital (tier 2) reduces severe-equivalent DC by 1
@@ -937,9 +940,11 @@ class NpcsMixin:
                             target=patient.name, treater=treater_name,
                             severity=sev, consequence=con, success=True)
             meta = self.state.setdefault("consequence_meta", {})
-            entry = meta.setdefault(meta_key, {})
-            entry["recovery"] = recovery + 1
-            entry["taken_at"] = self.state.get("zones_cleared", 0)
+            meta_entry = meta.setdefault(meta_key, {})
+            meta_entry["recovery"] = recovery + 1
+            meta_entry["taken_at"] = self.state.get("zones_cleared", 0)
+            # Grey the wound so enemies can't exploit it
+            patient.consequences[sev][treat_idx]["greyed"] = True
             next_eff = aspects._effective_severity(sev, recovery + 1)
             print()
             if next_eff == "mild":
@@ -947,8 +952,9 @@ class NpcsMixin:
                 display.narrate(f"  {con} is now healing on its own.")
                 display.info(f"  It will clear after a few zone clears.")
             elif next_eff is None:
-                patient.consequences[sev] = None
+                patient.heal_consequence(sev, treat_idx)
                 meta.pop(meta_key, None)
+                aspects._reindex_meta(meta, patient_key, sev, treat_idx)
                 display.success(f"The treatment takes hold. {con} has fully healed.")
             else:
                 display.success(f"The treatment takes hold. The injury is improving.")

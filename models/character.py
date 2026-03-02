@@ -1,6 +1,7 @@
 """Character model — skills, aspects, stress, consequences, fate points."""
 
 BODY_SLOTS = ["head", "torso", "legs", "feet", "hands"]
+CONSEQUENCE_SLOT_MAX = 2  # max entries per severity level
 
 
 class Character:
@@ -9,7 +10,17 @@ class Character:
         self.aspects = data["aspects"]  # {high_concept, trouble, other: []}
         self.skills = dict(data["skills"])  # {skill_name: value}
         self.stress = list(data["stress"])  # [False, False, False]
-        self.consequences = dict(data["consequences"])  # {mild: None, moderate: None, severe: None}
+        # Consequences: lists of {text, greyed} dicts per severity
+        raw_cons = data["consequences"]
+        self.consequences = {}
+        for sev in ("mild", "moderate", "severe"):
+            val = raw_cons.get(sev)
+            if val is None:
+                self.consequences[sev] = []
+            elif isinstance(val, str):
+                self.consequences[sev] = [{"text": val, "greyed": False}]
+            else:
+                self.consequences[sev] = list(val)
         self.fate_points = data["fate_points"]
         self.refresh = data["refresh"]
         self.inventory = list(data.get("inventory", []))
@@ -67,19 +78,25 @@ class Character:
         """Try to absorb shifts with a consequence. Returns remaining shifts.
 
         Consequences: mild (-2), moderate (-4), severe (-6).
+        Each severity holds up to CONSEQUENCE_SLOT_MAX entries.
+        If target severity is full, cascade up to next severity.
         """
         consequence_values = {"mild": 2, "moderate": 4, "severe": 6}
-        for severity in ["mild", "moderate", "severe"]:
-            if self.consequences[severity] is None and consequence_values[severity] >= shifts:
-                self.consequences[severity] = "Pending"  # Will be named by the narrative
+        severities = ["mild", "moderate", "severe"]
+
+        # First pass: find lowest severity that can absorb all shifts and has room
+        for sev in severities:
+            if consequence_values[sev] >= shifts and len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
+                self.consequences[sev].append({"text": "Pending", "greyed": False})
                 return 0
 
-        # Try partial absorption
-        for severity in ["mild", "moderate", "severe"]:
-            if self.consequences[severity] is None:
-                self.consequences[severity] = "Pending"
-                return max(0, shifts - consequence_values[severity])
+        # Second pass: partial absorption — use any severity with room
+        for sev in severities:
+            if len(self.consequences[sev]) < CONSEQUENCE_SLOT_MAX:
+                self.consequences[sev].append({"text": "Pending", "greyed": False})
+                return max(0, shifts - consequence_values[sev])
 
+        # All slots full — can't absorb
         return shifts
 
     def apply_damage(self, shifts):
@@ -95,17 +112,21 @@ class Character:
     def is_taken_out(self):
         """Check if character has no way to absorb any more hits."""
         all_stress_full = all(self.stress)
-        all_consequences_full = all(v is not None for v in self.consequences.values())
+        all_consequences_full = all(
+            len(self.consequences[sev]) >= CONSEQUENCE_SLOT_MAX
+            for sev in ("mild", "moderate", "severe")
+        )
         return all_stress_full and all_consequences_full
 
     def clear_stress(self):
         """Clear all stress boxes (happens after a conflict ends)."""
         self.stress = [False] * len(self.stress)
 
-    def heal_consequence(self, severity):
-        """Remove a consequence. Mild heals after one full scene, moderate after a session, severe after a major milestone."""
-        if severity in self.consequences:
-            self.consequences[severity] = None
+    def heal_consequence(self, severity, index=0):
+        """Remove a consequence entry at the given index from the severity list."""
+        entries = self.consequences.get(severity, [])
+        if 0 <= index < len(entries):
+            entries.pop(index)
 
     def spend_fate_point(self):
         """Spend a fate point. Returns True if successful."""
@@ -126,10 +147,11 @@ class Character:
         """Return all character aspects as a flat list."""
         aspects = [self.aspects["high_concept"], self.aspects["trouble"]]
         aspects.extend(self.aspects.get("other", []))
-        # Add consequence aspects
-        for severity, aspect in self.consequences.items():
-            if aspect is not None:
-                aspects.append(f"{aspect} ({severity})")
+        # Add non-greyed consequence aspects
+        for severity, entries in self.consequences.items():
+            for entry in entries:
+                if not entry.get("greyed"):
+                    aspects.append(f"{entry['text']} ({severity})")
         return aspects
 
     def add_to_inventory(self, item_id):

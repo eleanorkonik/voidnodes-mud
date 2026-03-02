@@ -198,13 +198,21 @@ def display_status(character, phase, char_key=None, consequence_meta=None):
     """Display character status bar. Pass char_key + consequence_meta to show * on recovering."""
     stress_str = "".join("[X]" if s else "[ ]" for s in character.stress)
     cons = []
-    for severity, aspect in character.consequences.items():
-        if aspect:
+    for severity in ("mild", "moderate", "severe"):
+        for i, entry in enumerate(character.consequences.get(severity, [])):
+            text = entry.get("text", "")
+            if not text:
+                continue
+            greyed = entry.get("greyed", False)
             suffix = ""
             if char_key and consequence_meta:
-                if consequence_meta.get(f"{char_key}_{severity}", {}).get("recovery", 0) > 0:
+                meta_key = f"{char_key}_{severity}_{i}"
+                if consequence_meta.get(meta_key, {}).get("recovery", 0) > 0:
                     suffix = "*"
-            cons.append(f"{severity}{suffix}: {aspect}")
+            if greyed:
+                cons.append(f"{DIM}{severity}{suffix}: {text} (greyed){RESET}")
+            else:
+                cons.append(f"{severity}{suffix}: {text}")
     cons_str = ", ".join(cons) if cons else "none"
 
     header(f"[{character.name}] — {phase.upper()} PHASE")
@@ -347,13 +355,24 @@ def display_character_sheet(character, char_key=None, consequence_meta=None):
     stress_str = "".join("[X]" if s else "[ ]" for s in character.stress)
     print(f"  {BOLD}Stress:{RESET} {stress_str}")
     print(f"  {BOLD}Consequences:{RESET}")
-    for severity, aspect in character.consequences.items():
-        suffix = ""
-        if char_key and consequence_meta and aspect:
-            if consequence_meta.get(f"{char_key}_{severity}", {}).get("recovery", 0) > 0:
-                suffix = "*"
-        status = f"{aspect}{suffix}" if aspect else "(none)"
-        print(f"    {severity.capitalize()}: {status}")
+    for severity in ("mild", "moderate", "severe"):
+        entries = character.consequences.get(severity, [])
+        if not entries:
+            print(f"    {severity.capitalize()}: (none)")
+        else:
+            for i, entry in enumerate(entries):
+                text = entry.get("text", "")
+                greyed = entry.get("greyed", False)
+                suffix = ""
+                if char_key and consequence_meta and text:
+                    meta_key = f"{char_key}_{severity}_{i}"
+                    if consequence_meta.get(meta_key, {}).get("recovery", 0) > 0:
+                        suffix = "*"
+                slot_label = f"{severity.capitalize()}" if i == 0 else f"  {severity.capitalize()}"
+                if greyed:
+                    print(f"    {DIM}{slot_label}{suffix}: {text} (greyed){RESET}")
+                else:
+                    print(f"    {slot_label}{suffix}: {text}")
     print(f"  {BOLD}Fate Points:{RESET} {character.fate_points} (Refresh: {character.refresh})")
 
 

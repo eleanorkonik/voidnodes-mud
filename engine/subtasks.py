@@ -490,28 +490,34 @@ def _handler_tend_wounds(game, room, npc, shifts):
         char_data = game.state.get(char_key, {})
         cons = char_data.get("consequences", {})
         for sev in ["severe", "moderate", "mild"]:
-            con_text = cons.get(sev)
-            if not con_text:
+            entries = cons.get(sev, [])
+            if not isinstance(entries, list):
                 continue
-            meta_key = f"{char_key}_{sev}"
-            entry = meta.get(meta_key, {})
-            recovery = entry.get("recovery", 0)
-            eff_sev = aspects._effective_severity(sev, recovery)
-            if eff_sev != "mild":
-                continue
-            taken_at = entry.get("taken_at", 0)
-            required = aspects.ZONE_CLEARS_REQUIRED["mild"]
-            # Apothecary tier 1+ reduces requirement by 1
-            if room.healing_level >= 1:
-                required = max(0, required - 1)
-            remaining = max(0, required - (zones_cleared - taken_at))
-            char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
-            if remaining <= 0:
-                cons[sev] = None
-                meta.pop(meta_key, None)
-                messages.append(f"{char_name}'s injury ({con_text}) has healed.")
-            else:
-                messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
+            for i in range(len(entries) - 1, -1, -1):
+                entry_data = entries[i]
+                con_text = entry_data.get("text", "")
+                if not con_text:
+                    continue
+                meta_key = f"{char_key}_{sev}_{i}"
+                meta_entry = meta.get(meta_key, {})
+                recovery = meta_entry.get("recovery", 0)
+                eff_sev = aspects._effective_severity(sev, recovery)
+                if eff_sev != "mild":
+                    continue
+                taken_at = meta_entry.get("taken_at", 0)
+                required = aspects.ZONE_CLEARS_REQUIRED["mild"]
+                # Apothecary tier 1+ reduces requirement by 1
+                if room.healing_level >= 1:
+                    required = max(0, required - 1)
+                remaining = max(0, required - (zones_cleared - taken_at))
+                char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+                if remaining <= 0:
+                    entries.pop(i)
+                    meta.pop(meta_key, None)
+                    aspects._reindex_meta(meta, char_key, sev, i)
+                    messages.append(f"{char_name}'s injury ({con_text}) has healed.")
+                else:
+                    messages.append(f"Tending {char_name}'s wounds. {remaining} zone clear{'s' if remaining != 1 else ''} until healed.")
     if not messages:
         messages.append("No injuries to tend. Organized supplies instead.")
     return messages
@@ -548,7 +554,7 @@ def _handler_prepare_poultice(game, room, npc, shifts):
 
 
 def _handler_surgical_care(game, room, npc, shifts):
-    """Auto-treat treatable consequences overnight — increments recovery."""
+    """Auto-treat treatable consequences overnight — increments recovery + greying."""
     from engine import aspects
     fake_game = type("FakeGame", (), {"state": game.state})()
     # Find a character with a treatable consequence (most severe first)
@@ -556,33 +562,39 @@ def _handler_surgical_care(game, room, npc, shifts):
         char_data = game.state.get(char_key, {})
         cons = char_data.get("consequences", {})
         for sev in ["severe", "moderate"]:
-            con_text = cons.get(sev)
-            if not con_text:
+            entries = cons.get(sev, [])
+            if not isinstance(entries, list):
                 continue
-            eligible, _ = aspects.can_treat_consequence(fake_game, char_key, sev)
-            if not eligible:
-                continue
-            cure = aspects.get_cure_for_consequence(con_text)
-            if cure not in room.items:
-                continue
-            # Consume cure item, increment recovery
-            room.remove_item(cure)
-            meta = game.state.setdefault("consequence_meta", {})
-            meta_key = f"{char_key}_{sev}"
-            entry = meta.setdefault(meta_key, {})
-            recovery = entry.get("recovery", 0)
-            entry["recovery"] = recovery + 1
-            entry["taken_at"] = game.state.get("zones_cleared", 0)
-            next_eff = aspects._effective_severity(sev, recovery + 1)
-            char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
-            if next_eff == "mild":
-                return [f"Treated {char_name}'s {sev} injury ({con_text}). Now healing on its own."]
-            elif next_eff is None:
-                cons[sev] = None
-                meta.pop(meta_key, None)
-                return [f"Treated {char_name}'s injury ({con_text}). Fully healed."]
-            else:
-                return [f"Treated {char_name}'s {sev} injury ({con_text}). Recovering (effective: {next_eff})."]
+            for i, entry_data in enumerate(entries):
+                con_text = entry_data.get("text", "")
+                if not con_text:
+                    continue
+                eligible, _ = aspects.can_treat_consequence(fake_game, char_key, sev, i)
+                if not eligible:
+                    continue
+                cure = aspects.get_cure_for_consequence(con_text)
+                if cure not in room.items:
+                    continue
+                # Consume cure item, increment recovery, grey the wound
+                room.remove_item(cure)
+                meta = game.state.setdefault("consequence_meta", {})
+                meta_key = f"{char_key}_{sev}_{i}"
+                meta_entry = meta.setdefault(meta_key, {})
+                recovery = meta_entry.get("recovery", 0)
+                meta_entry["recovery"] = recovery + 1
+                meta_entry["taken_at"] = game.state.get("zones_cleared", 0)
+                entry_data["greyed"] = True
+                next_eff = aspects._effective_severity(sev, recovery + 1)
+                char_name = game.state.get(f"{char_key}_name", char_key.capitalize())
+                if next_eff == "mild":
+                    return [f"Treated {char_name}'s {sev} injury ({con_text}). Now healing on its own."]
+                elif next_eff is None:
+                    entries.pop(i)
+                    meta.pop(meta_key, None)
+                    aspects._reindex_meta(meta, char_key, sev, i)
+                    return [f"Treated {char_name}'s injury ({con_text}). Fully healed."]
+                else:
+                    return [f"Treated {char_name}'s {sev} injury ({con_text}). Recovering (effective: {next_eff})."]
     return ["No treatable injuries found."]
 
 

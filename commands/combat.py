@@ -492,6 +492,7 @@ class CombatMixin:
         self.combat_boost = 0
         self.combat_consequences_taken = 0
         self.enemy_compel_boost = 0
+        self.enemy_has_invoked = False
         self.compel_triggered = False
         self.in_compel = False
         self.compel_data = None
@@ -509,6 +510,7 @@ class CombatMixin:
         self.combat_boost = 0
         self.combat_consequences_taken = 0
         self.enemy_compel_boost = 0
+        self.enemy_has_invoked = False
         self.compel_triggered = False
         self.in_compel = False
         self.compel_data = None
@@ -529,6 +531,14 @@ class CombatMixin:
         if self.enemy_compel_boost > 0:
             enemy_fight += self.enemy_compel_boost
             self.enemy_compel_boost = 0
+        # Enemy invoke: once per combat, 50% chance, +2 from non-greyed wound
+        if not self.enemy_has_invoked:
+            invoke_target = aspects.get_enemy_invoke_target(self.explorer)
+            if invoke_target and random.random() < 0.5:
+                sev, idx, wound_text = invoke_target
+                self.enemy_has_invoked = True
+                enemy_fight += 2
+                display.warning(f"  {enemy_data['name']} exploits your wound — {wound_text}!")
         player_fight = self.explorer.get_skill("Fight")
         defend_bonus = 2 if self.defending else 0
         player_defense = player_fight + defend_bonus
@@ -555,17 +565,17 @@ class CombatMixin:
             # Track and display consequences
             took_consequence = False
             for sev in ["mild", "moderate", "severe"]:
-                if self.explorer.consequences.get(sev) == "Pending":
-                    self.combat_consequences_taken += 1
-                    took_consequence = True
-                    # Name the consequence based on enemy
-                    con_text = f"Wounded by {enemy_data['name']}"
-                    self.explorer.consequences[sev] = con_text
-                    display.warning(f"  You take a {sev} consequence: {con_text}")
-                    self._record_consequence("explorer", sev, con_text)
-                    self._log_event("consequence_taken", comic_weight=4,
-                                    severity=sev, description=con_text,
-                                    source=enemy_data.get("name", "unknown"))
+                for i, entry in enumerate(self.explorer.consequences.get(sev, [])):
+                    if entry.get("text") == "Pending":
+                        self.combat_consequences_taken += 1
+                        took_consequence = True
+                        con_text = f"Wounded by {enemy_data['name']}"
+                        entry["text"] = con_text
+                        display.warning(f"  You take a {sev} consequence: {con_text}")
+                        self._record_consequence("explorer", sev, i, con_text)
+                        self._log_event("consequence_taken", comic_weight=4,
+                                        severity=sev, description=con_text,
+                                        source=enemy_data.get("name", "unknown"))
             if took_consequence and not self.state.get("tutorial_consequence_done"):
                 self.state["tutorial_consequence_done"] = True
                 print()
@@ -778,10 +788,12 @@ class CombatMixin:
         if self.seed.spend_motes(cost):
             self.state["extractions"] += 1
             self._end_combat()
-            # Reset consequences to None only if pending
+            # Remove pending consequences (not yet named)
             for sev in list(self.explorer.consequences.keys()):
-                if self.explorer.consequences[sev] == "Pending":
-                    self.explorer.consequences[sev] = None
+                entries = self.explorer.consequences[sev]
+                self.explorer.consequences[sev] = [
+                    e for e in entries if e.get("text") != "Pending"
+                ]
 
             self.state["explorer_location"] = "skerry_landing"
             self._move_followers("skerry_landing")

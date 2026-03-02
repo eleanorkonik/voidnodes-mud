@@ -139,6 +139,26 @@ def _migrate_state(state):
     for meta_key, entry in state.get("consequence_meta", {}).items():
         if isinstance(entry, dict):
             entry.setdefault("recovery", 0)
+    # Migrate consequences from string format to list format
+    for char_key in ("explorer", "steward"):
+        char_data = state.get(char_key)
+        if not char_data:
+            continue
+        cons = char_data.get("consequences", {})
+        for sev in ("mild", "moderate", "severe"):
+            val = cons.get(sev)
+            if val is None:
+                cons[sev] = []
+            elif isinstance(val, str):
+                cons[sev] = [{"text": val, "greyed": False}]
+            # else already a list — leave it
+    # Migrate consequence_meta keys: "explorer_mild" → "explorer_mild_0"
+    meta = state.get("consequence_meta", {})
+    old_keys = [k for k in meta if k.count("_") == 1]
+    for old_key in old_keys:
+        new_key = f"{old_key}_0"
+        if new_key not in meta:
+            meta[new_key] = meta.pop(old_key)
     # Zone unloading
     state.setdefault("unloaded_zones", [])
     # Ensure basic_tools and bandages recipes are known
@@ -358,6 +378,6 @@ def new_game_state():
         "recruited_npcs": [],
         "discovered_recipes": ["rope", "torch", "basic_tools", "bandages"],  # Start knowing basic recipes
         "zones_cleared": 0,
-        "consequence_meta": {},  # {char_severity: {taken_at: N, cure: item_id}}
+        "consequence_meta": {},  # {char_sev_idx: {taken_at: N, cure: item_id}}
     }
     return state
