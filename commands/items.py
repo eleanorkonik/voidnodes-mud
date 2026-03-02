@@ -135,20 +135,14 @@ class ItemsMixin:
             dropped = []
             for item_id in list(char.inventory):
                 bid = masterwork.base_id(item_id)
-                is_material = self.items_db.get(bid, {}).get("type") == "material"
-                is_specimen = item_id in self.specimens_db
-                if is_material or is_specimen:
+                if self.items_db.get(bid, {}).get("type") == "material":
                     char.remove_from_inventory(item_id)
                     room.add_item(item_id)
                     dropped.append(item_id)
             if dropped:
                 counts = {}
                 for mid in dropped:
-                    spec = self.specimens_db.get(mid)
-                    if spec:
-                        name = spec["name"]
-                    else:
-                        name = masterwork.get_display_name(mid, self.items_db)
+                    name = masterwork.get_display_name(mid, self.items_db)
                     counts[name] = counts.get(name, 0) + 1
                 display.narrate("You pile your salvage on the ground.")
                 for name, count in counts.items():

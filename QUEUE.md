@@ -21,7 +21,7 @@ Raw ideas, not yet shaped into plans.
 
 ## Bug Fixes
 
-- [x] **DROP SPECIMENS** — DROP MATERIALS now includes specimens.
+- [x] **DROP SPECIMENS** — DROP ALL already handles specimens; DROP SPECIMENS exists for targeted drops.
 
 ## Independent Features
 
