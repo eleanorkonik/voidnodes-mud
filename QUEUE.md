@@ -21,7 +21,7 @@ Raw ideas, not yet shaped into plans.
 
 ## Bug Fixes
 
-- [x] **DROP SPECIMENS** — DROP ALL already handles specimens; DROP SPECIMENS exists for targeted drops.
+(none)
 
 ## Independent Features
 
@@ -65,3 +65,4 @@ Major multi-phase work. Not building unless Eleanor says go.
 - [x] **Social Encounters (GREET)** — `archive/peaceful-greeting-forest.md`
 - [x] **Festering Compels on Room Entry** — `archive/festering-compel-sneak-attack.md`
 - [x] **NPC Spawn Randomness** — zones roll random NPC subsets each new game
+- [x] **DROP SPECIMENS** — was already working (DROP ALL, DROP SPECIMENS, DROP <name>)
