@@ -65,6 +65,12 @@ class MovementMixin:
             raw, _ = normalize_aspect(raw)
         return raw
 
+    def _get_zone_display_name(self, zone_id):
+        """Look up the display name for a zone by its ID."""
+        if zone_id == "skerry":
+            return self.state.get("skerry", {}).get("name", "The Skerry")
+        return self.state.get("zones", {}).get(zone_id, {}).get("name", zone_id)
+
     def _is_zone_depleted(self, zone_id):
         """Check if a zone's artifact has been resolved (kept/fed/given/stored/spent)."""
         art_id = self._get_zone_artifact(zone_id)
@@ -158,7 +164,7 @@ class MovementMixin:
     def cmd_seek(self, args):
         """Handle SEEK <aspect keywords> [IN VOID] — cross to a void node by its aspect."""
         if self.state["current_phase"] == "steward":
-            self._wrong_phase_narrate("explorer", "void")
+            self._steward_seek(args)
             return
         if not args:
             # No args — show destinations if at landing pad, else generic error
@@ -247,6 +253,117 @@ class MovementMixin:
             self._on_room_enter(target_room)
         else:
             self._check_passive_artifact_discovery(target_room)
+
+    def _steward_seek(self, args):
+        """SEEK for steward — travel to beaconed zones or return home."""
+        beacons = self.state.get("beacons", {})
+        room = self.current_room()
+
+        if not args:
+            # Show available beacon destinations
+            if room and room.zone == "skerry":
+                # At home — show beaconed zones
+                if not beacons:
+                    display.info("No beacons have been placed yet. Sevarik can PLACE BEACON in cleared zones.")
+                    return
+                print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Beacon Destinations ═══{display.RESET}")
+                print()
+                for zone_id, room_id in beacons.items():
+                    zone_name = self._get_zone_display_name(zone_id)
+                    zone_aspect = self._get_zone_aspect_for_zone(zone_id)
+                    aspect_hint = f" — {display.aspect_text(zone_aspect)}" if zone_aspect else ""
+                    print(f"  {display.BRIGHT_CYAN}{zone_name}{display.RESET}{aspect_hint}")
+                print()
+                display.info("  SEEK <zone aspect> to travel to a beaconed zone. (Costs 1 mote)")
+                return
+            elif room and room.zone != "skerry":
+                # In a beaconed zone — hint about going home
+                display.info("SEEK HOME to return to the skerry.")
+                return
+            else:
+                display.error("Seek what?")
+                return
+
+        target_text = " ".join(args).lower()
+
+        # SEEK HOME — return to skerry
+        if target_text in ("home", "skerry", "back"):
+            if room and room.zone == "skerry":
+                display.info("You're already home.")
+                return
+            # Travel home — advance day
+            skerry_room = self.rooms.get("skerry_landing")
+            if not skerry_room:
+                skerry_room = self.rooms.get("skerry_hollow")
+            if not skerry_room:
+                display.error("Can't find the way home.")
+                return
+
+            mote_cost = 1
+            if self.seed.motes < mote_cost:
+                display.seed_speak("Not enough motes to cross the void.")
+                return
+            self.seed.spend_motes(mote_cost)
+
+            from_room = room
+            self.state["steward_location"] = skerry_room.id
+            self.state["day"] += 1
+            self._narrate_void_crossing(from_room, skerry_room)
+            print()
+            display.narrate(f"The void crossing takes its toll. By the time you reach")
+            display.narrate(f"the skerry, it is morning. Day {self.state['day']}.")
+            display.display_room(skerry_room, self.game_context())
+            self._day_transition()
+            return
+
+        # Match target to a beaconed zone by aspect
+        if not beacons:
+            display.info("No beacons to seek. Sevarik needs to PLACE BEACON in cleared zones first.")
+            return
+
+        # Must be on skerry to travel out
+        if room and room.zone != "skerry":
+            display.error("You need to return home first. SEEK HOME.")
+            return
+
+        # Try to match by zone aspect keywords or zone name
+        best_match = None
+        for zone_id, entry_room_id in beacons.items():
+            zone_aspect = self._get_zone_aspect_for_zone(zone_id)
+            if zone_aspect and target_text in zone_aspect.lower():
+                best_match = (zone_id, entry_room_id)
+                break
+            # Also try zone name
+            zone_name = self._get_zone_display_name(zone_id)
+            if zone_name and target_text in zone_name.lower():
+                best_match = (zone_id, entry_room_id)
+                break
+
+        if not best_match:
+            display.error(f"No beaconed zone matches '{target_text}'.")
+            display.info("Your beacons:")
+            for zone_id in beacons:
+                zone_name = self._get_zone_display_name(zone_id)
+                print(f"  {zone_name}")
+            return
+
+        zone_id, entry_room_id = best_match
+        target_room = self.rooms.get(entry_room_id)
+        if not target_room:
+            display.error("That beacon seems to have gone dark.")
+            return
+
+        # Mote cost
+        mote_cost = 1
+        if self.seed.motes < mote_cost:
+            display.seed_speak("Not enough motes to cross the void.")
+            return
+        self.seed.spend_motes(mote_cost)
+
+        from_room = room
+        self.state["steward_location"] = entry_room_id
+        self._narrate_void_crossing(from_room, target_room)
+        display.display_room(target_room, self.game_context())
 
     def cmd_enter(self, args):
         """Handle ENTER VOID — legacy command, redirects to SEEK."""

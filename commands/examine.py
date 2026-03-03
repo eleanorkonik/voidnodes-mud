@@ -247,7 +247,7 @@ class ExamineMixin:
 
     def cmd_check(self, args):
         if not args:
-            display.error(f"Check what? Try CHECK SEED, CHECK <npc name>, CHECK SKERRY, or CHECK STORES.")
+            display.error(f"Check what? Try CHECK SEED, CHECK <npc name>, CHECK SKERRY, CHECK BEACONS, or CHECK STORES.")
             return
 
         target = " ".join(args).lower()
@@ -539,6 +539,24 @@ class ExamineMixin:
                         print(f"    {tmpl['name']} — needs: {mats}")
             return
 
+        if target in ("beacons", "beacon"):
+            beacons = self.state.get("beacons", {})
+            capacity = self.seed.max_beacons
+            print(f"\n{display.BOLD}Beacons{display.RESET}  ({len(beacons)}/{capacity})")
+            print()
+            if beacons:
+                for zone_id, room_id in beacons.items():
+                    zone_name = self._get_zone_display_name(zone_id)
+                    print(f"  {display.BRIGHT_CYAN}\u25c6{display.RESET} {zone_name}")
+            else:
+                print(f"  {display.DIM}No beacons placed.{display.RESET}")
+            print()
+            if capacity == 0:
+                display.info(f"  {self.seed_name} can't sustain beacons yet.")
+            elif len(beacons) < capacity:
+                display.info(f"  {capacity - len(beacons)} beacon slot(s) available. Craft Signal Beacons and PLACE them in cleared zones.")
+            return
+
         # Check NPC
         npc_id, npc = self._find_in_db(target, self.npcs_db)
         if npc:
@@ -730,8 +748,12 @@ class ExamineMixin:
 
     def cmd_scavenge(self, args):
         if self.state["current_phase"] == "steward":
-            self._wrong_phase_narrate("explorer", "scavenge")
-            return
+            room = self.current_room()
+            beacons = self.state.get("beacons", {})
+            if not room or room.zone not in beacons:
+                self._wrong_phase_narrate("explorer", "scavenge")
+                return
+            # Steward can scavenge in beaconed zones — continue to normal logic below
         room = self.current_room()
         if room.has_enemies():
             enemy_id = room.enemies[0]
