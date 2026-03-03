@@ -3,6 +3,7 @@
 import random
 
 from engine import display, dice, aspects
+from engine.aspects import normalize_aspect
 
 
 class CombatMixin:
@@ -114,17 +115,26 @@ class CombatMixin:
         aspect_name = " ".join(args)
         enemy_data = self.enemies_db.get(self.combat_target, {})
 
-        # Gather all available aspects
+        # Gather all available aspects (normalized to text strings)
         all_aspects = []
         room = self.current_room()
         if room:
-            all_aspects.extend(room.aspects)
+            for raw_a in room.aspects:
+                text, _ = normalize_aspect(raw_a)
+                all_aspects.append(text)
             zone_aspect = self._get_zone_aspect(room)
             if zone_aspect:
-                all_aspects.append(zone_aspect)
-        all_aspects.extend(enemy_data.get("aspects", []))
+                text, _ = normalize_aspect(zone_aspect)
+                all_aspects.append(text)
+        enemy_aspect_texts = []
+        for raw_a in enemy_data.get("aspects", []):
+            text, _ = normalize_aspect(raw_a)
+            all_aspects.append(text)
+            enemy_aspect_texts.append(text)
         char = self.current_character()
-        all_aspects.extend(char.get_all_aspects())
+        for raw_a in char.get_all_aspects():
+            text, _ = normalize_aspect(raw_a)
+            all_aspects.append(text)
 
         # Fuzzy match
         found = None
@@ -141,7 +151,7 @@ class CombatMixin:
             return
 
         # Determine difficulty: enemy aspects use enemy Notice, room aspects use flat 1
-        is_enemy_aspect = found in enemy_data.get("aspects", [])
+        is_enemy_aspect = found in enemy_aspect_texts
         if is_enemy_aspect:
             difficulty = enemy_data["skills"].get("Notice", 1)
         else:
@@ -440,7 +450,8 @@ class CombatMixin:
         enemy_data = self.enemies_db.get(self.combat_target, {})
         enemy_aspects = enemy_data.get("aspects", [])
         if enemy_aspects:
-            target_aspect = random.choice(enemy_aspects)
+            raw_aspect = random.choice(enemy_aspects)
+            target_aspect, _ = normalize_aspect(raw_aspect)
             self.exploit_advantages[target_aspect] = self.exploit_advantages.get(target_aspect, 0) + 1
             display.narrate(f"  You spot an opening in {display.aspect_text(target_aspect)}.")
             display.info(f"  (Exploit advantage gained — free +2 on your next attack)")

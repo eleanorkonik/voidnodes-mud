@@ -51,6 +51,8 @@ def _parse_repeat_prefix(raw):
 
 def _aspect_hint_words(aspect, count=2):
     """Pick the first few meaningful words from an aspect for a SEEK hint."""
+    if isinstance(aspect, dict):
+        aspect = aspect.get("text", str(aspect))
     words = [w for w in aspect.split() if w.lower() not in SKIP_WORDS]
     return " ".join(words[:count]).upper() if words else aspect.split()[0].upper()
 

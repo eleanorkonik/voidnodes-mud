@@ -3,6 +3,7 @@
 import random
 
 from engine import display, dice, aspects, map_renderer, farming, masterwork
+from engine.aspects import normalize_aspect
 
 
 class ExamineMixin:
@@ -37,8 +38,9 @@ class ExamineMixin:
         npc_id, npc = self._find_entity(room.npcs, target, self.npcs_db)
         if npc:
             display.header(npc["name"])
-            hc = npc.get("aspects", {}).get("high_concept", "")
-            display.narrate(f"  {hc}")
+            raw_hc = npc.get("aspects", {}).get("high_concept", "")
+            hc_text, _ = normalize_aspect(raw_hc) if raw_hc else ("", [])
+            display.narrate(f"  {hc_text}")
             if npc.get("recruited"):
                 display.info(f"  Loyalty: {npc.get('loyalty', 0)}/10  Mood: {npc.get('mood', 'unknown')}")
                 assignment = npc.get("assignment", "idle")
@@ -161,12 +163,15 @@ class ExamineMixin:
 
         # Look at aspect (zone + room)
         zone_aspect = self._get_zone_aspect(room)
-        if zone_aspect and target in zone_aspect.lower():
-            print(f"  {display.aspect_text(zone_aspect)} — a zone aspect that can be invoked in rolls.")
-            return
+        if zone_aspect:
+            za_text, _ = normalize_aspect(zone_aspect)
+            if target in za_text.lower():
+                print(f"  {display.aspect_text(za_text)} — a zone aspect that can be invoked in rolls.")
+                return
         for aspect in room.aspects:
-            if target in aspect.lower():
-                print(f"  {display.aspect_text(aspect)} — a room aspect that can be invoked in rolls.")
+            a_text, _ = normalize_aspect(aspect)
+            if target in a_text.lower():
+                print(f"  {display.aspect_text(a_text)} — a room aspect that can be invoked in rolls.")
                 return
 
         display.narrate(f"You don't see '{target}' here.")
@@ -538,7 +543,8 @@ class ExamineMixin:
         npc_id, npc = self._find_in_db(target, self.npcs_db)
         if npc:
             display.header(npc["name"])
-            display.narrate(f"  {npc['aspects']['high_concept']}")
+            npc_hc, _ = normalize_aspect(npc['aspects']['high_concept'])
+            display.narrate(f"  {npc_hc}")
             if npc.get("recruited"):
                 display.info(f"  Loyalty: {npc.get('loyalty', 0)}/10")
                 display.info(f"  Mood: {npc.get('mood', 'unknown')}")

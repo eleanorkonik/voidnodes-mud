@@ -314,9 +314,11 @@ def check_compel(game):
     Only triggers if conditions are met.
     """
     char = game.current_character()
-    trouble = char.aspects.get("trouble")
-    if not trouble:
+    raw_trouble = char.aspects.get("trouble")
+    if not raw_trouble:
         return None
+
+    trouble, _ = normalize_aspect(raw_trouble)
 
     # Try the trouble aspect first
     compel = COMPELS.get(trouble)
@@ -328,11 +330,12 @@ def check_compel(game):
         follower = _get_follower_name(game)
         if not follower:
             # Try other character aspects for a fallback compel
-            for other_aspect in char.aspects.get("other", []):
-                alt = COMPELS.get(other_aspect)
+            for raw_other in char.aspects.get("other", []):
+                other_text, _ = normalize_aspect(raw_other)
+                alt = COMPELS.get(other_text)
                 if alt and alt["condition"] == "always":
                     compel = alt
-                    trouble = other_aspect
+                    trouble = other_text
                     break
             else:
                 return None

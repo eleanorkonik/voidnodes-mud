@@ -3,6 +3,7 @@
 import random
 
 from engine import display, dice
+from engine.aspects import normalize_aspect
 
 
 # Module-level constant used by _aspect_hint_words
@@ -11,6 +12,8 @@ SKIP_WORDS = {"a", "an", "the", "of", "in", "is", "it", "that", "and", "but", "w
 
 def _aspect_hint_words(aspect, count=2):
     """Pick the first few meaningful words from an aspect for a SEEK hint."""
+    if isinstance(aspect, dict):
+        aspect, _ = normalize_aspect(aspect)
     words = [w for w in aspect.split() if w.lower() not in SKIP_WORDS]
     return " ".join(words[:count]).upper() if words else aspect.split()[0].upper()
 
@@ -55,8 +58,12 @@ class MovementMixin:
     def _get_zone_aspect_for_zone(self, zone_id):
         """Get the aspect string for a zone by its ID."""
         if zone_id == "skerry":
-            return self.state.get("skerry", {}).get("aspect", "")
-        return self.state.get("zones", {}).get(zone_id, {}).get("aspect", "")
+            raw = self.state.get("skerry", {}).get("aspect", "")
+        else:
+            raw = self.state.get("zones", {}).get(zone_id, {}).get("aspect", "")
+        if isinstance(raw, dict):
+            raw, _ = normalize_aspect(raw)
+        return raw
 
     def _is_zone_depleted(self, zone_id):
         """Check if a zone's artifact has been resolved (kept/fed/given/stored/spent)."""

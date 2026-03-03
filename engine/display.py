@@ -59,7 +59,9 @@ def enemy_name(name):
 
 
 def aspect_text(aspect):
-    """Format an aspect in magenta."""
+    """Format an aspect for display. Handles both string and dict formats."""
+    if isinstance(aspect, dict):
+        aspect = aspect.get("text", str(aspect))
     return f"{BRIGHT_MAGENTA}{aspect}{RESET}"
 
 
@@ -258,8 +260,10 @@ def display_self(character, items_db, artifacts_db=None):
     from models.character import BODY_SLOTS
     artifacts_db = artifacts_db or {}
 
+    from engine.aspects import normalize_aspect
     header(f"═══ {character.name} ═══")
-    print(f"  {character.aspects['high_concept']}")
+    hc_text, _ = normalize_aspect(character.aspects['high_concept'])
+    print(f"  {hc_text}")
 
     print()
     print(f"  {BOLD}Wearing:{RESET}")
@@ -338,11 +342,15 @@ def display_inventory(character, items_db, artifacts_db=None, specimens_db=None)
 
 def display_character_sheet(character, char_key=None, consequence_meta=None):
     """Display full character sheet. Pass char_key + consequence_meta to show * on recovering."""
+    from engine.aspects import normalize_aspect
     header(f"═══ {character.name} ═══")
-    print(f"  {BOLD}High Concept:{RESET} {character.aspects['high_concept']}")
-    print(f"  {BOLD}Trouble:{RESET} {character.aspects['trouble']}")
+    hc_text, _ = normalize_aspect(character.aspects['high_concept'])
+    trouble_text, _ = normalize_aspect(character.aspects['trouble'])
+    print(f"  {BOLD}High Concept:{RESET} {hc_text}")
+    print(f"  {BOLD}Trouble:{RESET} {trouble_text}")
     for a in character.aspects.get("other", []):
-        print(f"  {BOLD}Aspect:{RESET} {a}")
+        a_text, _ = normalize_aspect(a)
+        print(f"  {BOLD}Aspect:{RESET} {a_text}")
 
     print()
     print(f"  {BOLD}Skills:{RESET}")
