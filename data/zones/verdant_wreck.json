@@ -13,6 +13,7 @@
     ],
     "npc_pool": ["lira"],
     "npc_spawn_range": [1, 1],
+    "artifact_pool": ["bloom_catalyst", "mycorrhizal_nexus", "chloroplast_prism"],
     "entry_room": "vw_airlock",
     "rooms": [
         {

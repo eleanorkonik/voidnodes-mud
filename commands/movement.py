@@ -39,13 +39,9 @@ class MovementMixin:
             display.narrate("The skerry rises under your feet. The tendril loosens, satisfied.")
         print()
 
-    # Zone-to-artifact mapping (each void node has one artifact)
-    _ZONE_ARTIFACTS = {
-        "debris_field": "stabilization_engine",
-        "coral_thicket": "growth_lattice",
-        "frozen_wreck": "eliok_house",
-        "verdant_wreck": "bloom_catalyst",
-    }
+    def _get_zone_artifact(self, zone_id):
+        """Look up the chosen artifact for a zone from game state."""
+        return self.state.get("zone_artifacts", {}).get(zone_id)
 
     def _get_void_crossings(self, room):
         """Find exits from this room that cross into a different zone."""
@@ -64,7 +60,7 @@ class MovementMixin:
 
     def _is_zone_depleted(self, zone_id):
         """Check if a zone's artifact has been resolved (kept/fed/given/stored/spent)."""
-        art_id = self._ZONE_ARTIFACTS.get(zone_id)
+        art_id = self._get_zone_artifact(zone_id)
         if not art_id:
             return False
         status = self.state.get("artifacts_status", {}).get(art_id)

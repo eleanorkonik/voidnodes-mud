@@ -159,6 +159,14 @@ def _migrate_state(state):
         new_key = f"{old_key}_0"
         if new_key not in meta:
             meta[new_key] = meta.pop(old_key)
+    # Zone artifact mapping (for old saves before artifact pools)
+    if "zone_artifacts" not in state:
+        state["zone_artifacts"] = {
+            "debris_field": "stabilization_engine",
+            "coral_thicket": "growth_lattice",
+            "frozen_wreck": "eliok_house",
+            "verdant_wreck": "bloom_catalyst",
+        }
     # Zone unloading
     state.setdefault("unloaded_zones", [])
     # Ensure basic_tools and bandages recipes are known
@@ -314,6 +322,26 @@ def _spawn_zone_npcs(zones, npcs, all_rooms):
                     npc["location"] = None
 
 
+def _spawn_zone_artifacts(zones, artifacts):
+    """Randomly select which artifact spawns per zone. Non-chosen artifacts get location=None.
+
+    Returns {zone_id: chosen_artifact_id} mapping.
+    """
+    zone_artifacts = {}
+    for zone_id, zone in zones.items():
+        pool = zone.get("artifact_pool")
+        if not pool:
+            continue
+        chosen = random.choice(pool)
+        zone_artifacts[zone_id] = chosen
+        for art_id in pool:
+            if art_id != chosen:
+                art = artifacts.get(art_id)
+                if art:
+                    art["location"] = None
+    return zone_artifacts
+
+
 def new_game_state():
     """Create a fresh game state from data files."""
     characters = load_data_file("characters.json")
@@ -339,6 +367,9 @@ def new_game_state():
     # Randomly select NPCs per zone
     _spawn_zone_npcs(zones, npcs, all_rooms)
 
+    # Randomly select one artifact per zone
+    zone_artifacts = _spawn_zone_artifacts(zones, artifacts)
+
     # Build enemy lookup from zones
     enemies_db = {}
     for zone_id, zone in zones.items():
@@ -361,6 +392,7 @@ def new_game_state():
         "recipes": recipes,
         "events": events,
         "enemies_db": enemies_db,
+        "zone_artifacts": zone_artifacts,  # {zone_id: chosen_artifact_id}
         "artifacts_status": {},  # tracks discovered/kept/fed
         "event_log": [{"day": 1, "phase": "prologue", "type": "game_start", "actor": "miria",
                        "location": "skerry_central", "comic_weight": 5,

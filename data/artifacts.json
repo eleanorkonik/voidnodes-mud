@@ -24,6 +24,56 @@
         "notice_dc": 1,
         "originZone": "debris_field"
     },
+    "salvage_core": {
+        "id": "salvage_core",
+        "name": "Salvage Core",
+        "description": "A compact cylinder of layered metal and crystal, warm to the touch. It was designed to recycle energy from broken systems \u2014 pulling power from wreckage and feeding it back into whatever still works. In your hands, it sharpens your awareness of what's useful and what's not.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "Nothing Is Truly Broken",
+            "Repurposed From the Ashes"
+        ],
+        "mote_value": 7,
+        "stat_bonuses": {
+            "Notice": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "df_cargo_bay"
+        },
+        "discovery_text": "Wedged between two crumpled cargo containers, a cylinder of layered metal glows faintly from within. The Salvage Core. It hums when you touch it \u2014 already scanning, already sorting, already deciding what can be saved.",
+        "hint_sensory": "a faint warmth between the containers \u2014 something recycling power from the wreckage around it",
+        "notice_dc": 1,
+        "originZone": "debris_field"
+    },
+    "navigators_lodestone": {
+        "id": "navigators_lodestone",
+        "name": "Navigator's Lodestone",
+        "description": "A rough crystal the size of a fist, shot through with veins of pale gold. It tugs gently in your hand, always pulling toward something \u2014 a direction, a memory, a place that used to exist. It knows where things are, even when you don't.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "It Remembers Every Route",
+            "The Pull of Somewhere Else"
+        ],
+        "mote_value": 9,
+        "stat_bonuses": {
+            "Lore": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "df_control_room"
+        },
+        "discovery_text": "On the shattered navigation console, a crystal sits in its mount \u2014 the only thing in this room that isn't broken. The Navigator's Lodestone. It tugs toward your hand before you even reach for it, eager to chart a course again.",
+        "hint_sensory": "a directional pull \u2014 faint but insistent, like a compass needle made of light",
+        "notice_dc": 2,
+        "originZone": "debris_field"
+    },
     "growth_lattice": {
         "id": "growth_lattice",
         "name": "Growth Lattice",
@@ -46,6 +96,56 @@
         },
         "discovery_text": "Nestled among the oldest coral roots, a lattice of living crystal pulses with deep green light. The Growth Lattice. {seed_name} stirs in your awareness \u2014 it can feel this thing, and it wants it.",
         "hint_sensory": "a green glow \u2014 not bioluminescence, something crystalline, threaded through everything around it",
+        "notice_dc": 2,
+        "originZone": "coral_thicket"
+    },
+    "resonance_chime": {
+        "id": "resonance_chime",
+        "name": "Resonance Chime",
+        "description": "A bell-shaped formation of living coral, pale violet and translucent. When struck, it produces a tone that doesn't fade \u2014 it spreads outward through every living thing nearby, harmonizing their rhythms. It makes communication effortless, almost involuntary.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "Every Living Thing Hears It",
+            "Harmony Whether You Want It or Not"
+        ],
+        "mote_value": 10,
+        "stat_bonuses": {
+            "Rapport": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "ct_spore_chamber"
+        },
+        "discovery_text": "Hanging from a thick coral root, a bell-shaped growth chimes softly in the still air. The Resonance Chime. The sound passes through you \u2014 not loud, but deep, like a heartbeat you suddenly share with everything around you.",
+        "hint_sensory": "a sustained tone \u2014 not mechanical, organic, vibrating through the coral walls like a shared pulse",
+        "notice_dc": 2,
+        "originZone": "coral_thicket"
+    },
+    "bioluminous_censer": {
+        "id": "bioluminous_censer",
+        "name": "Bioluminous Censer",
+        "description": "A crystallized light-organ from some deep-void creature, preserved in a lattice of coral. It glows with a cold, steady blue-white light that makes everything around it sharper and clearer. Hidden things become obvious. Shadows lose their secrets.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "Nothing Hides From This Light",
+            "Clarity Has a Price"
+        ],
+        "mote_value": 14,
+        "stat_bonuses": {
+            "Notice": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "ct_grove"
+        },
+        "discovery_text": "Among the luminous coral formations, one glow outshines the rest \u2014 a crystallized organ suspended in a lattice of pale branches. The Bioluminous Censer. Its light is cold and absolute. In its presence, every crack, every detail, every hidden thing stands out.",
+        "hint_sensory": "a cold light \u2014 brighter than the bioluminescence, sharper, like it's dissolving the shadows on purpose",
         "notice_dc": 2,
         "originZone": "coral_thicket"
     },
@@ -73,6 +173,61 @@
         "notice_dc": 0,
         "keep_effect": "The Eliok House expands when placed on the skerry, becoming a full-sized dwelling of living wood. A small dryad emerges \u2014 a remnant of the Eliok civilization \u2014 and begins tending the gardens. All NPC mood bonuses increase. All NPCs gain +1 loyalty. A new aspect appears on the skerry: 'Memory of the Eliok Lives On.'",
         "feed_effect": "{seed_name} absorbs the Eliok House and surges with growth. 25 motes flood in. For a moment, you see what {seed_name} sees \u2014 a vision of the great tree the Eliok once tended, stretching across an entire world. Then the vision fades, but {seed_name} remembers.",
+        "originZone": "frozen_wreck"
+    },
+    "cryogenic_seed_vault": {
+        "id": "cryogenic_seed_vault",
+        "name": "Cryogenic Seed Vault",
+        "description": "A sealed capsule of dark metal, frosted white, containing row upon row of preserved genetic samples. Seeds, spores, cuttings \u2014 the biological legacy of a civilization that knew it was dying. The knowledge locked inside could change what grows on the skerry forever.",
+        "type": "artifact",
+        "size": "large",
+        "aspects": [
+            "A Library Written in DNA",
+            "The Last Gift of a Dying World"
+        ],
+        "mote_value": 18,
+        "stat_bonuses": {
+            "Lore": 2
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "fw_quarters"
+        },
+        "discovery_text": "In a frost-sealed cabinet, a capsule sits in a cradle of dark metal. The Cryogenic Seed Vault. When you lift it, the frost cracks and falls away, revealing row after row of tiny preserved specimens. A whole world's worth of growing things, sleeping in the ice.",
+        "hint_sensory": "a sealed chamber \u2014 frost thicker here than anywhere else, as if something inside was worth protecting",
+        "notice_dc": 1,
+        "keep_effect": "The Cryogenic Seed Vault's preserved specimens unlock advanced plant varieties for the skerry garden. Rare crops become available. A new aspect appears on the skerry: 'Seeds of a Lost World Take Root.'",
+        "feed_effect": "{seed_name} absorbs the Cryogenic Seed Vault whole. 18 motes surge in, carrying the genetic memory of an entire world's flora. {seed_name} shudders, branches spreading wider, and for a moment every leaf on the skerry turns a color that doesn't exist in this void.",
+        "originZone": "frozen_wreck"
+    },
+    "frost_condenser": {
+        "id": "frost_condenser",
+        "name": "Frost Condenser",
+        "description": "A gauntlet-like device of dark alloy and pale crystal, designed to draw moisture from the air and shape it into ice at will. The cold radiates from it in waves. Worn properly, it can flash-freeze a barrier around you or send a lance of ice at whatever threatens you.",
+        "type": "artifact",
+        "size": "large",
+        "aspects": [
+            "The Cold Answers to You Now",
+            "Shield and Spear in One"
+        ],
+        "mote_value": 20,
+        "stat_bonuses": {
+            "Crafts": 1,
+            "Fight": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "fw_armory"
+        },
+        "discovery_text": "Mounted on a rack among shattered weapons, a gauntlet of dark alloy still radiates cold. The Frost Condenser. When you lift it, ice crystallizes across your forearm in an intricate lattice \u2014 not painful, protective. The gauntlet knows what it's for.",
+        "hint_sensory": "an intense cold \u2014 focused, deliberate, radiating from a weapons rack like it's guarding something",
+        "notice_dc": 1,
+        "keep_effect": "The Frost Condenser sheathes your arm in reactive ice armor. In combat, it absorbs the first hit each encounter. Outside combat, it can shape ice for construction and repair. A new aspect appears: 'Armed With Winter.'",
+        "feed_effect": "{seed_name} absorbs the Frost Condenser and the cold hits like a wall. 20 motes pour in, and for a moment {seed_name}'s tendrils crystallize into glass-clear ice before thawing back to living green. The cold is gone, but {seed_name} remembers the shape of it.",
         "originZone": "frozen_wreck"
     },
     "silver_slippers": {
@@ -113,6 +268,56 @@
         },
         "discovery_text": "At the base of the crystallized plant, a single bud glows with concentrated life. The Bloom Catalyst. When you pick it up, every plant in the chamber shivers.",
         "hint_sensory": "concentrated life \u2014 a green pulse, like a heartbeat, deep inside the overgrowth",
+        "notice_dc": 2,
+        "originZone": "verdant_wreck"
+    },
+    "mycorrhizal_nexus": {
+        "id": "mycorrhizal_nexus",
+        "name": "Mycorrhizal Nexus",
+        "description": "A dense knot of fungal tissue, pale white and faintly luminous, threaded with gossamer-thin filaments that spread outward in every direction. It's the hub of an underground network \u2014 a nervous system for the entire biodome. Holding it, you feel the faint emotional echoes of every living thing it once connected.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "Connected to Everything Below",
+            "The Network Remembers"
+        ],
+        "mote_value": 8,
+        "stat_bonuses": {
+            "Empathy": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "vw_nursery"
+        },
+        "discovery_text": "Beneath the nursery's topsoil, a pale knot of fungal tissue glows faintly. The Mycorrhizal Nexus. When you pull it free, gossamer threads trail from it like severed nerves, and for a moment you feel everything in the biodome \u2014 the hunger of roots, the patience of spores, the slow grief of soil.",
+        "hint_sensory": "a pale glow beneath the soil \u2014 fungal, spreading, like a buried nervous system still firing signals",
+        "notice_dc": 2,
+        "originZone": "verdant_wreck"
+    },
+    "chloroplast_prism": {
+        "id": "chloroplast_prism",
+        "name": "Chloroplast Prism",
+        "description": "A translucent green crystal the size of a plum, dense with swirling internal light. It's a concentrated fragment of photosynthetic energy \u2014 the biodome's growth engine, crystallized into a single point. Near it, plants lean closer. Away from it, they wilt.",
+        "type": "artifact",
+        "size": "medium",
+        "aspects": [
+            "Bottled Sunlight",
+            "Everything Leans Toward It"
+        ],
+        "mote_value": 6,
+        "stat_bonuses": {
+            "Crafts": 1
+        },
+        "stackable": false,
+        "special": null,
+        "location": {
+            "type": "room",
+            "id": "vw_greenhouse"
+        },
+        "discovery_text": "Among the overgrown hydroponics racks, a green crystal catches light that isn't there. The Chloroplast Prism. Every vine in the greenhouse bends toward it. When you pick it up, the nearest plants visibly droop, as if you've taken their sun.",
+        "hint_sensory": "green light \u2014 not reflected, generated, pulsing from somewhere in the overgrowth like a tiny captive sun",
         "notice_dc": 2,
         "originZone": "verdant_wreck"
     },

@@ -9,8 +9,8 @@ class ArtifactsMixin:
     def _on_artifact_resolved(self, art_id):
         """Called when any artifact is resolved. Increments zones_cleared for zone artifacts."""
         # Only zone artifacts count as zone clears
-        from commands.movement import MovementMixin
-        if art_id in MovementMixin._ZONE_ARTIFACTS.values():
+        zone_artifacts = self.state.get("zone_artifacts", {})
+        if art_id in zone_artifacts.values():
             self.state["zones_cleared"] = self.state.get("zones_cleared", 0) + 1
             results = aspects.check_auto_heal(self)
             for char_key, original_sev, consequence_text, event_type in results:
@@ -22,7 +22,7 @@ class ArtifactsMixin:
 
             # Unload the cleared zone's rooms and enemies from runtime
             zone_id = None
-            for zid, aid in MovementMixin._ZONE_ARTIFACTS.items():
+            for zid, aid in zone_artifacts.items():
                 if aid == art_id:
                     zone_id = zid
                     break

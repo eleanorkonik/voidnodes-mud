@@ -13,6 +13,7 @@
     ],
     "npc_pool": ["callum", "angya"],
     "npc_spawn_range": [1, 2],
+    "artifact_pool": ["eliok_house", "cryogenic_seed_vault", "frost_condenser"],
     "entry_room": "fw_entrance",
     "rooms": [
         {

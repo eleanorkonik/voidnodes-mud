@@ -79,8 +79,9 @@ class ItemsMixin:
                                 artifact_id=art_id, artifact_name=art.get("name", art_id))
                 if not self.state.get("tutorial_complete"):
                     self.state["tutorial_artifact_found"] = True
-                # Mark quest complete when bloom_catalyst is found
-                if art_id == "bloom_catalyst":
+                # Mark quest complete when the verdant_wreck zone artifact is found
+                vw_artifact = self.state.get("zone_artifacts", {}).get("verdant_wreck")
+                if art_id == vw_artifact:
                     self.state["tutorial_quest_done"] = True
                     quest = self.state.get("quests", {}).get("verdant_bloom", {})
                     if quest.get("status") == "active":
