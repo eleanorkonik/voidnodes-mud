@@ -6,8 +6,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Steady As She Goes",
-            "Still Running After All This Time"
+            {"text": "Steady As She Goes", "affinity": ["Crafts"]},
+            {"text": "Still Running After All This Time", "affinity": ["Crafts", "Will"]}
         ],
         "mote_value": 8,
         "stat_bonuses": {
@@ -31,8 +31,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Nothing Is Truly Broken",
-            "Repurposed From the Ashes"
+            {"text": "Nothing Is Truly Broken", "affinity": ["Notice", "Crafts"]},
+            {"text": "Repurposed From the Ashes", "affinity": ["Notice"]}
         ],
         "mote_value": 7,
         "stat_bonuses": {
@@ -56,8 +56,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "It Remembers Every Route",
-            "The Pull of Somewhere Else"
+            {"text": "It Remembers Every Route", "affinity": ["Lore"]},
+            {"text": "The Pull of Somewhere Else", "affinity": ["Lore", "Notice"]}
         ],
         "mote_value": 9,
         "stat_bonuses": {
@@ -81,8 +81,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "The Crystal Has Plans of Its Own",
-            "Everything Near It Grows \u2014 Everything"
+            {"text": "The Crystal Has Plans of Its Own", "affinity": ["Empathy"]},
+            {"text": "Everything Near It Grows \u2014 Everything", "affinity": ["Empathy", "Crafts"]}
         ],
         "mote_value": 12,
         "stat_bonuses": {
@@ -106,8 +106,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Every Living Thing Hears It",
-            "Harmony Whether You Want It or Not"
+            {"text": "Every Living Thing Hears It", "affinity": ["Rapport", "Empathy"]},
+            {"text": "Harmony Whether You Want It or Not", "affinity": ["Rapport"]}
         ],
         "mote_value": 10,
         "stat_bonuses": {
@@ -131,8 +131,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Nothing Hides From This Light",
-            "Clarity Has a Price"
+            {"text": "Nothing Hides From This Light", "affinity": ["Notice", "Investigate"]},
+            {"text": "Clarity Has a Price", "affinity": ["Notice"]}
         ],
         "mote_value": 14,
         "stat_bonuses": {
@@ -156,9 +156,9 @@
         "type": "artifact",
         "size": "large",
         "aspects": [
-            "Echo of a Lost Civilization",
-            "Home Made Manifest",
-            "The Biggest Decision"
+            {"text": "Echo of a Lost Civilization", "affinity": ["Lore"]},
+            {"text": "Home Made Manifest", "affinity": ["Empathy", "Rapport"]},
+            {"text": "The Biggest Decision", "affinity": ["Will"]}
         ],
         "mote_value": 25,
         "stat_bonuses": {},
@@ -182,8 +182,8 @@
         "type": "artifact",
         "size": "large",
         "aspects": [
-            "A Library Written in DNA",
-            "The Last Gift of a Dying World"
+            {"text": "A Library Written in DNA", "affinity": ["Lore", "Investigate"]},
+            {"text": "The Last Gift of a Dying World", "affinity": ["Lore"]}
         ],
         "mote_value": 18,
         "stat_bonuses": {
@@ -209,8 +209,8 @@
         "type": "artifact",
         "size": "large",
         "aspects": [
-            "The Cold Answers to You Now",
-            "Shield and Spear in One"
+            {"text": "The Cold Answers to You Now", "affinity": ["Fight", "Crafts"]},
+            {"text": "Shield and Spear in One", "affinity": ["Fight"]}
         ],
         "mote_value": 20,
         "stat_bonuses": {
@@ -236,7 +236,7 @@
         "description": "A pair of delicate silver slippers, impossibly light, threaded with filaments that shimmer like starlight. They hum faintly when you hold them, as if remembering a road that no longer exists.",
         "type": "artifact",
         "aspects": [
-            "There's No Place Like Home"
+            {"text": "There's No Place Like Home", "affinity": ["Will", "Rapport"]}
         ],
         "mote_value": 5,
         "stat_bonuses": {},
@@ -254,8 +254,8 @@
         "description": "A crystallized flower bud that pulses with deep green energy. When held near dormant plants, they erupt into instant growth \u2014 flowers, fruit, seeds, all at once. The crystal dims slightly each time it's used.",
         "type": "artifact",
         "aspects": [
-            "Instant Harvest",
-            "Five Blooms Remain"
+            {"text": "Instant Harvest", "affinity": ["Crafts"]},
+            {"text": "Five Blooms Remain", "affinity": ["Crafts"]}
         ],
         "mote_value": 5,
         "stat_bonuses": {},
@@ -278,8 +278,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Connected to Everything Below",
-            "The Network Remembers"
+            {"text": "Connected to Everything Below", "affinity": ["Empathy"]},
+            {"text": "The Network Remembers", "affinity": ["Empathy", "Lore"]}
         ],
         "mote_value": 8,
         "stat_bonuses": {
@@ -303,8 +303,8 @@
         "type": "artifact",
         "size": "medium",
         "aspects": [
-            "Bottled Sunlight",
-            "Everything Leans Toward It"
+            {"text": "Bottled Sunlight", "affinity": ["Crafts"]},
+            {"text": "Everything Leans Toward It", "affinity": ["Crafts", "Empathy"]}
         ],
         "mote_value": 6,
         "stat_bonuses": {
@@ -327,7 +327,7 @@
         "description": "A round, squishy red nose. It looks absurd. It feels absurd. But when you hold it, something about it makes you feel less conspicuous, less threatening \u2014 less worth envying.",
         "type": "artifact",
         "aspects": [
-            "Uglier Than I Am"
+            {"text": "Uglier Than I Am", "affinity": ["Rapport"]}
         ],
         "mote_value": 5,
         "stat_bonuses": {},

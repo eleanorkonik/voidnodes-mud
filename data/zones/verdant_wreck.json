@@ -2,7 +2,7 @@
     "id": "verdant_wreck",
     "name": "The Verdant Wreck",
     "description": "A massive biodome fragment \u2014 the growing section of a colony ship, its transparent dome panels fogged with condensation. When the ship broke apart, the growth systems kept running. Now it drifts in the void as a small jungle of dense green canopy and humid air, warm light leaking from every seam and crack in the hull.",
-    "aspect": "Life That Outlasted Its Makers",
+    "aspect": {"text": "Life That Outlasted Its Makers", "affinity": ["Lore", "Crafts"]},
     "difficulty": "easy",
     "scavenge_pool": [
         "resin",
@@ -26,7 +26,7 @@
                 "north": "vw_promenade"
             },
             "aspects": [
-                "Roots Through Steel"
+                {"text": "Roots Through Steel", "affinity": ["Physique", "Crafts"]}
             ],
             "items": [],
             "npcs": [],
@@ -45,7 +45,7 @@
                 "east": "vw_nursery"
             },
             "aspects": [
-                "Echoes of a Crew Long Gone"
+                {"text": "Echoes of a Crew Long Gone", "affinity": ["Investigate", "Lore"]}
             ],
             "items": [
                 "luminous_moss"
@@ -63,7 +63,7 @@
                 "east": "vw_promenade"
             },
             "aspects": [
-                "Still Water (Still Alive)"
+                {"text": "Still Water (Still Alive)", "affinity": ["Notice", "Empathy"]}
             ],
             "items": [
                 "coral_fragments",
@@ -82,7 +82,7 @@
                 "west": "vw_promenade"
             },
             "aspects": [
-                "Seeds of a Dead World"
+                {"text": "Seeds of a Dead World", "affinity": ["Lore", "Crafts"]}
             ],
             "items": [
                 "biodome_wheat",
@@ -104,7 +104,7 @@
                 "east": "vw_canopy"
             },
             "aspects": [
-                "Wild Growth"
+                {"text": "Wild Growth", "affinity": ["Crafts", "Empathy"]}
             ],
             "items": [],
             "npcs": [],
@@ -120,7 +120,7 @@
                 "west": "vw_greenhouse"
             },
             "aspects": [
-                "Predators Adapt"
+                {"text": "Predators Adapt", "affinity": ["Fight", "Notice"]}
             ],
             "items": [],
             "npcs": [],
@@ -139,7 +139,7 @@
                 "up": "vw_observation"
             },
             "aspects": [
-                "Impenetrable Roots"
+                {"text": "Impenetrable Roots", "affinity": ["Physique", "Crafts"]}
             ],
             "features": [
                 {
@@ -175,7 +175,7 @@
                 "down": "vw_root_wall"
             },
             "aspects": [
-                "The Whole Picture"
+                {"text": "The Whole Picture", "affinity": ["Notice", "Investigate"]}
             ],
             "items": [],
             "npcs": [],
@@ -191,7 +191,7 @@
                 "east": "vw_root_wall"
             },
             "aspects": [
-                "The Machine Still Remembers"
+                {"text": "The Machine Still Remembers", "affinity": ["Lore", "Crafts"]}
             ],
             "features": [
                 {
@@ -224,7 +224,7 @@
                 "south": "vw_root_wall"
             },
             "aspects": [
-                "Crystallized Mid-Bloom"
+                {"text": "Crystallized Mid-Bloom", "affinity": ["Lore", "Empathy"]}
             ],
             "features": [
                 {
@@ -252,8 +252,8 @@
             "name": "Tangle-Vine",
             "description": "Thick tendrils lash out from the canopy above \u2014 a plant that's learned to hunt.",
             "aspects": [
-                "Rooted But Reaching",
-                "Slow to React"
+                {"text": "Rooted But Reaching", "affinity": ["Fight", "Athletics"]},
+                {"text": "Slow to React", "affinity": ["Athletics"]}
             ],
             "skills": {
                 "Fight": 1,

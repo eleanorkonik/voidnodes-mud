@@ -5,10 +5,10 @@
         "location": "df_hull_breach",
         "recruited": false,
         "aspects": {
-            "high_concept": "Mysterious Wanderer Who Knows the Void",
-            "trouble": "Secrets That Could Help or Harm",
+            "high_concept": {"text": "Mysterious Wanderer Who Knows the Void", "affinity": ["Notice", "Lore"]},
+            "trouble": {"text": "Secrets That Could Help or Harm", "affinity": ["Will", "Investigate"]},
             "other": [
-                "Knows More Than They Say"
+                {"text": "Knows More Than They Say", "affinity": ["Investigate", "Lore"]}
             ]
         },
         "skills": {
@@ -99,10 +99,10 @@
         "location": "df_cargo_bay",
         "recruited": false,
         "aspects": {
-            "high_concept": "Enthusiastic Scavenger With an Eye for Value",
-            "trouble": "Too Trusting for the Void",
+            "high_concept": {"text": "Enthusiastic Scavenger With an Eye for Value", "affinity": ["Investigate", "Notice"]},
+            "trouble": {"text": "Too Trusting for the Void", "affinity": ["Empathy", "Rapport"]},
             "other": [
-                "Quick Hands, Quicker Smile"
+                {"text": "Quick Hands, Quicker Smile", "affinity": ["Athletics", "Rapport"]}
             ]
         },
         "skills": {
@@ -192,10 +192,10 @@
         "location": "df_control_room",
         "recruited": false,
         "aspects": {
-            "high_concept": "Cautious Mechanic Who's Seen Too Much Go Wrong",
-            "trouble": "Trust Issues (Well-Founded)",
+            "high_concept": {"text": "Cautious Mechanic Who's Seen Too Much Go Wrong", "affinity": ["Crafts", "Notice"]},
+            "trouble": {"text": "Trust Issues (Well-Founded)", "affinity": ["Will", "Empathy"]},
             "other": [
-                "Steady Hands Under Pressure"
+                {"text": "Steady Hands Under Pressure", "affinity": ["Crafts", "Physique"]}
             ]
         },
         "skills": {
@@ -284,10 +284,10 @@
         "location": "ct_grove",
         "recruited": false,
         "aspects": {
-            "high_concept": "Scared Teenager Trying to Be Brave",
-            "trouble": "Jumps at Every Shadow",
+            "high_concept": {"text": "Scared Teenager Trying to Be Brave", "affinity": ["Will"]},
+            "trouble": {"text": "Jumps at Every Shadow", "affinity": ["Notice"]},
             "other": [
-                "Surprisingly Observant"
+                {"text": "Surprisingly Observant", "affinity": ["Notice", "Investigate"]}
             ]
         },
         "skills": {
@@ -376,10 +376,10 @@
         "location": "ct_heart",
         "recruited": false,
         "aspects": {
-            "high_concept": "Practical Farmer Who Makes Things Grow",
-            "trouble": "Won't Move Without Proof",
+            "high_concept": {"text": "Practical Farmer Who Makes Things Grow", "affinity": ["Crafts", "Resources"]},
+            "trouble": {"text": "Won't Move Without Proof", "affinity": ["Will"]},
             "other": [
-                "Green Thumb in Any Soil"
+                {"text": "Green Thumb in Any Soil", "affinity": ["Crafts", "Empathy"]}
             ]
         },
         "skills": {
@@ -468,10 +468,10 @@
         "location": "fw_observation",
         "recruited": false,
         "aspects": {
-            "high_concept": "Obsessive Scholar Deciphering Ancient Script",
-            "trouble": "Knowledge Above Self-Preservation",
+            "high_concept": {"text": "Obsessive Scholar Deciphering Ancient Script", "affinity": ["Lore", "Investigate"]},
+            "trouble": {"text": "Knowledge Above Self-Preservation", "affinity": ["Will", "Lore"]},
             "other": [
-                "Reads Dead Languages"
+                {"text": "Reads Dead Languages", "affinity": ["Lore"]}
             ]
         },
         "skills": {
@@ -560,10 +560,10 @@
         "location": "vw_greenhouse",
         "recruited": false,
         "aspects": {
-            "high_concept": "Botanist Without a Ship",
-            "trouble": "Patient Observer",
+            "high_concept": {"text": "Botanist Without a Ship", "affinity": ["Lore", "Crafts"]},
+            "trouble": {"text": "Patient Observer", "affinity": ["Notice", "Empathy"]},
             "other": [
-                "Knows Every Root by Name"
+                {"text": "Knows Every Root by Name", "affinity": ["Lore"]}
             ]
         },
         "skills": {
@@ -661,10 +661,10 @@
         "location": "fw_armory",
         "recruited": false,
         "aspects": {
-            "high_concept": "Battle-Hardened Warrior of the Old Ships",
-            "trouble": "Respects Only Strength",
+            "high_concept": {"text": "Battle-Hardened Warrior of the Old Ships", "affinity": ["Fight", "Physique"]},
+            "trouble": {"text": "Respects Only Strength", "affinity": ["Fight", "Will"]},
             "other": [
-                "Ice in Her Veins"
+                {"text": "Ice in Her Veins", "affinity": ["Will"]}
             ]
         },
         "skills": {

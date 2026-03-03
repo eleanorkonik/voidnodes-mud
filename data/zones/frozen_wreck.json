@@ -2,7 +2,7 @@
     "id": "frozen_wreck",
     "name": "The Frozen Wreck",
     "description": "An ancient ship of dark, seamless metal, encrusted in blue-white void-ice and glittering with frost. It drifts in eerie silence, its angular hull reflecting cold light. The ice is centuries thick in places, translucent enough to hint at shapes preserved within.",
-    "aspect": "The Cold Preserves What Should Have Been Forgotten",
+    "aspect": {"text": "The Cold Preserves What Should Have Been Forgotten", "affinity": ["Will", "Physique"]},
     "difficulty": "hard",
     "scavenge_pool": [
         "crystal_shards",
@@ -27,7 +27,7 @@
                 "east": "fw_observation"
             },
             "aspects": [
-                "Built By Hands That Knew More Than Ours"
+                {"text": "Built By Hands That Knew More Than Ours", "affinity": ["Lore", "Crafts"]}
             ],
             "items": [
                 "ancient_alloys"
@@ -47,7 +47,7 @@
                 "east": "fw_quarters"
             },
             "aspects": [
-                "Something Watches From Beneath the Ice"
+                {"text": "Something Watches From Beneath the Ice", "affinity": ["Notice", "Will"]}
             ],
             "items": [
                 "frozen_water"
@@ -68,7 +68,7 @@
                 "north": "fw_quarters"
             },
             "aspects": [
-                "Every Surface Covered in Someone's Obsession"
+                {"text": "Every Surface Covered in Someone's Obsession", "affinity": ["Investigate", "Lore"]}
             ],
             "items": [
                 "crystal_shards"
@@ -88,7 +88,7 @@
                 "north": "fw_vault"
             },
             "aspects": [
-                "The Dead Sleep Lightly Here"
+                {"text": "The Dead Sleep Lightly Here", "affinity": ["Will", "Notice"]}
             ],
             "items": [
                 "preserved_food",
@@ -110,7 +110,7 @@
                 "east": "fw_vault"
             },
             "aspects": [
-                "Weapons Just Out of Reach"
+                {"text": "Weapons Just Out of Reach", "affinity": ["Fight", "Athletics"]}
             ],
             "items": [
                 "ancient_alloys",
@@ -130,7 +130,7 @@
                 "west": "fw_armory"
             },
             "aspects": [
-                "See Everything (Touch Nothing)"
+                {"text": "See Everything (Touch Nothing)", "affinity": ["Notice", "Investigate"]}
             ],
             "items": [],
             "npcs": [],
@@ -146,8 +146,8 @@
             "name": "Frost Shade",
             "description": "A shadow that moves beneath the ice, reaching through with freezing tendrils. It was something once \u2014 crew, passenger, prisoner. Now it's just cold and hunger.",
             "aspects": [
-                "Its Touch Burns Cold",
-                "Reaches Through What Should Be Solid"
+                {"text": "Its Touch Burns Cold", "affinity": ["Fight", "Physique"]},
+                {"text": "Reaches Through What Should Be Solid", "affinity": ["Will"]}
             ],
             "skills": {
                 "Fight": 3,
@@ -173,8 +173,8 @@
             "name": "Swarm Mites",
             "description": "Tiny crystalline insects that swarm in vast numbers. Each one is fragile, but together they can strip metal to the bone.",
             "aspects": [
-                "Fragile as Spun Glass",
-                "Tiny Jaws That Strip Metal Bare"
+                {"text": "Fragile as Spun Glass", "affinity": ["Fight"]},
+                {"text": "Tiny Jaws That Strip Metal Bare", "affinity": ["Fight", "Physique"]}
             ],
             "skills": {
                 "Fight": 2,
@@ -196,9 +196,9 @@
             "name": "Frost Shade Elder",
             "description": "The captain of the frozen wreck, preserved in void-ice for centuries. Its form is massive, translucent, and filled with a terrible cold intelligence. It guards the vault and the Eliok House within.",
             "aspects": [
-                "Still Thinks This Ship Is Its Command",
-                "Centuries of Cold Made It Patient",
-                "Nothing Leaves the Vault Without Permission"
+                {"text": "Still Thinks This Ship Is Its Command", "affinity": ["Will"]},
+                {"text": "Centuries of Cold Made It Patient", "affinity": ["Will", "Physique"]},
+                {"text": "Nothing Leaves the Vault Without Permission", "affinity": ["Fight", "Notice"]}
             ],
             "skills": {
                 "Fight": 4,

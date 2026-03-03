@@ -2,7 +2,7 @@
     "id": "debris_field",
     "name": "The Debris Field",
     "description": "A slowly tumbling mass of grey hull plating, olive-drab cargo containers, and twisted structural steel, spread across a pocket of void. The pieces rotate in silence, catching dull metallic light. The wreckage of a great vessel \u2014 shattered, scattered, and cold.",
-    "aspect": "A Dead Ship Still Full of Secrets",
+    "aspect": {"text": "A Dead Ship Still Full of Secrets", "affinity": ["Investigate", "Notice"]},
     "difficulty": "easy",
     "scavenge_pool": [
         "metal_scraps",
@@ -25,7 +25,7 @@
                 "east": "df_hull_breach"
             },
             "aspects": [
-                "Everything Drifts If You Let Go"
+                {"text": "Everything Drifts If You Let Go", "affinity": ["Athletics", "Notice"]}
             ],
             "items": [
                 "metal_scraps"
@@ -45,7 +45,7 @@
                 "north": "df_engine_room"
             },
             "aspects": [
-                "Treasure Behind Sealed Doors"
+                {"text": "Treasure Behind Sealed Doors", "affinity": ["Investigate", "Crafts"]}
             ],
             "items": [
                 "wire",
@@ -67,7 +67,7 @@
                 "north": "df_control_room"
             },
             "aspects": [
-                "One Wrong Move Draws Blood"
+                {"text": "One Wrong Move Draws Blood", "affinity": ["Athletics", "Notice"]}
             ],
             "items": [
                 "metal_scraps",
@@ -89,7 +89,7 @@
                 "west": "df_cargo_bay"
             },
             "aspects": [
-                "Everything Died Mid-Sentence"
+                {"text": "Everything Died Mid-Sentence", "affinity": ["Investigate", "Lore"]}
             ],
             "items": [
                 "basic_tools"
@@ -107,7 +107,7 @@
                 "south": "df_cargo_bay"
             },
             "aspects": [
-                "Something Down Here Has Juice"
+                {"text": "Something Down Here Has Juice", "affinity": ["Crafts", "Notice"]}
             ],
             "items": [
                 "metal_scraps",
@@ -126,8 +126,8 @@
             "name": "Rat Swarm",
             "description": "A chittering mass of pale, eyeless rats with translucent skin stretched tight over visible bones. They pour from cracks in the bulkhead like liquid, each one small but the whole swarm a gnawing tide.",
             "aspects": [
-                "Eyeless and Hunting by Sound",
-                "Each One Fragile Alone"
+                {"text": "Eyeless and Hunting by Sound", "affinity": ["Notice"]},
+                {"text": "Each One Fragile Alone", "affinity": ["Fight"]}
             ],
             "skills": {
                 "Fight": 2,
@@ -149,8 +149,8 @@
             "name": "Hound of Annwn",
             "description": "A spectral hound with white fur and red-tipped ears, its form flickering between solid and translucent. It watches you with ancient, knowing eyes, and its growl resonates in your chest.",
             "aspects": [
-                "Between This World and the Next",
-                "Those Jaws Cut Through Metal"
+                {"text": "Between This World and the Next", "affinity": ["Will", "Notice"]},
+                {"text": "Those Jaws Cut Through Metal", "affinity": ["Fight", "Physique"]}
             ],
             "skills": {
                 "Fight": 1,
@@ -172,8 +172,8 @@
             "name": "Corroded Automaton",
             "description": "A maintenance robot gone wrong. Its corroded frame jerks with erratic, dangerous movements. Sparks fly from exposed wiring.",
             "aspects": [
-                "Doesn't Know What It's Doing Anymore",
-                "One Spark From a Short Circuit"
+                {"text": "Doesn't Know What It's Doing Anymore", "affinity": ["Fight"]},
+                {"text": "One Spark From a Short Circuit", "affinity": ["Notice", "Crafts"]}
             ],
             "skills": {
                 "Fight": 3,

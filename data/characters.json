@@ -2,9 +2,9 @@
     "sevarik": {
         "name": "Sevarik",
         "aspects": {
-            "high_concept": "Fae-Lands Warrior Stranded in the Void",
-            "trouble": "Honor-Bound to Protect Everyone",
-            "other": ["Battle-Scarred Veteran", "Reluctant Leader"]
+            "high_concept": {"text": "Fae-Lands Warrior Stranded in the Void", "affinity": ["Fight", "Physique"]},
+            "trouble": {"text": "Honor-Bound to Protect Everyone", "affinity": ["Will", "Empathy"]},
+            "other": [{"text": "Battle-Scarred Veteran", "affinity": ["Fight"]}, {"text": "Reluctant Leader", "affinity": ["Rapport"]}]
         },
         "skills": {
             "Fight": 4,
@@ -28,9 +28,9 @@
     "miria": {
         "name": "Miria",
         "aspects": {
-            "high_concept": "Resourceful Healer Who Keeps Everyone Together",
-            "trouble": "Can't Say No to Someone in Need",
-            "other": ["Green Thumb in Any Soil", "Quiet Strength"]
+            "high_concept": {"text": "Resourceful Healer Who Keeps Everyone Together", "affinity": ["Empathy", "Lore"]},
+            "trouble": {"text": "Can't Say No to Someone in Need", "affinity": ["Will", "Empathy"]},
+            "other": [{"text": "Green Thumb in Any Soil", "affinity": ["Crafts", "Lore"]}, {"text": "Quiet Strength", "affinity": ["Will"]}]
         },
         "skills": {
             "Empathy": 4,

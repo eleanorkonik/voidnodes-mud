@@ -2,7 +2,7 @@
     "id": "coral_thicket",
     "name": "The Coral Thicket",
     "description": "A dense mass of crystallized organic matter in shades of blue, green, pink, and violet, glowing with soft bioluminescence against the void-dark. The coral structures twist and branch in impossible spiraling patterns, creating a labyrinth of sharp beauty. The air around it shimmers with warmth and drifting spores.",
-    "aspect": "Everything Here Grows Toward Something Hungry",
+    "aspect": {"text": "Everything Here Grows Toward Something Hungry", "affinity": ["Empathy", "Notice"]},
     "difficulty": "medium",
     "scavenge_pool": [
         "coral_fragments",
@@ -28,7 +28,7 @@
                 "east": "ct_tunnel"
             },
             "aspects": [
-                "Beautiful Enough to Drop Your Guard"
+                {"text": "Beautiful Enough to Drop Your Guard", "affinity": ["Notice", "Empathy"]}
             ],
             "items": [
                 "luminous_moss"
@@ -48,7 +48,7 @@
                 "north": "ct_heart"
             },
             "aspects": [
-                "Someone Lived Here For a Reason"
+                {"text": "Someone Lived Here For a Reason", "affinity": ["Investigate", "Empathy"]}
             ],
             "items": [
                 "resin",
@@ -68,7 +68,7 @@
                 "north": "ct_spore_chamber"
             },
             "aspects": [
-                "No Room to Swing a Sword"
+                {"text": "No Room to Swing a Sword", "affinity": ["Athletics", "Fight"]}
             ],
             "items": [
                 "coral_fragments"
@@ -90,7 +90,7 @@
                 "north": "ct_heart"
             },
             "aspects": [
-                "Breathe Wrong and You'll See Things"
+                {"text": "Breathe Wrong and You'll See Things", "affinity": ["Will", "Physique"]}
             ],
             "items": [
                 "luminous_moss",
@@ -112,7 +112,7 @@
                 "east": "ct_spore_chamber"
             },
             "aspects": [
-                "Someone's Been Tending This Place"
+                {"text": "Someone's Been Tending This Place", "affinity": ["Crafts", "Empathy"]}
             ],
             "items": [
                 "luminous_spore",
@@ -131,8 +131,8 @@
             "name": "Thorn Crawler",
             "description": "A coral-armored predator that blends with the thicket walls. It strikes from ambush, its barbed limbs lashing out with surprising speed.",
             "aspects": [
-                "Strikes Before You Know It's There",
-                "Part of the Wall Until It Isn't"
+                {"text": "Strikes Before You Know It's There", "affinity": ["Fight", "Athletics"]},
+                {"text": "Part of the Wall Until It Isn't", "affinity": ["Notice"]}
             ],
             "skills": {
                 "Fight": 3,
@@ -156,8 +156,8 @@
             "name": "Thorn Crawler Alpha",
             "description": "The largest of its kind, this crawler has grown thick coral plating and developed a cunning patience. It waits until prey is committed before striking.",
             "aspects": [
-                "Armored in Living Stone",
-                "It Can Wait Longer Than You Can"
+                {"text": "Armored in Living Stone", "affinity": ["Physique"]},
+                {"text": "It Can Wait Longer Than You Can", "affinity": ["Will", "Notice"]}
             ],
             "skills": {
                 "Fight": 4,
@@ -183,8 +183,8 @@
             "name": "Spore Cloud",
             "description": "Not a creature exactly \u2014 a living cloud of luminous spores that drifts with purpose. Inhaling them causes disorientation and hallucinations.",
             "aspects": [
-                "One Breath and the World Goes Sideways",
-                "It Goes Where the Air Goes"
+                {"text": "One Breath and the World Goes Sideways", "affinity": ["Will", "Physique"]},
+                {"text": "It Goes Where the Air Goes", "affinity": ["Athletics"]}
             ],
             "skills": {
                 "Fight": 2,
