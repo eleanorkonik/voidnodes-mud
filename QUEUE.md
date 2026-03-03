@@ -32,7 +32,7 @@ No dependency on the feature sequence. Can be done anytime.
 - [x] **Steward Rapport Checks** — CHECK <NPC> and CHECK SKERRY both show mood tiers.
 - [x] **Bandage Wounds** — `bandage-wounds.md`. Wounds should be greyable so enemies can't invoke them. Healing exists, greying doesn't.
 - [x] **Wound/Stress/Rescue** — `wound-stress-rescue.md`. Multiple consequences per slot, severe wounds trigger rescue mechanic.
-- [ ] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Currently 1 per zone; need 2 more each + randomized spawning.
+- [x] **Three Artifacts Per Zone** — `three-artifacts-per-zone.md`. Currently 1 per zone; need 2 more each + randomized spawning.
 
 ## Infrastructure
 
