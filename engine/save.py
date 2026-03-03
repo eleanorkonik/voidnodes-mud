@@ -214,6 +214,8 @@ def _migrate_state(state):
         defaults = _room_defaults.get(rid, {})
         for key, val in defaults.items():
             tmpl.setdefault(key, val)
+    # Beacons
+    state.setdefault("beacons", {})
     # Workshop queue
     state.setdefault("workshop_queue", [])
     # Ensure new workshop recipes are discoverable (added with workshop build)
@@ -400,5 +402,6 @@ def new_game_state():
         "discovered_recipes": ["rope", "torch", "basic_tools", "bandages"],  # Start knowing basic recipes
         "zones_cleared": 0,
         "consequence_meta": {},  # {char_sev_idx: {taken_at: N, cure: item_id}}
+        "beacons": {},  # {zone_id: entry_room_id}
     }
     return state

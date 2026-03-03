@@ -845,3 +845,102 @@ class ItemsMixin:
                         verb=process_verb,
                         success=shifts >= 0,
                         masterwork=shifts >= 3)
+
+    # ── PLACE / RECLAIM Beacons ───────────────────────────────────
+
+    def cmd_place(self, args):
+        """PLACE BEACON — Place a Signal Beacon in a cleared zone's entry room."""
+        if not args:
+            display.error("Place what? PLACE BEACON to place a Signal Beacon.")
+            return
+
+        target = " ".join(args).lower()
+        if "beacon" not in target:
+            display.error("Place what? PLACE BEACON to place a Signal Beacon.")
+            return
+
+        phase = self.state["current_phase"]
+        if phase != "explorer":
+            self._wrong_phase_narrate("explorer", "place beacons")
+            return
+
+        room = self.current_room()
+        char = self.current_character()
+
+        # Must be in a zone entry room
+        zone_id = room.zone
+        if zone_id == "skerry":
+            display.narrate("You can only place a beacon at a zone's entry point.")
+            return
+
+        zone_data = self.state.get("zones", {}).get(zone_id, {})
+        entry_room_id = zone_data.get("entry_room")
+        if room.id != entry_room_id:
+            display.narrate("You can only place a beacon at a zone's entry point.")
+            return
+
+        # Zone must be cleared
+        if not self._is_zone_depleted(zone_id):
+            display.narrate("This zone hasn't been cleared yet.")
+            return
+
+        # Must have a signal_beacon in inventory
+        if "signal_beacon" not in char.inventory:
+            display.narrate("You don't have a Signal Beacon to place.")
+            return
+
+        # Check max_beacons is non-zero
+        if self.seed.max_beacons == 0:
+            display.narrate(f"The {self.seed_name} isn't strong enough to sustain beacons yet.")
+            return
+
+        # Check beacon capacity
+        beacons = self.state.get("beacons", {})
+        if len(beacons) >= self.seed.max_beacons:
+            display.narrate(f"The {self.seed_name} can only sustain {self.seed.max_beacons} beacon(s) at this growth stage.")
+            return
+
+        # Check zone doesn't already have a beacon
+        if zone_id in beacons:
+            display.narrate("There's already a beacon here.")
+            return
+
+        # Success
+        char.remove_from_inventory("signal_beacon")
+        self.state.setdefault("beacons", {})[zone_id] = room.id
+        display.narrate("You plant the Signal Beacon into the ground. It hums to life,")
+        display.narrate("a steady pulse of light anchoring this place in the void.")
+        display.success(f"Beacon placed at {room.name}. {self.steward_name} can now SEEK here.")
+        self._log_event("beacon_placed", comic_weight=2, zone=zone_id)
+
+    def cmd_reclaim(self, args):
+        """RECLAIM BEACON — Pick up a placed beacon, returning it to inventory."""
+        if not args:
+            display.error("Reclaim what? RECLAIM BEACON to pick up a placed beacon.")
+            return
+
+        target = " ".join(args).lower()
+        if "beacon" not in target:
+            display.error("Reclaim what? RECLAIM BEACON to pick up a placed beacon.")
+            return
+
+        phase = self.state["current_phase"]
+        if phase != "explorer":
+            self._wrong_phase_narrate("explorer", "reclaim beacons")
+            return
+
+        room = self.current_room()
+        char = self.current_character()
+        beacons = self.state.get("beacons", {})
+
+        # Must be in a room that has a beacon placed
+        if room.zone not in beacons or beacons[room.zone] != room.id:
+            display.narrate("There's no beacon here to reclaim.")
+            return
+
+        # Success
+        del self.state["beacons"][room.zone]
+        char.add_to_inventory("signal_beacon")
+        display.narrate("You pull up the Signal Beacon and stow it.")
+        display.success("Beacon reclaimed.")
+        self._log_event("beacon_reclaimed", comic_weight=1, zone=room.zone)

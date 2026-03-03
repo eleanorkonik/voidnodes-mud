@@ -112,6 +112,8 @@ COMMANDS = {
     "queue":     {"args": "optional"},
     "unqueue":   {"args": "required"},
     "upgrade":   {"args": "required"},
+    "place":     {"args": "required"},
+    "reclaim":   {"args": "required"},
 }
 
 

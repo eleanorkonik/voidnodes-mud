@@ -106,6 +106,11 @@ class WorldSeed:
         elif stage == 4:  # Sun
             self.aspects = ["Reality Plays By Its Rules Here", "Remembers a World That No Longer Exists"]
 
+    @property
+    def max_beacons(self):
+        """Max beacons allowed = growth stage (0 Baby, 1 Tendril, 2 Aura, 3 Canopy, 4 Sun)."""
+        return self.growth_stage
+
     def clear_stress_box(self):
         """Clear the most recently filled stress box. Returns True if one was cleared."""
         for i in range(len(self.stress) - 1, -1, -1):
