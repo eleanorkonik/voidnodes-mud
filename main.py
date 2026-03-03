@@ -76,7 +76,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.running = False
         self.in_combat = False
         self.combat_target = None
-        self.defending = False
+        self.defend_invoke_bonus = 0
         self.exploit_advantages = {}  # {aspect_name: count} — free +2 from EXPLOIT
         self.combat_boost = 0  # one-use +2 from ties
         self.combat_consequences_taken = 0  # for CONCEDE FP calculation

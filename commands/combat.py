@@ -44,7 +44,7 @@ class CombatMixin:
             return
 
         # Calculate bonus from pending invoke, exploit advantages, and boost
-        bonus = self._consume_invoke_bonus()
+        bonus = self._consume_invoke_bonus(skill="Fight")
         used_aspect = None
         if self.exploit_advantages:
             # Auto-consume one exploit advantage
@@ -89,12 +89,12 @@ class CombatMixin:
             display.error("You're not in combat.")
             return
 
-        self.defending = True
+        self.defend_invoke_bonus = 2  # non-invoke defend always gets full +2
         display.narrate("You brace yourself, watching for openings. (+2 defense this exchange)")
 
         # Enemy turn (with the +2 defense active)
         self._enemy_turn()
-        self.defending = False
+        self.defend_invoke_bonus = 0
 
     def cmd_exploit(self, args):
         """EXPLOIT <aspect> — Create an Advantage by exploiting an aspect.
@@ -201,18 +201,19 @@ class CombatMixin:
             # Show available aspects with used ones dimmed
             print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Invoke an Aspect ═══{display.RESET}  (1 FP — you have {char.fate_points})")
             print()
-            available = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
-            used = [(a, s) for a, s in all_aspects if a in self.scene_invoked_aspects]
+            available = [(a, s, aff) for a, s, aff in all_aspects if a not in self.scene_invoked_aspects]
+            used = [(a, s, aff) for a, s, aff in all_aspects if a in self.scene_invoked_aspects]
             if available:
                 print("  Available:")
-                for a, source in available:
-                    print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+                for a, source, aff in available:
+                    aff_hint = f" {display.DIM}{', '.join(aff)}{display.RESET}" if aff else ""
+                    print(f"    {display.aspect_text(a)}{aff_hint} {display.DIM}({source}){display.RESET}")
             else:
                 print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
             if used:
                 print()
                 print("  Already invoked:")
-                for a, source in used:
+                for a, source, aff in used:
                     print(f"    {display.DIM}\u2717 {a} ({source}){display.RESET}")
             print()
             display.info("  INVOKE <aspect> to gain +2 on your next skill check.")
@@ -222,15 +223,17 @@ class CombatMixin:
 
         raw = " ".join(args)
         found = None
-        for a, source in all_aspects:
+        found_affinity = []
+        for a, source, aff in all_aspects:
             if raw.lower() in a.lower():
                 found = a
+                found_affinity = aff
                 break
 
         if not found:
             display.error(f"No matching aspect for '{raw}'.")
             display.info("Available aspects:")
-            for a, source in all_aspects:
+            for a, source, aff in all_aspects:
                 if a not in self.scene_invoked_aspects:
                     print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
@@ -238,10 +241,10 @@ class CombatMixin:
         # Scene-used check
         if found in self.scene_invoked_aspects:
             display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
-            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+            remaining = [(a, s, aff) for a, s, aff in all_aspects if a not in self.scene_invoked_aspects]
             if remaining:
                 display.info("  Still available:")
-                for a, source in remaining:
+                for a, source, aff in remaining:
                     print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
@@ -252,6 +255,7 @@ class CombatMixin:
         self.scene_invoked_aspects.add(found)
         self.pending_invoke_bonus = 2
         self.pending_invoke_aspect = found
+        self.pending_invoke_affinity = found_affinity
         if not self.state.get("_invoke_hint"):
             self.state["_invoke_hint"] = True
 
@@ -282,15 +286,17 @@ class CombatMixin:
         # Fuzzy-match the aspect
         aspect_name = raw
         found = None
-        for a, source in all_aspects:
+        found_affinity = []
+        for a, source, aff in all_aspects:
             if aspect_name.lower() in a.lower():
                 found = a
+                found_affinity = aff
                 break
 
         if not found:
             display.error(f"No matching aspect found for '{aspect_name}'.")
             display.info("Available aspects:")
-            for a, source in all_aspects:
+            for a, source, aff in all_aspects:
                 if a not in self.scene_invoked_aspects:
                     print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
@@ -298,10 +304,10 @@ class CombatMixin:
         # Check if already invoked this scene
         if found in self.scene_invoked_aspects:
             display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
-            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+            remaining = [(a, s, aff) for a, s, aff in all_aspects if a not in self.scene_invoked_aspects]
             if remaining:
                 display.info("  Still available:")
-                for a, source in remaining:
+                for a, source, aff in remaining:
                     print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
@@ -325,9 +331,9 @@ class CombatMixin:
 
         # Branch on effect
         if effect == "ATTACK":
-            self._invoke_attack(found)
+            self._invoke_attack(found, found_affinity)
         elif effect == "DEFEND":
-            self._invoke_defend(found)
+            self._invoke_defend(found, found_affinity)
         elif effect == "SETUP":
             self._invoke_setup(found)
 
@@ -338,20 +344,21 @@ class CombatMixin:
 
         invoked = self.scene_invoked_aspects
 
-        available = [(a, s) for a, s in all_aspects if a not in invoked]
-        spent = [(a, s) for a, s in all_aspects if a in invoked]
+        available = [(a, s, aff) for a, s, aff in all_aspects if a not in invoked]
+        spent = [(a, s, aff) for a, s, aff in all_aspects if a in invoked]
 
         if available:
             print("  Available:")
-            for a, source in available:
-                print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
+            for a, source, aff in available:
+                aff_hint = f" {display.DIM}{', '.join(aff)}{display.RESET}" if aff else ""
+                print(f"    {display.aspect_text(a)}{aff_hint} {display.DIM}({source}){display.RESET}")
         else:
             print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
 
         if spent:
             print()
             print("  Already invoked:")
-            for a, source in spent:
+            for a, source, aff in spent:
                 print(f"    {display.DIM}\u2717 {a} ({source}){display.RESET}")
 
         print()
@@ -376,14 +383,14 @@ class CombatMixin:
             print(f"  {display.DIM}INVOKE <aspect>{display.RESET}")
         print()
 
-    def _invoke_attack(self, invoked_aspect):
-        """INVOKE for +2 attack — roll attack with bonus."""
+    def _invoke_attack(self, invoked_aspect, affinity=None):
+        """INVOKE for attack — roll attack with affinity-scaled bonus."""
         enemy_data = self.enemies_db.get(self.combat_target, {})
         if not enemy_data:
             return
         room = self.current_room()
 
-        bonus = 2  # invoke bonus
+        bonus = aspects.calc_invoke_bonus(affinity or [], "Fight")
         used_free = None
         if self.exploit_advantages:
             free_aspect = next(iter(self.exploit_advantages))
@@ -421,11 +428,11 @@ class CombatMixin:
         # Enemy turn
         self._enemy_turn()
 
-    def _invoke_defend(self, invoked_aspect):
-        """INVOKE for +2 defense — set defending and pass to enemy turn."""
-        self.defending = True
+    def _invoke_defend(self, invoked_aspect, affinity=None):
+        """INVOKE for defense — set defend bonus scaled by affinity."""
+        self.defend_invoke_bonus = aspects.calc_invoke_bonus(affinity or [], "Fight")
         display.narrate(f"  You brace yourself, drawing on {display.aspect_text(invoked_aspect)}.")
-        display.info(f"  (+2 defense until your next action)")
+        display.info(f"  (+{self.defend_invoke_bonus} defense until your next action)")
         self._enemy_turn()
 
     def _invoke_setup(self, invoked_aspect):
@@ -489,7 +496,7 @@ class CombatMixin:
         """Initialize combat state for a new encounter."""
         self.in_combat = True
         self.combat_target = enemy_id
-        self.defending = False
+        self.defend_invoke_bonus = 0
         self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
@@ -507,7 +514,7 @@ class CombatMixin:
         """Clean up after combat ends (victory, concede, or extraction)."""
         self.in_combat = False
         self.combat_target = None
-        self.defending = False
+        self.defend_invoke_bonus = 0
         self.exploit_advantages = {}
         self.combat_boost = 0
         self.combat_consequences_taken = 0
@@ -545,13 +552,13 @@ class CombatMixin:
                 else:
                     display.warning(f"  {enemy_data['name']} exploits your wound — {wound_text}! (+{bonus})")
         player_fight = self.explorer.get_skill("Fight")
-        defend_bonus = 2 if self.defending else 0
+        defend_bonus = self.defend_invoke_bonus
         player_defense = player_fight + defend_bonus
 
         atk_total, def_total, shifts, atk_dice, def_dice = dice.opposed_roll(enemy_fight, player_defense)
 
         print()
-        defense_label = f"Fight+2" if self.defending else "Fight"
+        defense_label = f"Fight+{defend_bonus}" if defend_bonus else "Fight"
         print(f"  {display.DIM}{enemy_data['name']} strikes back!{display.RESET}")
         print(f"  {enemy_data['name']}: {dice.roll_description(atk_dice, enemy_fight, 'Fight')}")
         print(f"  {self.explorer.name}: {dice.roll_description(def_dice, player_defense, defense_label)}")
@@ -626,7 +633,7 @@ class CombatMixin:
             display.narrate(f"  {enemy_data['name']} swings wide. You sidestep easily.")
 
         # Reset defending after enemy attack resolves
-        self.defending = False
+        self.defend_invoke_bonus = 0
 
         # Check for compel after enemy turn
         self._check_compel()
