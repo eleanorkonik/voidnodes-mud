@@ -159,15 +159,17 @@ class CombatMixin:
             self.exploit_advantages[found] = self.exploit_advantages.get(found, 0) + 2
             display.success(f"  Brilliant! You spot exactly how to use {display.aspect_text(found)}.")
             display.info(f"  (2 exploit advantages on {found} — free +2 each on your next attacks)")
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_exploit_done"] = True
+            if not self.state.get("_exploit_hint"):
+                self.state["_exploit_hint"] = True
+                display.seed_speak("That advantage is free — ATTACK to spend it, no fate point needed.")
         elif shifts >= 0:
             # Success — 1 advantage
             self.exploit_advantages[found] = self.exploit_advantages.get(found, 0) + 1
             display.success(f"  You find a way to use {display.aspect_text(found)} to your advantage.")
             display.info(f"  (Exploit advantage on {found} — free +2 on your next attack)")
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_exploit_done"] = True
+            if not self.state.get("_exploit_hint"):
+                self.state["_exploit_hint"] = True
+                display.seed_speak("That advantage is free — ATTACK to spend it, no fate point needed.")
         elif shifts == -1:
             # Tie — boost
             self.combat_boost += 2
@@ -250,8 +252,8 @@ class CombatMixin:
         self.scene_invoked_aspects.add(found)
         self.pending_invoke_bonus = 2
         self.pending_invoke_aspect = found
-        if not self.state.get("tutorial_complete"):
-            self.state["tutorial_invoke_done"] = True
+        if not self.state.get("_invoke_hint"):
+            self.state["_invoke_hint"] = True
 
         display.success(f"You invoke {display.aspect_text(found)} — +2 on your next action.")
         self._log_event("aspect_invoked", comic_weight=2,
@@ -313,8 +315,8 @@ class CombatMixin:
             return
 
         self.scene_invoked_aspects.add(found)
-        if not self.state.get("tutorial_complete"):
-            self.state["tutorial_invoke_done"] = True
+        if not self.state.get("_invoke_hint"):
+            self.state["_invoke_hint"] = True
 
         display.success(f"You invoke {display.aspect_text(found)} — {aspects.COMBAT_EFFECTS[effect]['desc']}!")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
@@ -596,8 +598,8 @@ class CombatMixin:
                         entry["greyed"] = True
                 self._seed_extraction()
                 return
-            if took_consequence and not self.state.get("tutorial_consequence_done"):
-                self.state["tutorial_consequence_done"] = True
+            if took_consequence and not self.state.get("_consequence_hint"):
+                self.state["_consequence_hint"] = True
                 print()
                 display.seed_speak("That's a consequence — a wound that lasts beyond this fight.")
                 display.seed_speak("Stress clears when combat ends, but consequences stay.")
@@ -609,8 +611,8 @@ class CombatMixin:
             # Show current stress
             stress_str = "".join("[X]" if s else "[ ]" for s in self.explorer.stress)
             display.info(f"  Stress: {stress_str}")
-            if not self.state.get("tutorial_stress_done"):
-                self.state["tutorial_stress_done"] = True
+            if not self.state.get("_stress_hint"):
+                self.state["_stress_hint"] = True
                 print()
                 display.seed_speak("You've been hit. Those boxes are stress — they absorb damage.")
                 display.seed_speak("A 1-shift hit fills the first box, 2-shift the second, etc.")
@@ -792,8 +794,12 @@ class CombatMixin:
                             target=enemy_data.get("name", enemy_id),
                             target_id=enemy_id,
                             loot=dropped)
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_combat_done"] = True
+            if not self.state.get("_first_victory_hint"):
+                self.state["_first_victory_hint"] = True
+                print()
+                display.seed_speak("Well fought. That fate point you earned? Spend it to")
+                display.seed_speak("INVOKE an aspect — yours, the enemy's, the zone's.")
+                display.seed_speak("That's your real edge.")
             return True
 
         enemy_data["stress"] = enemy_stress

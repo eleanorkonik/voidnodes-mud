@@ -77,12 +77,14 @@ class ItemsMixin:
                 display.success(f"You pick up the {art.get('name', art_id)}.")
                 self._log_event("artifact_found", comic_weight=5,
                                 artifact_id=art_id, artifact_name=art.get("name", art_id))
-                if not self.state.get("tutorial_complete"):
-                    self.state["tutorial_artifact_found"] = True
+                if not self.state.get("_artifact_found_hint"):
+                    self.state["_artifact_found_hint"] = True
+                    print()
+                    display.seed_speak("An artifact! You can KEEP it for the stat bonus,")
+                    display.seed_speak("or FEED it to me — I'll convert it into motes.")
                 # Mark quest complete when the verdant_wreck zone artifact is found
                 vw_artifact = self.state.get("zone_artifacts", {}).get("verdant_wreck")
                 if art_id == vw_artifact:
-                    self.state["tutorial_quest_done"] = True
                     quest = self.state.get("quests", {}).get("verdant_bloom", {})
                     if quest.get("status") == "active":
                         quest["status"] = "complete"
@@ -116,9 +118,9 @@ class ItemsMixin:
                             item_id=item_id, item_name=take_name)
             # Tutorial nudge: first time picking up remnants with tools
             if item.get("type") == "remnants" and "basic_tools" in char.inventory:
-                if not self.state.get("tutorial_process_shown"):
+                if not self.state.get("_process_hint"):
                     display.seed_speak("You have tools — you can PROCESS remnants for materials.")
-                    self.state["tutorial_process_shown"] = True
+                    self.state["_process_hint"] = True
             return
 
         display.narrate(f"There's nothing called '{target}' here to take.")
@@ -246,8 +248,6 @@ class ItemsMixin:
             display.success(f"You set down the {art['name']}.")
             if room.zone == "skerry":
                 display.narrate("It'll be safe here until you decide what to do with it.")
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_artifact_resolved"] = True
             return
 
         display.error(f"You don't have anything called '{target}'.")
@@ -501,8 +501,6 @@ class ItemsMixin:
             self.state.setdefault("artifacts_status", {})[art_id] = "fed"
             self._on_artifact_resolved(art_id)
             self._move_artifact(art_id, None, None)
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_artifact_resolved"] = True
 
             if art.get("feed_effect"):
                 display.narrate(self.sub(art["feed_effect"]))
@@ -566,8 +564,6 @@ class ItemsMixin:
             char.remove_from_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "given"
             self._on_artifact_resolved(art_id)
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_artifact_resolved"] = True
             display.success(f"You give the {art['name']} to {npc_data['name']}.")
             return
 
@@ -616,8 +612,6 @@ class ItemsMixin:
             target_char.add_to_inventory(art_id)
             self.state.setdefault("artifacts_status", {})[art_id] = "given"
             self._on_artifact_resolved(art_id)
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_artifact_resolved"] = True
             display.success(f"You give the {art['name']} to {agent_data['name']}.")
             return
 

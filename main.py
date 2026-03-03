@@ -727,35 +727,6 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                 else:
                     display.seed_speak("Not yet. Get to know this place first.")
                     return
-            elif phase == "explorer" and step != "explorer_handoff":
-                steward_name = self.steward_name
-                display.narrate(f"{self.seed_name} refuses to turn its attention away. There's more")
-                display.narrate(f"you need to learn before it's comfortable focusing on {steward_name} again.")
-                print()
-                tutorial.get_current_hint(step, self.state)
-                return
-            elif phase == "explorer" and step == "explorer_handoff":
-                # Don't let explorer hand off until junkyard has enough to build something
-                junkyard = self.rooms.get("skerry_junkyard")
-                if junkyard and self.skerry.expandable:
-                    junk_counts = {}
-                    for item_id in junkyard.items:
-                        junk_counts[item_id] = junk_counts.get(item_id, 0) + 1
-                    # Also count steward inventory (materials may already be picked up)
-                    for item_id in self.steward.inventory:
-                        junk_counts[item_id] = junk_counts.get(item_id, 0) + 1
-                    npc_count = len(self.state.get("recruited_npcs", []))
-                    can_build_any = any(
-                        self.skerry.can_build(tmpl, junk_counts, npc_count, self.seed.growth_stage)[0]
-                        for tmpl in self.skerry.expandable
-                    )
-                    if not can_build_any:
-                        steward_name = self.steward_name
-                        display.seed_speak(f"{steward_name} won't have enough to work with.")
-                        display.seed_speak("Gather more salvage before heading back.")
-                        display.info("  SEEK to cross into the void and find more materials.")
-                        return
-
         # Validate: not switching to current
         if (phase == "explorer" and target_role == "explorer") or \
            (phase == "steward" and target_role == "steward"):
@@ -816,6 +787,12 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             display.display_status(self.steward, "steward", char_key="steward",
                                    consequence_meta=self.state.get("consequence_meta", {}))
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
+
+            if not self.state.get("_first_steward_hint"):
+                self.state["_first_steward_hint"] = True
+                print()
+                display.seed_speak("While you're here — CHECK SKERRY to see what needs doing.")
+                display.seed_speak("BUILD things, ASSIGN workers, keep this place running.")
 
         else:
             # Steward → Explorer (same day — day ticks when explorer returns)

@@ -92,8 +92,6 @@ class ArtifactsMixin:
                     self._move_artifact(art_id, "inventory", char_role)
                 self.state.setdefault("artifacts_status", {})[art_id] = "kept"
                 self._on_artifact_resolved(art_id)
-                if not self.state.get("tutorial_complete"):
-                    self.state["tutorial_artifact_resolved"] = True
 
                 display.success(f"You keep the {art['name']}.")
                 self._log_event("artifact_kept", comic_weight=5,

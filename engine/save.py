@@ -119,18 +119,7 @@ def _migrate_state(state):
         if char_key in state:
             state[char_key].setdefault("worn", {})
             state[char_key].setdefault("slot_capacity", {"large": 1, "medium": 2, "small": 20})
-    # Tutorial state fields
-    state.setdefault("tutorial_combat_done", False)
-    state.setdefault("tutorial_invoke_done", False)
-    state.setdefault("tutorial_scavenge_done", False)
-    state.setdefault("tutorial_artifact_found", False)
-    state.setdefault("tutorial_artifact_resolved", False)
-    state.setdefault("tutorial_recruit_done", False)
-    state.setdefault("tutorial_exploit_done", False)
-    state.setdefault("tutorial_quest_done", False)
-    state.setdefault("tutorial_settle_done", False)
-    state.setdefault("tutorial_stress_done", False)
-    state.setdefault("tutorial_consequence_done", False)
+    # Legacy tutorial flags (no longer written; kept for old save compat)
     state.setdefault("quests", {})
     # Healing system fields
     state.setdefault("zones_cleared", 0)

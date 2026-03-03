@@ -160,7 +160,6 @@ class SkerryMgmtMixin:
             self._log_event("npc_settled", comic_weight=3,
                             npc_name=npc["name"], npc_id=npc_id,
                             room=target_room.name, task=master_task)
-            self.state["tutorial_settle_done"] = True
             return
 
         # SETTLE <npc> — original behavior, settle on skerry without room housing
@@ -178,7 +177,6 @@ class SkerryMgmtMixin:
         self._log_event("npc_settled", comic_weight=3,
                         npc_name=npc["name"], npc_id=npc_id,
                         room="skerry_central")
-        self.state["tutorial_settle_done"] = True
 
     def cmd_assign(self, args):
         if self.state["current_phase"] == "explorer":

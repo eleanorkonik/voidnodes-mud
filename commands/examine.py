@@ -794,8 +794,6 @@ class ExamineMixin:
                             item_found=found,
                             item_name=specimen_info["name"] if specimen_info else item_info.get("name", found),
                             zone=zone_id)
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_scavenge_done"] = True
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
 

@@ -617,8 +617,8 @@ class NpcsMixin:
             return
 
         self.scene_invoked_aspects.add(found)
-        if not self.state.get("tutorial_complete"):
-            self.state["tutorial_invoke_done"] = True
+        if not self.state.get("_invoke_hint"):
+            self.state["_invoke_hint"] = True
 
         source_type = "seed" if found_source == self.seed_name else None
         flavor = aspects.get_recruit_invoke_flavor(found, found_source, npc_name, source_type=source_type)
@@ -738,8 +738,10 @@ class NpcsMixin:
                             flawless=flawless,
                             variant=seed_hex.lower())
 
-            if not self.state.get("tutorial_complete"):
-                self.state["tutorial_recruit_done"] = True
+            if not self.state.get("_recruit_settle_hint"):
+                self.state["_recruit_settle_hint"] = True
+                print()
+                display.seed_speak("Good — now SETTLE them at a building to put them to work.")
         else:
             npc["recruit_attempts"] = npc.get("recruit_attempts", 0) + 1
             display.narrate(self._sub_dialogue(npc["dialogue"].get("recruit_fail", f"{npc_name} isn't convinced yet.")))
