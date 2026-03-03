@@ -726,7 +726,7 @@ class ItemsMixin:
         self._overflow_confirmed = None
 
         char.spend_fate_point()
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill=skill_name)
         skill_val = char.get_skill(skill_name) + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, dc)
 
@@ -788,7 +788,7 @@ class ItemsMixin:
         process_verb = remnant_data.get("process_verb", "process")
 
         # Craft skill check + invoke bonus + workshop bonus
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill="Crafts")
         skill_val = char.get_skill("Crafts") + invoke_bonus
         workshop_bonus = 0
         if room and room.id == "skerry_workshop":

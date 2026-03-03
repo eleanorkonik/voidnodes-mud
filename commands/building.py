@@ -61,7 +61,7 @@ class BuildingMixin:
         # Skill check
         skill_name = recipe.get("skill", "Crafts")
         dc = recipe["difficulty"]
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill=skill_name)
         skill_val = char.get_skill(skill_name) + invoke_bonus
         # Workshop bonus when crafting in the workshop
         workshop_bonus = 0
@@ -625,7 +625,7 @@ class BuildingMixin:
         # Skill check
         skill_name = tier["skill"]
         dc = tier["dc"]
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill=skill_name)
         skill_val = char.get_skill(skill_name) + invoke_bonus
         label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
         total, shifts, dice_result = dice.skill_check(skill_val, dc)

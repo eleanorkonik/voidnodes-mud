@@ -499,7 +499,7 @@ class MovementMixin:
 
             # Aggressive enemy — initiative roll: enemy Notice vs player Notice
             enemy_notice = enemy_data["skills"].get("Notice", 0)
-            invoke_bonus = self._consume_invoke_bonus()
+            invoke_bonus = self._consume_invoke_bonus(skill="Notice")
             player_notice = self.explorer.get_skill("Notice") + invoke_bonus
             atk_total, def_total, shifts, _, _ = dice.opposed_roll(enemy_notice, player_notice)
 

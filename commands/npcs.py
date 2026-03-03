@@ -427,7 +427,7 @@ class NpcsMixin:
             display.info(f"  Spent 1 fate point to retry. (Fate Points remaining: {char.fate_points})")
 
         # FATE roll — sets puzzle difficulty
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill="Rapport")
         rapport_val = char.get_skill("Rapport") + invoke_bonus
         rapport_label = f"Rapport+{invoke_bonus}" if invoke_bonus else "Rapport"
         total, shifts, dice_result = dice.skill_check(rapport_val, dc)
@@ -583,16 +583,18 @@ class NpcsMixin:
         # Fuzzy-match the aspect
         found = None
         found_source = None
-        for a, source in all_aspects:
+        found_affinity = []
+        for a, source, aff in all_aspects:
             if query.lower() in a.lower():
                 found = a
                 found_source = source
+                found_affinity = aff
                 break
 
         if not found:
             display.error(f"No matching aspect for '{query}'.")
             display.info("  Available aspects:")
-            for a, source in all_aspects:
+            for a, source, aff in all_aspects:
                 if a not in self.scene_invoked_aspects:
                     print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
@@ -600,10 +602,10 @@ class NpcsMixin:
         # Check if already invoked this scene
         if found in self.scene_invoked_aspects:
             display.error(f"You've already invoked {display.aspect_text(found)} this scene.")
-            remaining = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
+            remaining = [(a, s, aff) for a, s, aff in all_aspects if a not in self.scene_invoked_aspects]
             if remaining:
                 display.info("  Still available:")
-                for a, source in remaining:
+                for a, source, aff in remaining:
                     print(f"    {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
             return
 
@@ -625,17 +627,22 @@ class NpcsMixin:
         display.narrate(f"  {flavor}")
         display.info(f"  (Fate Points remaining: {char.fate_points})")
 
+        # Calculate affinity bonus for scaling effects
+        bonus = aspects.calc_invoke_bonus(found_affinity, "Rapport")
+
         # Branch on effect
         if effect == "PUSH":
             old_threshold = state["threshold"]
             total_tiles = state["grid_size"] ** 2
             floor = int(total_tiles * 0.4)
-            state["threshold"] = max(floor, old_threshold - 4)
+            push_amount = 4 if bonus == 2 else 3
+            state["threshold"] = max(floor, old_threshold - push_amount)
             display.info(f"  Threshold: {old_threshold} → {state['threshold']}")
         elif effect == "COUNTER":
             recruit.reset_lowest_counter(state)
         elif effect == "RESTORE":
-            recruit.restore_tiles(state, count=3)
+            restore_count = 3 if bonus == 2 else 2
+            recruit.restore_tiles(state, count=restore_count)
 
         # Check if threshold now crossed
         if state["score"] >= state["threshold"] and not state.get("threshold_reached"):
@@ -899,7 +906,7 @@ class NpcsMixin:
 
         # Roll Lore check
         print()
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill="Lore")
         effective_lore = treater_lore + invoke_bonus
 
         # Apothecary room bonus

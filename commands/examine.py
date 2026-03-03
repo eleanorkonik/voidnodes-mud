@@ -743,7 +743,7 @@ class ExamineMixin:
         difficulty = 1 + times_searched
 
         char = self.current_character()
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill="Investigate")
         skill_val = char.get_skill("Investigate") + invoke_bonus
         total, shifts, dice_result = dice.skill_check(skill_val, difficulty)
 
@@ -814,7 +814,7 @@ class ExamineMixin:
             return
 
         char = self.current_character()
-        invoke_bonus = self._consume_invoke_bonus()
+        invoke_bonus = self._consume_invoke_bonus(skill="Notice")
         notice_val = char.get_skill("Notice") + invoke_bonus
         label = f"Notice+{invoke_bonus}" if invoke_bonus else "Notice"
 
@@ -922,21 +922,21 @@ class ExamineMixin:
         context = "combat" if self.in_combat else "recruit" if self.in_recruit else "combat"
         all_aspects = aspects.collect_invokable_aspects(self, context=context)
 
-        available = [(a, s) for a, s in all_aspects if a not in self.scene_invoked_aspects]
-        used = [(a, s) for a, s in all_aspects if a in self.scene_invoked_aspects]
+        available = [(a, s, aff) for a, s, aff in all_aspects if a not in self.scene_invoked_aspects]
+        used = [(a, s, aff) for a, s, aff in all_aspects if a in self.scene_invoked_aspects]
 
         print(f"\n{display.BOLD}{display.BRIGHT_CYAN}═══ Aspects ═══{display.RESET}  (FP: {char.fate_points})")
         print()
 
         if available:
-            for a, source in available:
+            for a, source, aff in available:
                 print(f"  {display.aspect_text(a)} {display.DIM}({source}){display.RESET}")
         else:
             print(f"  {display.DIM}No aspects remaining to invoke.{display.RESET}")
 
         if used:
             print()
-            for a, source in used:
+            for a, source, aff in used:
                 print(f"  {display.DIM}\u2717 {a} ({source}) (used){display.RESET}")
 
         print()

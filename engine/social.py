@@ -157,7 +157,7 @@ def resolve_simple(game, enc, npc_id, npc):
     skill_name = enc["skill"]
     dc = enc.get("dc", 2)
 
-    invoke_bonus = game._consume_invoke_bonus()
+    invoke_bonus = game._consume_invoke_bonus(skill=skill_name)
     skill_val = char.get_skill(skill_name) + invoke_bonus
     skill_label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
 
@@ -205,7 +205,7 @@ def resolve_challenge_step(game, enc_state, action):
     skill_name = step["skill"]
     dc = step.get("dc", 2)
 
-    invoke_bonus = game._consume_invoke_bonus()
+    invoke_bonus = game._consume_invoke_bonus(skill=skill_name)
     skill_val = char.get_skill(skill_name) + invoke_bonus
     skill_label = f"{skill_name}+{invoke_bonus}" if invoke_bonus else skill_name
 
@@ -276,7 +276,7 @@ def resolve_contest_round(game, enc_state, tactic_id):
 
     # Player roll
     skill_name = tactic["skill"]
-    invoke_bonus = game._consume_invoke_bonus()
+    invoke_bonus = game._consume_invoke_bonus(skill=skill_name)
     skill_val = char.get_skill(skill_name) + invoke_bonus - stale_penalty
     skill_label = skill_name
     if invoke_bonus and stale_penalty:
