@@ -45,7 +45,7 @@ Original roadmap. Order matters — later features build on earlier ones.
 1. [x] Inventory Slots
 2. [x] Social Encounters (GREET)
 3. [ ] **Aspect Affinities** — `aspect-affinities.md`. Aspects declare skill alignments, matching invoke = +3.
-4. [ ] **Just-in-Time Hints** — `just-in-time-hints.md`. Kill tutorial state machine, move hints to command handlers.
+4. [x] **Just-in-Time Hints** — `just-in-time-hints.md`. Kill tutorial state machine, move hints to command handlers.
 5. [ ] **Three New Zones** — `three-new-zones.md`. Silk Hollows, Driftpost Station, Dragon's Maw. Sub-plans: `zone-vegetarian-spiders.md`, `zone-ranchers-daughter.md`, `zone-dragon-boss.md`
 6. [ ] **Beacons for Miria** — `beacons.md`, `beacons-miria-seek.md`. Craftable beacons in cleared zones, Miria can SEEK to them.
 
