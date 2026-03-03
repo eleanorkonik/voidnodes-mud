@@ -91,6 +91,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
         self.social_encounter_state = None
         self.pending_invoke_bonus = 0  # floating +2 from invoke, consumed by next roll
         self.pending_invoke_aspect = None
+        self.pending_invoke_affinity = []
 
     @property
     def seed_name(self):
@@ -518,14 +519,17 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             "recovery": 0,
         }
 
-    def _consume_invoke_bonus(self):
+    def _consume_invoke_bonus(self, skill=None):
         """Consume any pending invoke bonus. Returns the bonus value (0 if none)."""
-        bonus = self.pending_invoke_bonus
-        if bonus > 0:
+        if self.pending_invoke_bonus > 0:
+            affinity = self.pending_invoke_affinity
+            bonus = aspects.calc_invoke_bonus(affinity, skill) if skill else 2
             display.info(f"  (Invoking {display.aspect_text(self.pending_invoke_aspect)} — +{bonus})")
             self.pending_invoke_bonus = 0
             self.pending_invoke_aspect = None
-        return bonus
+            self.pending_invoke_affinity = []
+            return bonus
+        return 0
 
     def _sub_dialogue(self, text):
         """Substitute template variables in NPC dialogue strings."""

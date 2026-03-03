@@ -10,16 +10,44 @@ import random
 from engine import display
 
 
+# ── Aspect normalization & affinity ──────────────────────────────────
+
+
+def normalize_aspect(raw):
+    """Normalize an aspect entry to (text, affinity_list).
+
+    Aspects can be a bare string (universal) or a dict with affinity:
+      "Battle-Scarred Veteran"  →  ("Battle-Scarred Veteran", [])
+      {"text": "Battle-Scarred Veteran", "affinity": ["Fight", "Physique"]}
+        →  ("Battle-Scarred Veteran", ["Fight", "Physique"])
+    """
+    if isinstance(raw, dict):
+        return raw.get("text", ""), raw.get("affinity", [])
+    return str(raw), []
+
+
+def calc_invoke_bonus(affinity, skill):
+    """Calculate invoke bonus based on aspect affinity and skill being checked.
+
+    - Universal aspect (empty affinity): +2
+    - Matching affinity (skill in list): +2
+    - Non-matching affinity: +1
+    """
+    if not affinity:
+        return 2  # universal
+    return 2 if skill in affinity else 1
+
+
 # ── Effect constants ─────────────────────────────────────────────────
 
 COMBAT_EFFECTS = {
     "ATTACK": {
-        "label": "+2 Attack",
-        "desc": "+2 attack",
+        "label": "Attack",
+        "desc": "attack",
     },
     "DEFEND": {
-        "label": "+2 Defense",
-        "desc": "+2 defense",
+        "label": "Defense",
+        "desc": "defense",
     },
     "SETUP": {
         "label": "Exploit Advantage",
@@ -90,14 +118,20 @@ def get_recruit_invoke_flavor(aspect, source, npc_name, source_type=None):
 
 
 def _flatten_npc_aspects(npc_data):
-    """Flatten an NPC's aspect dict {high_concept, trouble, other} into a list."""
+    """Flatten an NPC's aspect dict {high_concept, trouble, other} into a raw list.
+
+    Returns raw values which may be strings or affinity dicts — callers should
+    use normalize_aspect() to extract text and affinity.
+    """
     aspects_field = npc_data.get("aspects", [])
     if isinstance(aspects_field, dict):
         flat = []
-        if aspects_field.get("high_concept"):
-            flat.append(aspects_field["high_concept"])
-        if aspects_field.get("trouble"):
-            flat.append(aspects_field["trouble"])
+        hc = aspects_field.get("high_concept")
+        if hc:
+            flat.append(hc)
+        trouble = aspects_field.get("trouble")
+        if trouble:
+            flat.append(trouble)
         flat.extend(aspects_field.get("other", []))
         return flat
     # Already a list (shouldn't happen with current data, but safe)
@@ -105,32 +139,35 @@ def _flatten_npc_aspects(npc_data):
 
 
 def collect_invokable_aspects(game, context="combat"):
-    """Gather all invokable aspects with source labels.
+    """Gather all invokable aspects with source labels and affinity.
 
     Args:
         game: Game instance
         context: "combat" or "recruit"
 
     Returns:
-        List of (aspect_text, source_label) tuples.
+        List of (aspect_text, source_label, affinity_list) tuples.
     """
     aspects = []
     char = game.current_character()
 
     # Character aspects (high_concept, trouble, other, consequences)
     for a in char.get_all_aspects():
-        aspects.append((a, "yours"))
+        text, aff = normalize_aspect(a)
+        aspects.append((text, "yours", aff))
 
     # Room aspects
     room = game.current_room()
     if room:
         for a in room.aspects:
-            aspects.append((a, "room"))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, "room", aff))
 
         # Zone aspect
         zone_aspect = game._get_zone_aspect(room)
         if zone_aspect:
-            aspects.append((zone_aspect, "zone"))
+            text, aff = normalize_aspect(zone_aspect)
+            aspects.append((text, "zone", aff))
 
     # Context-specific sources
     if context == "combat":
@@ -138,7 +175,8 @@ def collect_invokable_aspects(game, context="combat"):
         if game.combat_target:
             enemy = game.enemies_db.get(game.combat_target, {})
             for a in enemy.get("aspects", []):
-                aspects.append((a, "enemy"))
+                text, aff = normalize_aspect(a)
+                aspects.append((text, "enemy", aff))
 
         # Following NPC aspects (recruited NPCs at same location)
         explorer_loc = game.state.get("explorer_location")
@@ -146,14 +184,16 @@ def collect_invokable_aspects(game, context="combat"):
             npc = game.npcs_db.get(npc_id, {})
             if npc.get("following") and npc.get("location") == explorer_loc:
                 for a in _flatten_npc_aspects(npc):
-                    aspects.append((a, npc.get("name", npc_id)))
+                    text, aff = normalize_aspect(a)
+                    aspects.append((text, npc.get("name", npc_id), aff))
 
     elif context == "recruit":
         # NPC target aspects
         if game.recruit_state:
             npc_data = game.recruit_state.get("npc_data", {})
             for a in _flatten_npc_aspects(npc_data):
-                aspects.append((a, npc_data.get("name", "NPC")))
+                text, aff = normalize_aspect(a)
+                aspects.append((text, npc_data.get("name", "NPC"), aff))
 
     elif context == "social":
         # Social encounter — NPC aspects from encounter state
@@ -161,25 +201,29 @@ def collect_invokable_aspects(game, context="combat"):
             npc_id = game.social_encounter_state.get("npc_id")
             npc_data = game.npcs_db.get(npc_id, {})
             for a in _flatten_npc_aspects(npc_data):
-                aspects.append((a, npc_data.get("name", npc_id)))
+                text, aff = normalize_aspect(a)
+                aspects.append((text, npc_data.get("name", npc_id), aff))
 
     # World seed aspects — only invokable in its room
     if game.seed and room and room.id == "skerry_hollow":
         for a in game.seed.aspects:
-            aspects.append((a, game.seed_name))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, game.seed_name, aff))
 
     # Inventory item aspects
     for item_id in char.inventory:
         item = game.items_db.get(item_id, {})
         for a in item.get("aspects", []):
-            aspects.append((a, item.get("name", item_id)))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, item.get("name", item_id), aff))
 
     # Kept artifact aspects
     kept = game.state.get("kept_artifact")
     if kept:
         artifact = game.artifacts_db.get(kept, {})
         for a in artifact.get("aspects", []):
-            aspects.append((a, artifact.get("name", kept)))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, artifact.get("name", kept), aff))
 
     return aspects
 
@@ -532,37 +576,45 @@ def get_treatment_aspects(game):
     - World seed aspects
     - Inventory item aspects
     - Kept artifact aspects
+
+    Returns:
+        List of (aspect_text, source_label, affinity_list) tuples.
     """
     aspects = []
     char = game.current_character()
 
     # Treater's character aspects
     for a in char.get_all_aspects():
-        aspects.append((a, "yours"))
+        text, aff = normalize_aspect(a)
+        aspects.append((text, "yours", aff))
 
     # Room aspects
     room = game.current_room()
     if room:
         for a in room.aspects:
-            aspects.append((a, "room"))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, "room", aff))
 
     # World seed aspects — only invokable in its room
     if game.seed and room and room.id == "skerry_hollow":
         for a in game.seed.aspects:
-            aspects.append((a, game.seed_name))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, game.seed_name, aff))
 
     # Inventory item aspects
     for item_id in char.inventory:
         item = game.items_db.get(item_id, {})
         for a in item.get("aspects", []):
-            aspects.append((a, item.get("name", item_id)))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, item.get("name", item_id), aff))
 
     # Kept artifact aspects
     kept = game.state.get("kept_artifact")
     if kept:
         artifact = game.artifacts_db.get(kept, {})
         for a in artifact.get("aspects", []):
-            aspects.append((a, artifact.get("name", kept)))
+            text, aff = normalize_aspect(a)
+            aspects.append((text, artifact.get("name", kept), aff))
 
     return aspects
 
