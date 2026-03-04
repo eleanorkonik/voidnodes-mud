@@ -77,6 +77,47 @@ class ItemsMixin:
                 display.info("  Try picking them up individually to push through.")
             return
 
+        # GET ALL <keyword> — grab matching items/specimens by name substring
+        if target.startswith("all "):
+            keyword = target[4:]
+            if not room.items:
+                display.narrate("There's nothing here to pick up.")
+                return
+            char = self.current_character()
+            picked = []
+            skipped = []
+            for item_id in list(room.items):
+                bid = masterwork.base_id(item_id)
+                is_fixture = self.items_db.get(bid, {}).get("type") == "fixture"
+                is_takeable = bid in self.items_db or item_id in self.specimens_db
+                if not is_takeable or is_fixture:
+                    continue
+                # Check name match against keyword
+                spec = self.specimens_db.get(item_id)
+                if spec:
+                    name = spec["name"].lower()
+                else:
+                    name = masterwork.get_display_name(item_id, self.items_db).lower()
+                if keyword not in name:
+                    continue
+                if self._can_take_item(char, item_id, allow_overflow=False):
+                    room.remove_item(item_id)
+                    char.add_to_inventory(item_id)
+                    picked.append(item_id)
+                else:
+                    skipped.append(item_id)
+            if not picked:
+                if skipped:
+                    display.narrate("Your inventory is too full to carry anything else.")
+                else:
+                    display.narrate(f"There's nothing called '{keyword}' here to take.")
+                return
+            _display_item_counts(picked, self.items_db, specimens_db=self.specimens_db, style=display.success)
+            if skipped:
+                display.info(f"  Left behind {len(skipped)} item{'s' if len(skipped) != 1 else ''} (no room).")
+                display.info("  Try picking them up individually to push through.")
+            return
+
         # Check artifacts at this location
         for art_id, art in self._artifacts_in_room(room.id):
             if target in art.get("name", "").lower() or target == art_id:
