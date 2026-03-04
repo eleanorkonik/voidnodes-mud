@@ -88,11 +88,11 @@
             "id": "improve_tools",
             "name": "Improve Tools",
             "order": 2,
-            "condition": "tools_not_maxed",
+            "condition": "tools_not_maxed_and_queue_empty",
             "skill": "Crafts",
             "dc": 2,
             "handler": "improve_tools",
-            "description": "Upgrade the workshop's tool level (cap 3)."
+            "description": "Upgrade the workshop's tool level (cap 3). Only runs when the craft queue is empty."
         }
     ],
     "gather": [

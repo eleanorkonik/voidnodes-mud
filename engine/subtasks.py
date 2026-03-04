@@ -112,6 +112,14 @@ def _tools_not_maxed(game, room, npc):
     return room.tool_level < 3
 
 
+def _tools_not_maxed_and_queue_empty(game, room, npc):
+    """Only improve tools when tool level < 3 AND the workshop queue is empty."""
+    if room.tool_level >= 3:
+        return False
+    queue = game.state.get("workshop_queue", [])
+    return len(queue) == 0
+
+
 def _has_delivery_targets(game, room, npc):
     """At least one delivery target room exists on the skerry."""
     for r in game.skerry.get_all_rooms():
@@ -156,6 +164,7 @@ CONDITIONS = {
     "room_has_items": _room_has_items,
     "room_has_materials": _room_has_materials,
     "tools_not_maxed": _tools_not_maxed,
+    "tools_not_maxed_and_queue_empty": _tools_not_maxed_and_queue_empty,
     "has_perishable_food": _has_perishable_food,
     "has_delivery_targets": _has_delivery_targets,
     "has_wounded": _has_wounded,
