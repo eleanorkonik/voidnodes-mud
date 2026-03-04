@@ -284,6 +284,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                     "assignment": "explorer",
                     "mood": "content",
                     "house_level": 0,
+                    "settled_room": "skerry_shelter",
                     "dialogue": {
                         "greeting": "A scarred man stands at the edge, staring into the void. He glances your way. 'You're the one the seed chose. Ready when you are.'",
                         "idle": f"'Whenever {self.seed_name} shifts focus to me, I'll head out.'",
