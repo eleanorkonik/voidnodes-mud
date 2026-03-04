@@ -21,7 +21,7 @@ FEELINGS = {
     1: [  # Tendril — sensations
         "You feel {seed_name} reaching, stretching, testing the edges of the skerry.",
         "A vibration through your feet — {seed_name} is excited.",
-        "{seed_name} tugs gently at your awareness, wanting attention.",
+        "{seed_name} tugs gently at your awareness. Maybe CHECK on it.",
         "The ground feels warmer where {seed_name}'s roots spread.",
         "A faint hum rises from {seed_name}'s hollow, almost musical.",
     ],
