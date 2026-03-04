@@ -138,6 +138,13 @@ class ItemsMixin:
                     self.state["_process_hint"] = True
             return
 
+        # Check room features (non-pickupable interactable objects)
+        for feature in room.features:
+            keywords = feature.get("keywords", [])
+            if target in feature.get("name", "").lower() or target in keywords:
+                display.narrate(f"The {feature['name']} is part of the room. Try PROBE to examine it.")
+                return
+
         # Check if the player already has it
         char = self.current_character()
         _, held_item = self._find_entity(char.inventory, target, self.items_db)
