@@ -190,6 +190,7 @@ class ItemsMixin:
                 room.add_item(item_id)
                 # Track artifact status if dropping an artifact
                 if item_id in self.artifacts_db:
+                    self._move_artifact(item_id, "room", room.id)
                     self.state.setdefault("artifacts_status", {})[item_id] = "stored"
                     self._on_artifact_resolved(item_id)
                 dropped.append(item_id)
@@ -227,6 +228,7 @@ class ItemsMixin:
         if art:
             char.remove_from_inventory(art_id)
             room.add_item(art_id)
+            self._move_artifact(art_id, "room", room.id)
             self.state.setdefault("artifacts_status", {})[art_id] = "stored"
             self._on_artifact_resolved(art_id)
             display.success(f"You set down the {art['name']}.")
