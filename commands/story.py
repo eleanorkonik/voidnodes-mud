@@ -343,6 +343,8 @@ class StoryMixin:
                     self._log_event("npc_departed", comic_weight=4,
                                     npc_name=npc["name"], npc_id=nid,
                                     cause="starvation")
+                    # Remove from their current room
+                    self._relocate_npc(nid, npc, None)
                     npc["recruited"] = False
                     npc["assignment"] = "idle"
                     npc["settled_room"] = None
@@ -364,12 +366,12 @@ class StoryMixin:
                 if required_structure:
                     for r in self.skerry.get_all_rooms():
                         if required_structure in r.structures:
-                            npc["location"] = r.id
+                            self._relocate_npc(npc_id, npc, r.id)
                             break
             elif npc.get("settled_room"):
-                npc["location"] = npc["settled_room"]
+                self._relocate_npc(npc_id, npc, npc["settled_room"])
             else:
-                npc["location"] = "skerry_central"
+                self._relocate_npc(npc_id, npc, "skerry_central")
 
         self._log_event("day_transition", comic_weight=1,
                         day_number=day,

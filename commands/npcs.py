@@ -783,10 +783,7 @@ class NpcsMixin:
             npc = self.npcs_db.get(npc_id, {})
             if npc.get("following"):
                 npc["following"] = False
-                npc["location"] = "skerry_central"
-                skerry_central = self.rooms.get("skerry_central")
-                if skerry_central and npc_id not in skerry_central.npcs:
-                    skerry_central.add_npc(npc_id)
+                self._relocate_npc(npc_id, npc, "skerry_central")
 
     def _followers_rejoin_explorer(self):
         """Followers leave the skerry and rejoin the explorer.
@@ -803,11 +800,7 @@ class NpcsMixin:
             if npc.get("assignment", "idle") != "idle":
                 continue
             npc["following"] = True
-            npc["location"] = explorer_loc
-            # Remove from skerry room
-            skerry_central = self.rooms.get("skerry_central")
-            if skerry_central and npc_id in skerry_central.npcs:
-                skerry_central.remove_npc(npc_id)
+            self._relocate_npc(npc_id, npc, explorer_loc)
 
     # ── Healing / Treatment ──────────────────────────────────────
 

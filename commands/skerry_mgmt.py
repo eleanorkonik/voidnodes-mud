@@ -50,14 +50,28 @@ class SkerryMgmtMixin:
         """Map a room role to the corresponding NPC task name."""
         return self._ROLE_TO_TASK.get(role, role)
 
-    def _move_npc_to_task_room(self, npc, task):
+    def _relocate_npc(self, npc_id, npc, new_room_id):
+        """Move an NPC from their current room to a new room.
+
+        Updates npc["location"], removes from old room.npcs, adds to new room.npcs.
+        """
+        old_room_id = npc.get("location")
+        if old_room_id and old_room_id in self.rooms:
+            old_room = self.rooms[old_room_id]
+            old_room.remove_npc(npc_id)
+        npc["location"] = new_room_id
+        if new_room_id and new_room_id in self.rooms:
+            new_room = self.rooms[new_room_id]
+            new_room.add_npc(npc_id)
+
+    def _move_npc_to_task_room(self, npc_id, npc, task):
         """Move an NPC to the room that matches their assigned task."""
         required_structure = self._TASK_REQUIRES_ROOM.get(task)
         if not required_structure:
             return
         for r in self.skerry.get_all_rooms():
             if required_structure in r.structures:
-                npc["location"] = r.id
+                self._relocate_npc(npc_id, npc, r.id)
                 # Hint to settle if not already settled in this room
                 if npc.get("settled_room") != r.id:
                     display.info(f"  Tip: SETTLE {npc['name'].upper()} IN {r.name.upper()} to give them a permanent bed there.")
@@ -144,7 +158,7 @@ class SkerryMgmtMixin:
             # House them
             npc["settled_room"] = target_room.id
             npc["following"] = False
-            npc["location"] = target_room.id
+            self._relocate_npc(npc_id, npc, target_room.id)
 
             # Auto-assign master task from room role
             master_task = self._role_to_task(target_room.role)
@@ -168,10 +182,7 @@ class SkerryMgmtMixin:
             return
 
         npc["following"] = False
-        npc["location"] = "skerry_central"
-        skerry_central = self.rooms.get("skerry_central")
-        if skerry_central and npc_id not in skerry_central.npcs:
-            skerry_central.add_npc(npc_id)
+        self._relocate_npc(npc_id, npc, "skerry_central")
         display.success(f"{npc['name']} settles in on the skerry.")
         display.narrate(f"{npc['name']} looks around, taking it in. For now, the clearing will do.")
         self._log_event("npc_settled", comic_weight=3,
@@ -214,7 +225,7 @@ class SkerryMgmtMixin:
                 npc["assignment"] = master_task
                 npc["assigned_subtask"] = subtask_id
                 # Move NPC to the task's facility room
-                self._move_npc_to_task_room(npc, master_task)
+                self._move_npc_to_task_room(npc_id, npc, master_task)
                 display.success(f"Assigned {npc['name']} to {subtask_def['name']} ({master_task}).")
                 self._log_event("npc_assigned", comic_weight=2,
                                 npc_name=npc["name"], npc_id=npc_id,
@@ -264,7 +275,7 @@ class SkerryMgmtMixin:
             npc["assignment"] = task
             npc["assigned_subtask"] = None  # master task, no specific subtask
             # Move NPC to the task's facility room
-            self._move_npc_to_task_room(npc, task)
+            self._move_npc_to_task_room(npc_id, npc, task)
             display.success(f"Assigned {npc['name']} to {task}.")
             self._log_event("npc_assigned", comic_weight=2,
                             npc_name=npc["name"], npc_id=npc_id, task=task)
