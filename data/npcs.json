@@ -188,8 +188,10 @@
         "encounter_pool": ["tool_dispute", "homesick_talk"],
         "greet_lines": {
             "assigned": [
-                "'You should see what I found in the junkyard today! Well — you will, when I'm done sorting it.'",
-                "'Staying busy! The junkyard's got layers. Every time I think I've found everything, there's more underneath.'",
+                "'Lots of junk to sort through out here. I'll have materials ready for you when I'm done.'",
+                "'This wreckage isn't going to strip itself! Well — it might, actually, in the void. But not fast enough.'",
+                "'Keeping busy! Every time I think I've gone through everything, there's another layer underneath.'",
+                "'I've been pulling apart a conduit housing all morning. My hands are filthy and I love it.'",
                 "'I love having a job. Beats sitting around wondering if the void is going to eat me.'"
             ]
         }
