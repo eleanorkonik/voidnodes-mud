@@ -74,6 +74,7 @@ class ItemsMixin:
             _display_item_counts(picked, self.items_db, specimens_db=self.specimens_db, style=display.success)
             if skipped:
                 display.info(f"  Left behind {len(skipped)} item{'s' if len(skipped) != 1 else ''} (no room).")
+                display.info("  Try picking them up individually to push through.")
             return
 
         # Check artifacts at this location
