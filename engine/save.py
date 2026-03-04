@@ -391,7 +391,7 @@ def new_game_state():
         "extractions": 0,
         "explorer_location": "skerry_shelter",
         "steward_location": "skerry_junkyard",
-        "prologue_location": "skerry_central",
+        "prologue_location": "skerry_junkyard",
         "tutorial_step": "awakening",
         "tutorial_complete": False,
         "bonded_with_seed": False,
