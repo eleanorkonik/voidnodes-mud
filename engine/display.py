@@ -410,8 +410,7 @@ def display_help(phase, seed_name="Tuft"):
         return
 
     exploration = [
-        ("SCAVENGE", "Search the room for materials"),
-        ("INVESTIGATE", "Search for hidden artifacts (Notice check)"),
+        ("SCAVENGE", "Search the room for materials and artifacts"),
         ("PROBE <thing>", "Examine a discovered artifact or item"),
         ("SEEK [aspect]", f"Cross the void to a node (costs 1 {seed_name} mote)"),
         ("RETREAT", f"Emergency retreat (costs {seed_name} motes)"),

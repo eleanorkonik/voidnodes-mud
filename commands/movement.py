@@ -606,7 +606,7 @@ class MovementMixin:
                 if hint:
                     print()
                     display.narrate(f"  You notice {hint}.")
-                    display.info("  INVESTIGATE to look closer.")
+                    display.info("  SCAVENGE to search the room.")
 
     def _on_room_enter(self, room):
         """Check for hazards and aggressive enemies when entering a room."""

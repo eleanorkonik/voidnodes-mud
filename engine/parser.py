@@ -42,6 +42,8 @@ COMMAND_ALIASES = {
     "dismantle": "process",
     "salvage": "process",
     "offer": "give",
+    "investigate": "scavenge",
+    "search": "scavenge",
 }
 
 # All recognized commands and which phase they're valid in
@@ -76,7 +78,6 @@ COMMANDS = {
     "exploit":   {"args": "required"},
     "concede":   {"args": "none"},
     "scavenge":  {"args": "none"},
-    "investigate": {"args": "none"},
     "probe":     {"args": "required"},
     "feed":      {"args": "required"},
     "keep":      {"args": "required"},

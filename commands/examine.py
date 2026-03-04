@@ -1,4 +1,4 @@
-"""Examine domain — look, ih, status, check, probe, investigate, scavenge, map, quests."""
+"""Examine domain — look, ih, status, check, probe, scavenge, map, quests."""
 
 import random
 
@@ -607,7 +607,7 @@ class ExamineMixin:
             if target in art.get("name", "").lower() or target == art_id or target in art.get("hint_sensory", "").lower():
                 if art_id not in self.state.get("artifacts_status", {}):
                     # Undiscovered — can't PROBE what you haven't noticed
-                    display.narrate("You sense something here, but you'd need to INVESTIGATE the room to find it.")
+                    display.narrate("You sense something here, but you'd need to SCAVENGE the room to find it.")
                 else:
                     display.header(art["name"])
                     display.narrate(self.sub(art["description"]))
@@ -827,33 +827,32 @@ class ExamineMixin:
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
 
-    def cmd_investigate(self, args):
-        """INVESTIGATE — active Notice check to discover artifacts in the room."""
-        room = self.current_room()
-        if not room:
-            return
+        # Also check for undiscovered artifacts while searching
+        self._scavenge_artifact_check(room, char)
 
-        # Find undiscovered artifacts in this room
+    def cmd_investigate(self, args):
+        """INVESTIGATE — alias for SCAVENGE."""
+        self.cmd_scavenge(args)
+
+    def _scavenge_artifact_check(self, room, char):
+        """Notice check for undiscovered artifacts, run as part of SCAVENGE."""
         undiscovered = []
         for art_id, art in self._artifacts_in_room(room.id):
             if art_id not in self.state.get("artifacts_status", {}):
                 undiscovered.append((art_id, art))
 
         if not undiscovered:
-            display.narrate("You search the room carefully but find nothing hidden.")
             return
 
-        char = self.current_character()
-        invoke_bonus = self._consume_invoke_bonus(skill="Notice")
-        notice_val = char.get_skill("Notice") + invoke_bonus
-        label = f"Notice+{invoke_bonus}" if invoke_bonus else "Notice"
+        notice_val = char.get_skill("Notice")
 
         for art_id, art in undiscovered:
             dc = art.get("notice_dc", 2)
             total, shifts, dice_result = dice.skill_check(notice_val, dc)
-            print(f"  {label}: {dice.roll_description(dice_result, notice_val, label)} vs DC {dc}")
 
             if shifts >= 0:
+                print()
+                display.narrate("While searching, something catches your eye...")
                 print()
                 display.header(art["name"])
                 display.narrate(self.sub(art.get("discovery_text", art["description"])))
@@ -864,10 +863,8 @@ class ExamineMixin:
                     display.info(f"  Keep for: {bonuses}")
                 if art.get("keep_effect"):
                     display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
-                self._log_event("artifact_investigated", comic_weight=3,
+                self._log_event("artifact_discovered", comic_weight=3,
                                 artifact_id=art_id, artifact_name=art["name"])
-            else:
-                display.narrate("You search carefully but don't find the source of what you sensed.")
 
     def cmd_map(self, args):
         current = self.current_room()
