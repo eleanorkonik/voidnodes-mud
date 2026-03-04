@@ -805,6 +805,9 @@ class CombatMixin:
                 room.add_item(remnants_id)
                 remnants_info = self.items_db[remnants_id]
                 display.narrate(f"  {remnants_info.get('name', 'Remains')} left behind.")
+                if "basic_tools" in self.current_character().inventory and not self.state.get("_process_hint"):
+                    self.state["_process_hint"] = True
+                    display.seed_speak("You have tools — you can PROCESS those remains for materials.")
 
             self.explorer.gain_fate_point()
             display.info(f"  (+1 Fate Point for victory)")

@@ -129,10 +129,12 @@ class ItemsMixin:
             display.success(f"You pick up {take_name}.")
             self._log_event("item_taken", comic_weight=1,
                             item_id=item_id, item_name=take_name)
-            # Tutorial nudge: first time picking up remnants with tools
-            if item.get("type") == "remnants" and "basic_tools" in char.inventory:
-                if not self.state.get("_process_hint"):
-                    display.seed_speak("You have tools — you can PROCESS remnants for materials.")
+            # Tutorial nudge: tools + remnants together for the first time
+            if not self.state.get("_process_hint"):
+                has_remnants = any(self.items_db.get(masterwork.base_id(i), {}).get("type") == "remnants" for i in char.inventory)
+                if (item.get("type") == "remnants" and "basic_tools" in char.inventory) or \
+                   (item_id == "basic_tools" and has_remnants):
+                    display.seed_speak("You have tools and remains — you can PROCESS them for materials.")
                     self.state["_process_hint"] = True
             return
 
