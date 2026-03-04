@@ -827,13 +827,6 @@ class ExamineMixin:
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
 
-        # Tutorial: explain scavenge mechanics after first steward scavenge
-        if self.state["current_phase"] == "steward" and not self.state.get("_steward_scavenge_hint"):
-            self.state["_steward_scavenge_hint"] = True
-            print()
-            display.seed_speak("Each time you search the same spot, the easy pickings thin out.")
-            display.seed_speak("Come back the next day and you'll spot things you missed.")
-
     def cmd_investigate(self, args):
         """INVESTIGATE — active Notice check to discover artifacts in the room."""
         room = self.current_room()

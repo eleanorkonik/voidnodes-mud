@@ -11,7 +11,9 @@ STEPS = [
     # Act 1 — Miria Prologue
     "awakening",             # tendril reaches out, prompt to BOND
     "naming",                # seed asks for a name (input captured in game loop)
-    "first_look",            # prompt to LOOK — first perception of the skerry
+    "first_look",            # prompt to LOOK — teaches aspects + INVOKE
+    "invoke_practice",       # player INVOKEs an aspect
+    "scavenge_practice",     # player SCAVENGEs the junkyard
     "movement",              # prompt to GO somewhere
     "exploring",             # free exploration, encounter explorer at shelter
     "check_seed",            # CHECK SKERRY — learn about domain overview
@@ -107,7 +109,7 @@ def after_command(cmd, args, game):
         return False
 
     if step == "first_look" and cmd == "look":
-        game.state["tutorial_step"] = "movement"
+        game.state["tutorial_step"] = "invoke_practice"
         print()
         display.seed_speak("Good. The clearing, the paths, the edges of things?")
         display.seed_speak("You see that with your eyes.")
@@ -124,9 +126,33 @@ def after_command(cmd, args, game):
                 display.seed_speak(f"See those? {aspect_list}.")
                 display.seed_speak("Those are aspects — the deeper nature of things.")
                 display.seed_speak("The big one covers this whole zone. The others are specific to where you're standing.")
-                display.seed_speak("Thanks to our connection, you can INVOKE them. But let's talk about that later.")
             print()
-        display.seed_speak("For now, survey our domain. Try walking.")
+        display.seed_speak("Thanks to our connection, you can INVOKE them.")
+        display.seed_speak("It costs a fate point, but it sharpens your next action —")
+        display.seed_speak("a bonus that stacks on whatever you do next.")
+        display.seed_speak("You have three fate points. They refresh each day.")
+        print()
+        display.seed_speak("There's salvage worth picking through here. Try invoking")
+        display.seed_speak("an aspect before you dig in.")
+        _tutorial_prompt("INVOKE <aspect> to call on it, then SCAVENGE.")
+        return False
+
+    if step == "invoke_practice" and cmd == "invoke":
+        game.state["tutorial_step"] = "scavenge_practice"
+        print()
+        display.seed_speak("Good. That bonus is floating now — it'll attach to your")
+        display.seed_speak("next skill check, whatever it is.")
+        print()
+        _tutorial_prompt("Now SCAVENGE to search for useful materials.")
+        return False
+
+    if step == "scavenge_practice" and cmd == "scavenge":
+        game.state["tutorial_step"] = "movement"
+        print()
+        display.seed_speak("Each time you search the same spot, the easy pickings thin out.")
+        display.seed_speak("Come back the next day and you'll spot things you missed.")
+        print()
+        display.seed_speak("Now — let's have a look around. Survey our domain.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
         return False
 
@@ -254,6 +280,12 @@ def get_current_hint(step, game_state=None):
     elif step == "first_look":
         display.seed_speak("Now, let me help you perceive.")
         _tutorial_prompt("Go ahead and LOOK to see your surroundings.")
+    elif step == "invoke_practice":
+        display.seed_speak("Try calling on one of those aspects.")
+        _tutorial_prompt("INVOKE <aspect> to call on it, then SCAVENGE.")
+    elif step == "scavenge_practice":
+        display.seed_speak("You've got a bonus waiting. Put it to use.")
+        _tutorial_prompt("SCAVENGE to search for useful materials.")
     elif step == "movement":
         display.seed_speak("There are paths here. Pick a direction.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")

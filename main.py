@@ -797,9 +797,8 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             if not self.state.get("_first_steward_hint"):
                 self.state["_first_steward_hint"] = True
                 print()
-                display.seed_speak("Have a LOOK around. There's salvage here worth picking through.")
-                display.seed_speak("Try INVOKE to call on one of your aspects before you SCAVENGE —")
-                display.seed_speak("it costs a fate point, but it'll sharpen your chances.")
+                display.seed_speak("While you're here — CHECK SKERRY to see what needs doing.")
+                display.seed_speak("BUILD things, ASSIGN workers, keep this place running.")
 
         else:
             # Steward → Explorer (same day — day ticks when explorer returns)
