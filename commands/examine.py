@@ -228,9 +228,9 @@ class ExamineMixin:
                 print(f"  {display.DIM}You notice {hint}.{display.RESET}")
             has_contents = True
 
-        # Room features (interactable objects)
+        # Room features (interactable objects — not pickupable)
         for feature in room.features:
-            print(f"  {display.aspect_text(feature['name'])}")
+            print(f"  {display.aspect_text(feature['name'])} {display.DIM}(built-in){display.RESET}")
             has_contents = True
 
         if not has_contents:
