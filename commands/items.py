@@ -138,7 +138,15 @@ class ItemsMixin:
                     self.state["_process_hint"] = True
             return
 
-        display.narrate(f"There's nothing called '{target}' here to take.")
+        # Check if the player already has it
+        char = self.current_character()
+        _, held_item = self._find_entity(char.inventory, target, self.items_db)
+        _, held_art = self._find_entity(char.inventory, target, self.artifacts_db)
+        _, held_spec = self._find_entity(char.inventory, target, self.specimens_db)
+        if held_item or held_art or held_spec:
+            display.narrate(f"You already have that. (Check INVENTORY.)")
+        else:
+            display.narrate(f"There's nothing called '{target}' here to take.")
 
     def cmd_drop(self, args):
         if not args:
