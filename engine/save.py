@@ -150,12 +150,30 @@ def _migrate_state(state):
             meta[new_key] = meta.pop(old_key)
     # Zone artifact mapping (for old saves before artifact pools)
     if "zone_artifacts" not in state:
-        state["zone_artifacts"] = {
-            "debris_field": "stabilization_engine",
-            "coral_thicket": "growth_lattice",
-            "frozen_wreck": "eliok_house",
-            "verdant_wreck": "bloom_catalyst",
+        # Rebuild from artifact data — the chosen artifact has a location,
+        # unchosen ones have location=None
+        _ZONE_POOLS = {
+            "debris_field": ["stabilization_engine", "salvage_core", "navigators_lodestone"],
+            "coral_thicket": ["growth_lattice", "resonance_chime", "bioluminous_censer"],
+            "frozen_wreck": ["eliok_house", "cryogenic_seed_vault", "frost_condenser"],
+            "verdant_wreck": ["bloom_catalyst", "mycorrhizal_nexus", "chloroplast_prism"],
         }
+        artifacts = state.get("artifacts", {})
+        art_statuses = state.get("artifacts_status", {})
+        zone_artifacts = {}
+        for zone_id, pool in _ZONE_POOLS.items():
+            # Check which artifact from the pool is resolved or has a location
+            chosen = None
+            for art_id in pool:
+                if art_id in art_statuses:
+                    chosen = art_id
+                    break
+                art = artifacts.get(art_id, {})
+                if art.get("location"):
+                    chosen = art_id
+                    break
+            zone_artifacts[zone_id] = chosen or pool[0]
+        state["zone_artifacts"] = zone_artifacts
     # Zone unloading
     state.setdefault("unloaded_zones", [])
     # Ensure basic_tools and bandages recipes are known

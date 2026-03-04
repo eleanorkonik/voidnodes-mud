@@ -35,8 +35,8 @@ class ItemsMixin:
         char = self.current_character()
         display.display_inventory(char, self.items_db, self.artifacts_db, self.specimens_db)
         used = self._count_slots_used(char)
-        capacity = self._get_effective_capacity(char)
-        display.display_slot_usage(used, capacity)
+        # Always show personal capacity, not the generous skerry limits
+        display.display_slot_usage(used, dict(char.slot_capacity))
 
     def cmd_take(self, args):
         if not args:
