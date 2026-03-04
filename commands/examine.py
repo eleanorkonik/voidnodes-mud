@@ -750,10 +750,12 @@ class ExamineMixin:
         if self.state["current_phase"] == "steward":
             room = self.current_room()
             beacons = self.state.get("beacons", {})
-            if not room or room.zone not in beacons:
+            in_junkyard = room and room.id == "skerry_junkyard"
+            in_beaconed = room and room.zone in beacons
+            if not in_junkyard and not in_beaconed:
                 self._wrong_phase_narrate("explorer", "scavenge")
                 return
-            # Steward can scavenge in beaconed zones — continue to normal logic below
+            # Steward can scavenge in junkyard or beaconed zones
         room = self.current_room()
         if room.has_enemies():
             enemy_id = room.enemies[0]
@@ -824,6 +826,13 @@ class ExamineMixin:
                             zone=zone_id)
         else:
             display.narrate("  You search carefully but find nothing useful this time.")
+
+        # Tutorial: explain scavenge mechanics after first steward scavenge
+        if self.state["current_phase"] == "steward" and not self.state.get("_steward_scavenge_hint"):
+            self.state["_steward_scavenge_hint"] = True
+            print()
+            display.seed_speak("Each time you search the same spot, the easy pickings thin out.")
+            display.seed_speak("Come back the next day and you'll spot things you missed.")
 
     def cmd_investigate(self, args):
         """INVESTIGATE — active Notice check to discover artifacts in the room."""

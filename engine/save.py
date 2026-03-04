@@ -390,7 +390,7 @@ def new_game_state():
                        "details": "Arrived at the skerry, a tiny island of solid ground in the endless void."}],
         "extractions": 0,
         "explorer_location": "skerry_shelter",
-        "steward_location": "skerry_central",
+        "steward_location": "skerry_junkyard",
         "prologue_location": "skerry_central",
         "tutorial_step": "awakening",
         "tutorial_complete": False,

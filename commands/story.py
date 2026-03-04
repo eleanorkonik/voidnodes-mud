@@ -169,8 +169,9 @@ class StoryMixin:
 
         day = self.state["day"]
 
-        # Reset social compel daily tracking
+        # Reset daily counters
         self.state["social_compels_today"] = []
+        self.state["scavenge_counts"] = {}
 
         # Refresh fate points for both characters
         self.explorer.refresh_fate_points()
