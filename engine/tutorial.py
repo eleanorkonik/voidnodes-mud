@@ -14,6 +14,7 @@ STEPS = [
     "first_look",            # prompt to LOOK — teaches aspects + INVOKE
     "invoke_practice",       # player INVOKEs an aspect
     "scavenge_practice",     # player SCAVENGEs the junkyard
+    "scavenge_again",        # scavenge again without invoke, feel the difference
     "movement",              # prompt to GO somewhere
     "exploring",             # free exploration, encounter explorer at shelter
     "check_seed",            # CHECK SKERRY — learn about domain overview
@@ -147,10 +148,21 @@ def after_command(cmd, args, game):
         return False
 
     if step == "scavenge_practice" and cmd == "scavenge":
-        game.state["tutorial_step"] = "movement"
+        game.state["tutorial_step"] = "scavenge_again"
         print()
-        display.seed_speak("Each time you search the same spot, the easy pickings thin out.")
-        display.seed_speak("Come back the next day and you'll spot things you missed.")
+        display.seed_speak("See that DC? That's the difficulty. It goes up each time")
+        display.seed_speak("you search the same spot — the easy pickings thin out.")
+        display.seed_speak("Come back the next day, though, and you'll spot things you missed.")
+        print()
+        display.seed_speak("Try again — without invoking this time. Invoking is a way")
+        display.seed_speak("of pulling at your fate. You can only do it so many times")
+        display.seed_speak("a day, unless you find ways to manipulate your fate.")
+        print()
+        _tutorial_prompt("SCAVENGE again to see how it feels without the bonus.")
+        return False
+
+    if step == "scavenge_again" and cmd == "scavenge":
+        game.state["tutorial_step"] = "movement"
         print()
         display.seed_speak("Now — let's have a look around. Survey our domain.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
@@ -286,6 +298,9 @@ def get_current_hint(step, game_state=None):
     elif step == "scavenge_practice":
         display.seed_speak("You've got a bonus waiting. Put it to use.")
         _tutorial_prompt("SCAVENGE to search for useful materials.")
+    elif step == "scavenge_again":
+        display.seed_speak("Try searching again, without invoking this time.")
+        _tutorial_prompt("SCAVENGE again to see how it feels without the bonus.")
     elif step == "movement":
         display.seed_speak("There are paths here. Pick a direction.")
         _tutorial_prompt("Pick a direction — N, S, E, or W.")
