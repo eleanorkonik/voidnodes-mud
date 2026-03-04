@@ -313,7 +313,7 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                 if step == "exploring" and current_room and "sevarik" in current_room.npcs:
                     tutorial._show_sevarik_encounter(self)
                 else:
-                    tutorial.get_current_hint(step, self.state)
+                    tutorial.get_current_hint(step, self.state, game=self)
         else:
             # Ensure inactive agent is placed on the skerry
             inactive_role = "steward" if phase == "explorer" else "explorer"

@@ -7,6 +7,21 @@ comes from one-shot contextual hints in command handlers (just-in-time hints).
 from engine import display
 
 
+def _exit_hint(game):
+    """Build a direction hint string from the current room's actual exits."""
+    if not game:
+        return "pick a direction"
+    room = game.current_room()
+    if not room or not room.exits:
+        return "pick a direction"
+    abbrev = {"north": "N", "south": "S", "east": "E", "west": "W",
+              "up": "UP", "down": "DOWN"}
+    dirs = [abbrev.get(d, d.upper()) for d in room.exits]
+    if len(dirs) == 1:
+        return dirs[0]
+    return ", ".join(dirs[:-1]) + ", or " + dirs[-1]
+
+
 STEPS = [
     # Act 1 — Miria Prologue
     "awakening",             # tendril reaches out, prompt to BOND
@@ -165,7 +180,8 @@ def after_command(cmd, args, game):
         game.state["tutorial_step"] = "movement"
         print()
         display.seed_speak("Now — let's have a look around. Survey our domain.")
-        _tutorial_prompt("Pick a direction — N, S, E, or W.")
+        exits = _exit_hint(game)
+        _tutorial_prompt(f"Pick a direction — {exits}.")
         return False
 
     if step == "movement" and cmd == "go":
@@ -274,7 +290,7 @@ def _show_the_split(game):
     game.state["tutorial_step"] = "check_seed"
 
 
-def get_current_hint(step, game_state=None):
+def get_current_hint(step, game_state=None, game=None):
     """Show a world-seed-voiced hint for the current step (on resume)."""
     gs = game_state or {}
     seed_name = gs.get("world_seed_name", "the seed")
@@ -303,7 +319,8 @@ def get_current_hint(step, game_state=None):
         _tutorial_prompt("SCAVENGE again to see how it feels without the bonus.")
     elif step == "movement":
         display.seed_speak("There are paths here. Pick a direction.")
-        _tutorial_prompt("Pick a direction — N, S, E, or W.")
+        exits = _exit_hint(game)
+        _tutorial_prompt(f"Pick a direction — {exits}.")
     elif step == "exploring":
         display.seed_speak("Keep looking around. There's someone here you need to meet.")
     elif step == "check_seed":
