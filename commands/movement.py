@@ -601,6 +601,12 @@ class MovementMixin:
                     display.info(f"  Special: {self.sub(art['keep_effect'][:80])}...")
                 self._log_event("artifact_noticed", comic_weight=3,
                                 artifact_id=art_id, artifact_name=art["name"])
+            else:
+                hint = art.get("hint_sensory")
+                if hint:
+                    print()
+                    display.narrate(f"  You notice {hint}.")
+                    display.info("  INVESTIGATE to look closer.")
 
     def _on_room_enter(self, room):
         """Check for hazards and aggressive enemies when entering a room."""
