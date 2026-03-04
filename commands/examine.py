@@ -465,78 +465,8 @@ class ExamineMixin:
                 print(f"\n  {display.BRIGHT_YELLOW}Idle:{display.RESET} {', '.join(labels)}")
                 print(f"  {display.DIM}Use ASSIGN <name> <task> to put them to work.{display.RESET}")
 
-            # Shared inventory counts for upgradable + buildable sections
-            inv_counts = self._inventory_counts(self.steward)
-            room = self.current_room()
-            if room:
-                for item_id in room.items:
-                    inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
-            npc_count = len(self.state.get("recruited_npcs", []))
-
-            # Show upgradable structures
-            from commands.building import BuildingMixin
-            upgrade_lines = []
-            for key, udef in BuildingMixin.UPGRADE_TIERS.items():
-                uroom = self.skerry.get_room(udef["room_id"])
-                if not uroom:
-                    continue
-                current_level = getattr(uroom, udef["level_field"], 0)
-                tier = udef["tiers"].get(current_level)
-                if not tier:
-                    continue  # maxed out
-                mat_parts = []
-                can_upgrade = True
-                for k, v in tier["cost"].items():
-                    label = f"{v}x {k.replace('_', ' ')}"
-                    if inv_counts.get(k, 0) >= v:
-                        mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
-                    else:
-                        mat_parts.append(label)
-                        can_upgrade = False
-                mats = ", ".join(mat_parts)
-                line_name = f"{uroom.name} → {tier['name']}"
-                if can_upgrade:
-                    upgrade_lines.append(f"    {display.BRIGHT_WHITE}{line_name}{display.RESET} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
-                else:
-                    upgrade_lines.append(f"    {line_name} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
-            if upgrade_lines:
-                print(f"\n  {display.BOLD}Upgradable:{display.RESET}")
-                for line in upgrade_lines:
-                    print(line)
-
-            if self.skerry.expandable:
-                print(f"\n  {display.BOLD}Buildable:{display.RESET}")
-                for tmpl in self.skerry.expandable:
-                    reqs = tmpl.get("requires", {})
-                    # Hide structures the seed hasn't unlocked yet
-                    if self.seed.growth_stage < reqs.get("seed_stage", 0):
-                        continue
-                    mat_parts = []
-                    for k, v in reqs.get("materials", {}).items():
-                        label = f"{v}x {k.replace('_', ' ')}"
-                        if inv_counts.get(k, 0) >= v:
-                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
-                        else:
-                            mat_parts.append(label)
-                    if reqs.get("any_specimen", 0) > 0:
-                        spec_count = sum(1 for i in inv_counts if farming.is_specimen(i) and inv_counts[i] > 0)
-                        label = f"{reqs['any_specimen']}x specimen"
-                        if spec_count >= reqs["any_specimen"]:
-                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
-                        else:
-                            mat_parts.append(label)
-                    if reqs.get("npcs", 0) > 0:
-                        label = f"{reqs['npcs']} NPC{'s' if reqs['npcs'] > 1 else ''}"
-                        if npc_count >= reqs["npcs"]:
-                            mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
-                        else:
-                            mat_parts.append(label)
-                    mats = ", ".join(mat_parts)
-                    can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
-                    if can:
-                        print(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
-                    else:
-                        print(f"    {tmpl['name']} — needs: {mats}")
+            # Buildable and upgradable structures (shared helper in BuildingMixin)
+            self._display_buildable_structures()
             return
 
         if target in ("beacons", "beacon"):

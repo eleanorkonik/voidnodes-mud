@@ -6,6 +6,94 @@ from engine import display, dice, parser, tutorial, farming, masterwork
 class BuildingMixin:
     """Mixin providing building and crafting commands for the Game class."""
 
+    def _display_buildable_structures(self):
+        """Show upgradable and buildable structures with material availability.
+
+        Used by both BUILD (no args) and CHECK SKERRY.
+        """
+        inv_counts = self._inventory_counts(self.steward)
+        room = self.current_room()
+        if room:
+            for item_id in room.items:
+                inv_counts[item_id] = inv_counts.get(item_id, 0) + 1
+        npc_count = len(self.state.get("recruited_npcs", []))
+
+        has_output = False
+
+        # Upgradable structures
+        upgrade_lines = []
+        for key, udef in self.UPGRADE_TIERS.items():
+            uroom = self.skerry.get_room(udef["room_id"])
+            if not uroom:
+                continue
+            current_level = getattr(uroom, udef["level_field"], 0)
+            tier = udef["tiers"].get(current_level)
+            if not tier:
+                continue  # maxed out
+            mat_parts = []
+            can_upgrade = True
+            for k, v in tier["cost"].items():
+                label = f"{v}x {k.replace('_', ' ')}"
+                if inv_counts.get(k, 0) >= v:
+                    mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                else:
+                    mat_parts.append(label)
+                    can_upgrade = False
+            mats = ", ".join(mat_parts)
+            line_name = f"{uroom.name} → {tier['name']}"
+            if can_upgrade:
+                upgrade_lines.append(f"    {display.BRIGHT_WHITE}{line_name}{display.RESET} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
+            else:
+                upgrade_lines.append(f"    {line_name} — needs: {mats} ({tier['skill']} DC {tier['dc']})")
+        if upgrade_lines:
+            print(f"\n  {display.BOLD}Upgradable:{display.RESET}")
+            for line in upgrade_lines:
+                print(line)
+            has_output = True
+
+        # Buildable structures
+        if self.skerry.expandable:
+            build_lines = []
+            for tmpl in self.skerry.expandable:
+                reqs = tmpl.get("requires", {})
+                # Hide structures the seed hasn't unlocked yet
+                if self.seed.growth_stage < reqs.get("seed_stage", 0):
+                    continue
+                mat_parts = []
+                for k, v in reqs.get("materials", {}).items():
+                    label = f"{v}x {k.replace('_', ' ')}"
+                    if inv_counts.get(k, 0) >= v:
+                        mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                    else:
+                        mat_parts.append(label)
+                if reqs.get("any_specimen", 0) > 0:
+                    spec_count = sum(1 for i in inv_counts if farming.is_specimen(i) and inv_counts[i] > 0)
+                    label = f"{reqs['any_specimen']}x specimen"
+                    if spec_count >= reqs["any_specimen"]:
+                        mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                    else:
+                        mat_parts.append(label)
+                if reqs.get("npcs", 0) > 0:
+                    label = f"{reqs['npcs']} NPC{'s' if reqs['npcs'] > 1 else ''}"
+                    if npc_count >= reqs["npcs"]:
+                        mat_parts.append(f"{display.BRIGHT_WHITE}{label}{display.RESET}")
+                    else:
+                        mat_parts.append(label)
+                mats = ", ".join(mat_parts)
+                can, _ = self.skerry.can_build(tmpl, inv_counts, npc_count, self.seed.growth_stage)
+                if can:
+                    build_lines.append(f"    {display.BRIGHT_WHITE}{tmpl['name']}{display.RESET} — needs: {mats}")
+                else:
+                    build_lines.append(f"    {tmpl['name']} — needs: {mats}")
+            if build_lines:
+                print(f"\n  {display.BOLD}Buildable:{display.RESET}")
+                for line in build_lines:
+                    print(line)
+                has_output = True
+
+        if not has_output:
+            print("  No structures available to build or upgrade right now.")
+
     def cmd_craft(self, args):
         if self.state["current_phase"] == "explorer":
             self._wrong_phase_narrate("steward", "building")
@@ -214,7 +302,8 @@ class BuildingMixin:
             self._wrong_phase_narrate("steward", "building")
             return
         if not args:
-            display.error("Build what? Type CHECK SKERRY to see buildable structures.")
+            display.header("Available Structures")
+            self._display_buildable_structures()
             return
 
         target = " ".join(args).lower()
