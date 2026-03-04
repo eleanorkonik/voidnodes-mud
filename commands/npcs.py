@@ -755,7 +755,8 @@ class NpcsMixin:
             if not self.state.get("_recruit_settle_hint"):
                 self.state["_recruit_settle_hint"] = True
                 print()
-                display.seed_speak("Good — now SETTLE them at a building to put them to work.")
+                display.seed_speak("They'll follow you for now. Bring them back to the skerry")
+                display.seed_speak(f"and {self.steward_name} can SETTLE them at a building.")
         else:
             npc["recruit_attempts"] = npc.get("recruit_attempts", 0) + 1
             display.narrate(self._sub_dialogue(npc["dialogue"].get("recruit_fail", f"{npc_name} isn't convinced yet.")))
