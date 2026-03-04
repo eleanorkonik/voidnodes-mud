@@ -92,7 +92,23 @@
             "story": ""
         },
         "encounter_pool": ["tool_dispute", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_guarding": [
+                "'Nothing moves out there without me seeing it. The void teaches you what to watch for.'",
+                "'Quiet shift. That's either good news or very bad news. I'll let you know which.'",
+                "'I've mapped every approach vector within visual range. Old habit.'",
+                "'The void is never truly empty. Something always drifts through eventually.'"
+            ],
+            "assigned_salvage": [
+                "'There's a pattern to wreckage if you know how to read it. I've seen enough of it.'",
+                "'Most people see junk. I see what it used to be, and what it could become.'",
+                "'Efficient work. No wasted motion. That's how you survive out here.'"
+            ],
+            "assigned": [
+                "'Work keeps the mind from wandering to places it shouldn't go.'",
+                "'I've done worse for less reason. This is fine.'"
+            ]
+        }
     },
     "emmy": {
         "name": "Emmy",
@@ -187,11 +203,22 @@
         },
         "encounter_pool": ["tool_dispute", "homesick_talk"],
         "greet_lines": {
-            "assigned": [
+            "assigned_salvage": [
                 "'Lots of junk to sort through out here. I'll have materials ready for you when I'm done.'",
                 "'This wreckage isn't going to strip itself! Well — it might, actually, in the void. But not fast enough.'",
                 "'Keeping busy! Every time I think I've gone through everything, there's another layer underneath.'",
                 "'I've been pulling apart a conduit housing all morning. My hands are filthy and I love it.'",
+                "'I love having a job. Beats sitting around wondering if the void is going to eat me.'"
+            ],
+            "assigned_crafting": [
+                "'I'm figuring out how these pieces fit together. It's like a puzzle, except the puzzle is useful!'",
+                "'Did you know you can make wire out of basically anything if you try hard enough? Because you can.'",
+                "'I broke two things and fixed three. Net positive!'",
+                "'Crafting is just scavenging but backwards — you take the bits and UN-take-apart them.'"
+            ],
+            "assigned": [
+                "'I'm on it! Whatever it is, I'm on it. Just point me at something and I'll figure it out.'",
+                "'Busy busy busy. I like busy. Busy means people need me.'",
                 "'I love having a job. Beats sitting around wondering if the void is going to eat me.'"
             ]
         }
@@ -287,7 +314,23 @@
             "story": ""
         },
         "encounter_pool": ["tool_dispute", "skeptic_debate"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_crafting": [
+                "'Don't rush me. Good work takes time, and I don't do sloppy work.'",
+                "'I reinforced the joint twice. Most people do it once. Most people's joints fail.'",
+                "'Hand me that — no, the other one. The one that isn't about to fall apart.'",
+                "'Whoever built the original version of this should be embarrassed. I'm fixing it properly.'"
+            ],
+            "assigned_salvage": [
+                "'I'm sorting by material grade. The good stuff goes in one pile, the garbage goes in a bigger pile.'",
+                "'Half this wreckage is held together by corrosion and hope. Useful corrosion, though.'",
+                "'Don't touch the sorted piles. I have a system.'"
+            ],
+            "assigned": [
+                "'Keeping busy. Don't need to chat about it.'",
+                "'It's work. I've done worse.'"
+            ]
+        }
     },
     "chris": {
         "name": "Chris",
@@ -380,7 +423,22 @@
             "story": ""
         },
         "encounter_pool": ["lonely_night", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_guarding": [
+                "'I-I'm watching! Nothing's gotten past me. I promise.'",
+                "'I notice things other people miss. Small things. Movement in the dark.'",
+                "'It's actually... not so scary up here? I can see everything coming. That helps.'"
+            ],
+            "assigned_gardening": [
+                "'The plants don't judge you. They just... grow. I like that about them.'",
+                "'I watered everything twice. Is that too much? I hope that's not too much.'",
+                "'This is nice. Quiet. Growing things instead of running from things.'"
+            ],
+            "assigned": [
+                "'I'm helping! I'm really trying. Tell me if I'm doing it wrong, okay?'",
+                "'I want to be useful. Just tell me what to do.'"
+            ]
+        }
     },
     "tilly": {
         "name": "Tilly",
@@ -473,7 +531,23 @@
             "story": ""
         },
         "encounter_pool": ["tool_dispute", "garden_crisis", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_gardening": [
+                "'The soil here is better than anything I had at the thicket. {seed_name} makes the difference.'",
+                "'Three new shoots since yesterday. This garden wants to grow.'",
+                "'I've been composting the scraps. Nothing goes to waste in a proper garden.'",
+                "'These root systems are establishing nicely. Give it time — you can't rush a plant.'"
+            ],
+            "assigned_crafting": [
+                "'Tools are just an extension of your hands. I've been making tools since before you were born.'",
+                "'Measure twice, cut once. Or in the void, measure twice and pray the materials hold.'",
+                "'Practical work for practical people. I don't need it to be pretty, I need it to work.'"
+            ],
+            "assigned": [
+                "'Work doesn't do itself. I'm getting on with it.'",
+                "'Idle hands make idle settlements. I don't do idle.'"
+            ]
+        }
     },
     "callum": {
         "name": "Callum",
@@ -566,7 +640,22 @@
             "story": ""
         },
         "encounter_pool": ["scholar_puzzle", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_healing": [
+                "'Medicine is applied knowledge. The Eliok texts describe wound treatment extensively — I'm cross-referencing.'",
+                "'I've been cataloguing the medicinal properties of everything in the apothecary. Fascinating compounds.'",
+                "'Healing is just biology. And biology is just chemistry. And chemistry is just — well, you get the idea.'"
+            ],
+            "assigned_crafting": [
+                "'Precision instruments require precision work. I'm in my element.'",
+                "'The Eliok built things to last millennia. I'm trying to reverse-engineer their joinery techniques.'",
+                "'Don't interrupt me — I'm at a critical juncture. Literally. This joint has to be exact.'"
+            ],
+            "assigned": [
+                "'Productive work. I can study and contribute simultaneously.'",
+                "'Every task teaches you something, if you're paying attention. I am always paying attention.'"
+            ]
+        }
     },
     "lira": {
         "name": "Lira",
@@ -668,7 +757,23 @@
             "story": ""
         },
         "encounter_pool": ["tool_dispute", "garden_crisis", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_gardening": [
+                "'The growth patterns here are extraordinary. {seed_name}'s influence on root development is unlike anything in my research.'",
+                "'I've cross-pollinated two of the specimens. If the hybrid takes, we'll have a new cultivar.'",
+                "'Every plant tells you what it needs if you know how to listen. These ones are practically shouting.'",
+                "'The soil microbiome is establishing beautifully. Another week and we'll see real yields.'"
+            ],
+            "assigned_healing": [
+                "'Plants and people aren't so different. Both need the right conditions to recover.'",
+                "'I've been preparing poultices from the garden specimens. The medicinal applications are promising.'",
+                "'Tending wounds is like tending roots — patience, clean conditions, and knowing when to intervene.'"
+            ],
+            "assigned": [
+                "'Useful work. I'd rather be in the garden, but this needs doing too.'",
+                "'Science doesn't stop just because the task changes. I'm observing everything.'"
+            ]
+        }
     },
     "angya": {
         "name": "Angya",
@@ -762,6 +867,17 @@
             "story": ""
         },
         "encounter_pool": ["tool_dispute", "homesick_talk"],
-        "greet_lines": {}
+        "greet_lines": {
+            "assigned_guarding": [
+                "'Nothing gets past me. I've been watching the approaches — three viable vectors, all covered.'",
+                "'Finally. Real work. Sitting idle was killing me faster than any void creature could.'",
+                "'The perimeter is secure. I've set up sight lines on every approach.'",
+                "'Something stirred out in the dark an hour ago. It didn't come closer. Smart.'"
+            ],
+            "assigned": [
+                "'I'll do what needs doing. Don't mistake compliance for enthusiasm.'",
+                "'Work is work. At least it's not boring.'"
+            ]
+        }
     }
 }
