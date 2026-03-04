@@ -26,6 +26,7 @@ class Room:
         self.barracks_spaces = data.get("barracks_spaces", 0)
         self.salvage_level = data.get("salvage_level", 0)
         self.shelter_level = data.get("shelter_level", 0)
+        self.garden_level = data.get("garden_level", 0)
 
     def discover(self):
         """Mark room as discovered."""
@@ -106,4 +107,6 @@ class Room:
             d["salvage_level"] = self.salvage_level
         if self.shelter_level:
             d["shelter_level"] = self.shelter_level
+        if self.garden_level:
+            d["garden_level"] = self.garden_level
         return d

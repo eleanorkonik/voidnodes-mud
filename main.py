@@ -795,6 +795,9 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
                                    consequence_meta=self.state.get("consequence_meta", {}))
             display.display_seed(self.seed.to_dict(), name=self.seed_name)
 
+            # Show any day transition reports the steward missed
+            self._show_pending_steward_reports()
+
             if not self.state.get("_first_steward_hint"):
                 self.state["_first_steward_hint"] = True
                 print()

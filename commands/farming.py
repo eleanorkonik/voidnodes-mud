@@ -6,6 +6,13 @@ from engine import display, farming
 class FarmingMixin:
     """Mixin providing farming and garden commands for the Game class."""
 
+    def _current_garden_plots(self):
+        """Get plots for the current room's garden, or all plots if not in a garden."""
+        room = self.current_room()
+        if room and room.id in self.skerry.gardens:
+            return self.skerry.get_garden_plots_for_room(room.id)
+        return self.skerry.get_garden_plots()
+
     def cmd_plant(self, args):
         """Manually plant a specimen in a garden plot."""
         if self.state["current_phase"] == "explorer":
@@ -40,7 +47,7 @@ class FarmingMixin:
             display.error(f"No specimen '{specimen_target}' in your inventory.")
             return
 
-        plots = self.skerry.get_garden_plots()
+        plots = self._current_garden_plots()
         if not plots:
             display.error("No garden plots available.")
             return
@@ -83,7 +90,7 @@ class FarmingMixin:
             display.error("No garden built.")
             return
 
-        plots = self.skerry.get_garden_plots()
+        plots = self._current_garden_plots()
 
         # If no args, harvest all ready plots
         if not args:
@@ -138,14 +145,14 @@ class FarmingMixin:
                 display.success(f"Byproduct: {utility['name']} x{utility.get('quantity', 1)}")
 
     def cmd_survey(self, args):
-        """Survey all garden plots."""
+        """Survey garden plots (current garden if in one, otherwise all)."""
         if self.state["current_phase"] == "explorer":
             self._wrong_phase_narrate("steward", "farming")
             return
         if not self.skerry.has_structure("garden"):
             display.error("No garden built. Build one first.")
             return
-        plots = self.skerry.get_garden_plots()
+        plots = self._current_garden_plots()
         display.display_plot_survey(plots, self.state["day"])
 
     def cmd_uproot(self, args):

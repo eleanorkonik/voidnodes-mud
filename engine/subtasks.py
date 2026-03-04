@@ -71,18 +71,26 @@ def _check_condition(condition_name, game, room, npc):
     return fn(game, room, npc)
 
 
+def _garden_plots_for_room(game, room):
+    """Get garden plots for a specific room, falling back to all plots."""
+    plots = game.skerry.get_garden_plots_for_room(room.id)
+    if plots:
+        return plots
+    return game.skerry.get_garden_plots()
+
+
 def _has_planted_plots(game, room, npc):
-    plots = game.skerry.get_garden_plots()
+    plots = _garden_plots_for_room(game, room)
     return any(p.get("plant") is not None for p in plots)
 
 
 def _has_harvestable_plots(game, room, npc):
-    plots = game.skerry.get_garden_plots()
+    plots = _garden_plots_for_room(game, room)
     return any(farming.is_harvestable(p) for p in plots)
 
 
 def _has_empty_plots_and_specimens(game, room, npc):
-    plots = game.skerry.get_garden_plots()
+    plots = _garden_plots_for_room(game, room)
     has_empty = any(p.get("plant") is None for p in plots)
     if not has_empty:
         return False
@@ -166,8 +174,8 @@ def _npc_skill(npc, skill_name):
 
 
 def _handler_water_plants(game, room, npc, shifts):
-    """Boost growth on all planted plots."""
-    plots = game.skerry.get_garden_plots()
+    """Boost growth on planted plots in this garden."""
+    plots = _garden_plots_for_room(game, room)
     watered = 0
     for plot in plots:
         if plot.get("plant") and plot["plant"]["growth"] < plot["plant"]["growth_needed"]:
@@ -182,8 +190,8 @@ def _handler_water_plants(game, room, npc, shifts):
 
 
 def _handler_fertilize_soil(game, room, npc, shifts):
-    """Improve soil nutrients on planted plots."""
-    plots = game.skerry.get_garden_plots()
+    """Improve soil nutrients on planted plots in this garden."""
+    plots = _garden_plots_for_room(game, room)
     fertilized = 0
     boost = max(1, 1 + shifts)
     for plot in plots:
@@ -197,8 +205,8 @@ def _handler_fertilize_soil(game, room, npc, shifts):
 
 
 def _handler_harvest_crops(game, room, npc, shifts):
-    """Harvest mature plants."""
-    plots = game.skerry.get_garden_plots()
+    """Harvest mature plants in this garden."""
+    plots = _garden_plots_for_room(game, room)
     day = game.state["day"]
     messages = []
     for plot in plots:
@@ -220,8 +228,8 @@ def _handler_harvest_crops(game, room, npc, shifts):
 
 
 def _handler_plant_seeds(game, room, npc, shifts):
-    """Plant specimens from steward inventory into empty plots."""
-    plots = game.skerry.get_garden_plots()
+    """Plant specimens from steward inventory into empty plots in this garden."""
+    plots = _garden_plots_for_room(game, room)
     day = game.state["day"]
     specimen_ids = [item_id for item_id in game.steward.inventory
                     if farming.is_specimen(item_id)]

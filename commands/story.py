@@ -164,10 +164,17 @@ class StoryMixin:
                         mood="grim", loyalty=lira.get("loyalty", 0))
 
     def _day_transition(self):
-        """Handle end-of-day events."""
+        """Handle end-of-day events.
+
+        Collects steward-relevant overnight reports into state so the
+        steward sees them on phase entry (not just the explorer on void
+        return).  Reports are also printed immediately for whoever is
+        active.
+        """
         self.scene_invoked_aspects = set()
 
         day = self.state["day"]
+        reports = []  # steward-relevant overnight report lines
 
         # Reset daily counters
         self.state["social_compels_today"] = []
@@ -182,6 +189,7 @@ class StoryMixin:
         drain, drain_msgs = apply_festering_drain(self)
         for msg in drain_msgs:
             display.warning(msg)
+            reports.append(msg)
 
         # World seed growth check
         display.seed_speak(self.seed.communicate(self.seed_name))
@@ -190,14 +198,17 @@ class StoryMixin:
         for npc_id in self.state.get("recruited_npcs", []):
             npc = self.npcs_db.get(npc_id, {})
             if npc:
-                house = npc.get("house_level", 0)
-                if house == 0 and npc.get("mood") != "unhappy":
+                has_shelter = npc.get("house_level", 0) > 0 or npc.get("settled_room")
+                if not has_shelter and npc.get("mood") != "unhappy":
                     if random.random() < 0.3:
                         old_mood = npc.get("mood", "content")
                         npc["mood"] = "restless"
-                        display.info(f"  {npc['name']} is getting restless without proper shelter.")
-                        if not npc.get("settled_room"):
-                            display.info(f"    Tip: SETTLE {npc['name'].upper()} IN <room> to assign them a bed.")
+                        msg = f"  {npc['name']} is getting restless without proper shelter."
+                        display.info(msg)
+                        reports.append(msg)
+                        tip = f"    Tip: SETTLE {npc['name'].upper()} IN <room> to assign them a bed."
+                        display.info(tip)
+                        reports.append(tip)
                         self._log_event("npc_mood_change", comic_weight=2,
                                         npc_name=npc["name"], npc_id=npc_id,
                                         old_mood=old_mood, new_mood="restless",
@@ -215,18 +226,22 @@ class StoryMixin:
 
             # Garden pre-step: base growth ticks (time passing, not an NPC action)
             if room.role == "garden":
-                plots = self.skerry.get_garden_plots()
+                plots = self.skerry.get_garden_plots_for_room(room.id)
                 newly_ready = farming.advance_growth(plots, len(workers))
                 for plot_id in newly_ready:
                     plot = self.skerry.get_plot(plot_id)
                     if plot and plot.get("plant"):
-                        display.success(f"  Plot {plot_id}: {plot['plant'].get('name')} is ready!")
+                        msg = f"  Plot {plot_id}: {plot['plant'].get('name')} is ready!"
+                        display.success(msg)
+                        reports.append(msg)
 
             # Run subtask queue
             results = subtasks.run_room_subtasks(self, room, workers)
             for npc_name, subtask_name, messages in results:
                 for msg in messages:
-                    display.success(f"  {npc_name} ({subtask_name}): {msg}")
+                    line = f"  {npc_name} ({subtask_name}): {msg}"
+                    display.success(line)
+                    reports.append(line)
 
         # Random event
         if random.random() < 0.4:
@@ -245,6 +260,7 @@ class StoryMixin:
                     event = random.choices(eligible, weights=weights, k=1)[0]
                     display.header(f"Event: {self.sub(event['name'])}")
                     display.narrate(f"  {self.sub(event['description'])}")
+                    reports.append(f"  Event: {self.sub(event['name'])}")
 
                     if event.get("skill_check"):
                         sc = event["skill_check"]
@@ -253,7 +269,9 @@ class StoryMixin:
                         print(f"  {dice.roll_description(dice_result, self.steward.get_skill(sc['skill']), sc['skill'])}")
 
                         if shifts >= 0:
-                            display.success(f"  {self.sub(event['success'])}")
+                            msg = f"  {self.sub(event['success'])}"
+                            display.success(msg)
+                            reports.append(msg)
                             effect = event.get("success_effect", {})
                             if effect.get("mote_bonus"):
                                 self.seed.feed(effect["mote_bonus"])
@@ -265,7 +283,9 @@ class StoryMixin:
                                     n = self.npcs_db.get(nid, {})
                                     n["loyalty"] = min(10, n.get("loyalty", 0) + 1)
                         else:
-                            display.warning(f"  {self.sub(event['failure'])}")
+                            msg = f"  {self.sub(event['failure'])}"
+                            display.warning(msg)
+                            reports.append(msg)
                             effect = event.get("failure_effect", {})
                             if effect.get("stress"):
                                 self.steward.apply_damage(effect["stress"])
@@ -275,7 +295,9 @@ class StoryMixin:
                                     if n.get("mood") == "content":
                                         n["mood"] = "restless"
                     else:
-                        display.success(f"  {self.sub(event['success'])}")
+                        msg = f"  {self.sub(event['success'])}"
+                        display.success(msg)
+                        reports.append(msg)
                         effect = event.get("success_effect", {})
                         if effect.get("mote_bonus"):
                             self.seed.feed(effect["mote_bonus"])
@@ -289,14 +311,18 @@ class StoryMixin:
             # Remove spoiled food
             spoiled = farming.remove_spoiled(self.skerry.food_stores, day)
             for name in spoiled:
-                display.warning(f"  Spoiled: {name} has gone bad.")
+                msg = f"  Spoiled: {name} has gone bad."
+                display.warning(msg)
+                reports.append(msg)
 
             # Consume food
             population = 2 + len(self.state.get("recruited_npcs", []))
             daily_need = population * 50
             consumed = farming.consume_food(self.skerry.food_stores, daily_need, day)
             if consumed > 0:
-                display.info(f"  Colony consumed {consumed} cal ({population} people).")
+                msg = f"  Colony consumed {consumed} cal ({population} people)."
+                display.info(msg)
+                reports.append(msg)
 
             # Check starvation tier
             food_days = farming.days_of_food(self.skerry.food_stores, population)
@@ -309,19 +335,25 @@ class StoryMixin:
 
             if tier["aspect"]:
                 dyn.append(tier["aspect"])
-                display.warning(f"  Aspect: {tier['aspect']}")
+                msg = f"  Aspect: {tier['aspect']}"
+                display.warning(msg)
+                reports.append(msg)
 
             # Variety check
             var = farming.variety_score(self.skerry.food_stores)
             if 0 < var < 3:
                 dyn.append("Monotonous Diet")
-                display.warning(f"  Aspect: Monotonous Diet")
+                msg = "  Aspect: Monotonous Diet"
+                display.warning(msg)
+                reports.append(msg)
 
             # Pleasure check
             pleasure = farming.avg_pleasure(self.skerry.food_stores)
             if pleasure > 6:
                 dyn.append("Well-Fed Colony")
-                display.success(f"  Aspect: Well-Fed Colony (free invoke)")
+                msg = "  Aspect: Well-Fed Colony (free invoke)"
+                display.success(msg)
+                reports.append(msg)
 
             # Starvation effects on NPCs
             if tier["aspect"] == "Hunger Gnaws at Everyone":
@@ -330,7 +362,9 @@ class StoryMixin:
                     n["loyalty"] = max(0, n.get("loyalty", 5) - 1)
                 self.steward.apply_damage(1)
                 self.explorer.apply_damage(1)
-                display.warning("  Hunger takes its toll. Everyone suffers.")
+                msg = "  Hunger takes its toll. Everyone suffers."
+                display.warning(msg)
+                reports.append(msg)
             elif tier["aspect"] == "People Are Starving":
                 departed = []
                 for nid in list(self.state.get("recruited_npcs", [])):
@@ -339,7 +373,9 @@ class StoryMixin:
                         departed.append(nid)
                 for nid in departed:
                     npc = self.npcs_db[nid]
-                    display.warning(f"  {npc['name']} has left the colony — too hungry to stay.")
+                    msg = f"  {npc['name']} has left the colony — too hungry to stay."
+                    display.warning(msg)
+                    reports.append(msg)
                     self._log_event("npc_departed", comic_weight=4,
                                     npc_name=npc["name"], npc_id=nid,
                                     cause="starvation")
@@ -373,10 +409,24 @@ class StoryMixin:
             else:
                 self._relocate_npc(npc_id, npc, "skerry_central")
 
+        # Buffer reports for steward if not already in steward phase
+        if self.state.get("current_phase") != "steward" and reports:
+            self.state["pending_steward_reports"] = reports
+
         self._log_event("day_transition", comic_weight=1,
                         day_number=day,
                         population=2 + len(self.state.get("recruited_npcs", [])))
         display.display_seed(self.seed.to_dict(), name=self.seed_name)
+
+    def _show_pending_steward_reports(self):
+        """Show buffered overnight reports when steward becomes active."""
+        reports = self.state.pop("pending_steward_reports", [])
+        if not reports:
+            return
+        print()
+        display.header("Overnight Report")
+        for line in reports:
+            print(line)
 
     def _transition_to_day1(self):
         """Transition from prologue to Day 1 Explorer Phase."""

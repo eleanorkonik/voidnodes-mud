@@ -165,9 +165,20 @@ def _migrate_state(state):
     # Farming system fields
     skerry_state = state.get("skerry", {})
     skerry_state.setdefault("food_stores", [])
-    skerry_state.setdefault("garden", {"plots": [], "max_plots": 4})
+    # Migrate single garden → gardens dict
+    if "garden" in skerry_state and "gardens" not in skerry_state:
+        old_garden = skerry_state.pop("garden")
+        if old_garden.get("plots"):
+            skerry_state["gardens"] = {"skerry_garden": old_garden}
+        else:
+            skerry_state["gardens"] = {}
+    skerry_state.setdefault("gardens", {})
     skerry_state.setdefault("seed_vault", [])
     skerry_state.setdefault("dynamic_aspects", [])
+    # Ensure garden rooms have garden_level field
+    for room_data in skerry_state.get("rooms", []):
+        if room_data.get("id", "").startswith("skerry_garden"):
+            room_data.setdefault("garden_level", 0)
     # Rename old task names + ensure NPC fields exist
     for npc_id, npc in state.get("npcs", {}).items():
         if npc.get("assignment") == "scavenging":
@@ -189,7 +200,7 @@ def _migrate_state(state):
         "skerry_landing": {"role": None},
         "skerry_storehouse": {"role": "organize"},
         "skerry_workshop": {"role": "craft", "tool_level": 0},
-        "skerry_garden": {"role": "garden"},
+        "skerry_garden": {"role": "garden", "garden_level": 0},
         "skerry_water": {"role": "gather"},
         "skerry_lookout": {"role": "guard"},
         "skerry_apothecary": {"role": "healing", "healing_level": 0},
@@ -206,6 +217,7 @@ def _migrate_state(state):
         room_data.setdefault("healing_level", 0)
         room_data.setdefault("salvage_level", 0)
         room_data.setdefault("shelter_level", 0)
+        room_data.setdefault("garden_level", 0)
         # Migrate old "rest" role → "communal"
         if room_data.get("role") == "rest":
             room_data["role"] = "communal"
@@ -218,6 +230,8 @@ def _migrate_state(state):
     state.setdefault("beacons", {})
     # Workshop queue
     state.setdefault("workshop_queue", [])
+    # Pending steward reports from day transitions triggered outside steward phase
+    state.setdefault("pending_steward_reports", [])
     # Ensure new workshop recipes are discoverable (added with workshop build)
     # Migrate event_log: convert old string entries to dicts
     event_log = state.get("event_log", [])

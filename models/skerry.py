@@ -11,7 +11,18 @@ class Skerry:
         self.structures = list(data.get("structures_built", []))
         self.npc_houses = dict(data.get("npc_houses", {}))  # {npc_id: house_level}
         self.food_stores = list(data.get("food_stores", []))
-        self.garden = data.get("garden", {"plots": [], "max_plots": 4})
+        # Gardens: {room_id: {"plots": [...], "max_plots": N}}
+        # Migrate legacy single-garden format
+        if "gardens" in data:
+            self.gardens = dict(data["gardens"])
+        elif "garden" in data:
+            old = data["garden"]
+            if old.get("plots"):
+                self.gardens = {"skerry_garden": old}
+            else:
+                self.gardens = {}
+        else:
+            self.gardens = {}
         self.seed_vault = list(data.get("seed_vault", []))
         self.dynamic_aspects = list(data.get("dynamic_aspects", []))
 
@@ -62,11 +73,20 @@ class Skerry:
 
     def build_room(self, room_template):
         """Add an expandable room to the skerry."""
-        room_data = dict(room_template)
+        import copy
+        room_data = copy.deepcopy(room_template)
         room_data["discovered"] = True
         room_data["items"] = []
         room_data["npcs"] = []
         room_data["enemies"] = []
+
+        # For additional gardens, generate a unique room ID
+        is_garden = "garden" in room_data.get("structures", [])
+        if is_garden and room_data["id"] in self.rooms:
+            # Building another garden — give it a unique ID
+            garden_num = sum(1 for rid in self.rooms if rid.startswith("skerry_garden")) + 1
+            room_data["id"] = f"skerry_garden_{garden_num}"
+            room_data["name"] = f"Garden ({garden_num})"
 
         # Set up exits
         exits = dict(room_data.get("exits", {}))
@@ -82,12 +102,18 @@ class Skerry:
 
         self.structures.append(room_data.get("structures", [None])[0])
 
-        # Initialize garden plots if this is the garden
+        # Initialize garden plots if this is a garden
         if "garden" in room_data:
-            self.garden = room_data["garden"]
+            garden_data = room_data["garden"]
+            # Assign globally unique plot IDs
+            max_plot_id = self._max_plot_id()
+            for i, plot in enumerate(garden_data["plots"]):
+                plot["id"] = max_plot_id + i + 1
+            self.gardens[room.id] = garden_data
 
-        # Remove from expandable list
-        self.expandable = [r for r in self.expandable if r["id"] != room_data["id"]]
+        # Remove from expandable list (except garden — allow re-building)
+        if not is_garden:
+            self.expandable = [r for r in self.expandable if r["id"] != room_data["id"]]
 
         return room
 
@@ -104,15 +130,52 @@ class Skerry:
         return self.npc_houses.get(npc_id, 0)
 
     def get_garden_plots(self):
-        """Get the garden plot list."""
-        return self.garden.get("plots", [])
+        """Get all garden plots across all gardens."""
+        all_plots = []
+        for garden in self.gardens.values():
+            all_plots.extend(garden.get("plots", []))
+        return all_plots
+
+    def get_garden_plots_for_room(self, room_id):
+        """Get plots for a specific garden room. Returns [] if not a garden."""
+        garden = self.gardens.get(room_id)
+        if garden:
+            return garden.get("plots", [])
+        return []
+
+    def get_garden_for_room(self, room_id):
+        """Get the garden data dict for a specific room, or None."""
+        return self.gardens.get(room_id)
 
     def get_plot(self, plot_id):
-        """Get a specific garden plot by ID."""
-        for plot in self.garden.get("plots", []):
-            if plot["id"] == plot_id:
-                return plot
+        """Get a specific garden plot by ID, searching all gardens."""
+        for garden in self.gardens.values():
+            for plot in garden.get("plots", []):
+                if plot["id"] == plot_id:
+                    return plot
         return None
+
+    def _max_plot_id(self):
+        """Return the highest plot ID across all gardens, or 0."""
+        max_id = 0
+        for garden in self.gardens.values():
+            for plot in garden.get("plots", []):
+                if plot["id"] > max_id:
+                    max_id = plot["id"]
+        return max_id
+
+    def garden_at_max(self, room_id):
+        """Check if a garden room is at its max plot count (20)."""
+        garden = self.gardens.get(room_id)
+        if not garden:
+            return False
+        return len(garden.get("plots", [])) >= 20
+
+    def all_gardens_at_max(self):
+        """Check if ALL garden rooms are at 20 plots."""
+        if not self.gardens:
+            return False
+        return all(len(g.get("plots", [])) >= 20 for g in self.gardens.values())
 
     def to_dict(self):
         """Serialize to dict."""
@@ -122,7 +185,7 @@ class Skerry:
             "structures_built": self.structures,
             "npc_houses": self.npc_houses,
             "food_stores": self.food_stores,
-            "garden": self.garden,
+            "gardens": self.gardens,
             "seed_vault": self.seed_vault,
             "dynamic_aspects": self.dynamic_aspects,
         }
