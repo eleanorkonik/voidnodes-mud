@@ -168,8 +168,10 @@ def get_quest_talk(npc_id, npc, game_state):
     quest = game_state.get("quests", {}).get("verdant_bloom", {})
     dialogue = npc.get("dialogue", {})
 
-    # Quest complete — react based on path taken
+    # Quest complete — if recruited, let normal greeting system handle her
     if quest.get("status") == "complete":
+        if npc.get("recruited"):
+            return None
         path = quest.get("path")
         if path == "careful":
             return {"lines": [dialogue.get("quest_careful_done", "...")]}
