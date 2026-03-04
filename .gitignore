@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 saves/
 .claude/
+.DS_Store
