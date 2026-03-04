@@ -52,7 +52,10 @@ class NpcsMixin:
                                 npc_name=npc["name"], npc_id=npc_id)
             else:
                 dialogue = npc.get("dialogue", {})
+                desc = dialogue.get("greeting_desc")
                 msg = dialogue.get("greeting", "They look at you warily.")
+                if desc:
+                    display.narrate(self._sub_dialogue(desc))
                 display.npc_speak(npc["name"], self._sub_dialogue(msg))
                 # First time greeting any unrecruited NPC — seed hints about RECRUIT
                 if not self.state.get("_recruit_hint_shown"):
@@ -448,7 +451,11 @@ class NpcsMixin:
         print()
 
         # Show NPC greeting for context
-        greeting = npc.get("dialogue", {}).get("greeting", "")
+        dialogue = npc.get("dialogue", {})
+        desc = dialogue.get("greeting_desc")
+        greeting = dialogue.get("greeting", "")
+        if desc:
+            display.narrate(self._sub_dialogue(desc))
         if greeting:
             display.npc_speak(npc["name"], self._sub_dialogue(greeting))
             print()

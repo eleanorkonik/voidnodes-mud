@@ -30,7 +30,8 @@
         "mood": "content",
         "house_level": 0,
         "dialogue": {
-            "greeting": "A lean figure steps out from behind a cargo crate, watchful but not hostile. 'Another survivor. I was starting to think I was the last one.'",
+            "greeting_desc": "A lean figure steps out from behind a cargo crate, watchful but not hostile.",
+            "greeting": "Another survivor. I was starting to think I was the last one.",
             "idle": "'There's work to be done. The skerry won't grow itself \u2014 well, {seed_name} will, but it needs help.'",
             "happy": "'This place is starting to feel like it could be something. Keep at it.'",
             "quest": "'The frozen wreck to the west... I've seen lights there that shouldn't exist. Be careful if you go.'",
@@ -124,7 +125,8 @@
         "mood": "content",
         "house_level": 0,
         "dialogue": {
-            "greeting": "A young woman waves from atop a cargo crate. 'Oh! A person! A real, actual person! I haven't seen anyone in ages!'",
+            "greeting_desc": "A young woman waves from atop a cargo crate.",
+            "greeting": "Oh! A person! A real, actual person! I haven't seen anyone in ages!",
             "idle": "'So when do we start scavenging? I know all the good spots around here.'",
             "happy": "'I love having people around. The void was so quiet before.'",
             "recruit_success": "'You have a place to stay? With actual walls? I'm in. Absolutely in. When do we leave?'",
@@ -216,7 +218,8 @@
         "assignment": "idle",
         "mood": "restless",
         "dialogue": {
-            "greeting": "A stocky figure looks up from the console they're tinkering with. 'Another survivor? Don't touch anything.'",
+            "greeting_desc": "A stocky figure looks up from the console they're tinkering with.",
+            "greeting": "Another survivor? Don't touch anything.",
             "idle": "'If you need something fixed, I'm your person. Just don't expect miracles.'",
             "happy": "'I have to admit, this shelter is better than a dead control room. Good work.'",
             "recruit_success": "Dax looks around the ruined control room, then sighs. 'Fine. Can't be worse than this. Lead the way.'",
@@ -308,7 +311,8 @@
         "assignment": "idle",
         "mood": "content",
         "dialogue": {
-            "greeting": "A teenager peers out from behind a lean-to, eyes wide. 'Are... are you friendly? Please be friendly.'",
+            "greeting_desc": "A teenager peers out from behind a lean-to, eyes wide.",
+            "greeting": "Are... are you friendly? Please be friendly.",
             "idle": "'I'm trying to help. Just tell me what to do and I'll do it. Promise.'",
             "happy": "'I feel safe here. For the first time in... I don't even know how long.'",
             "recruit_success": "'You want me to come with you? Really? Yes! I mean \u2014 yes. Definitely. Let's go.'",
@@ -400,7 +404,8 @@
         "assignment": "idle",
         "mood": "content",
         "dialogue": {
-            "greeting": "A weathered woman looks up from her coral garden. 'Hm. You look like you could use a meal. Sit down.'",
+            "greeting_desc": "A weathered woman looks up from her coral garden.",
+            "greeting": "Hm. You look like you could use a meal. Sit down.",
             "idle": "'The garden needs tending. These coral-seeds don't plant themselves.'",
             "happy": "'The soil here responds to {seed_name}. I've never seen anything like it. We could grow real food.'",
             "recruit_success": "'You've got a world seed and a place to put down roots? Show me this skerry of yours. If it's real, I'll stay.'",
@@ -492,7 +497,8 @@
         "assignment": "idle",
         "mood": "content",
         "dialogue": {
-            "greeting": "A thin man adjusts spectacles made from crystal shards. 'Fascinating \u2014 another living being. Tell me, can you read Eliok script?'",
+            "greeting_desc": "A thin man adjusts spectacles made from crystal shards.",
+            "greeting": "Fascinating \u2014 another living being. Tell me, can you read Eliok script?",
             "idle": "'The inscriptions on this ship... they tell a story. A world that grew from a single seed. Sound familiar?'",
             "happy": "'Access to {seed_name} changes everything. If I could study the world seed directly...'",
             "recruit_success": "'A world seed? An actual living world seed? I need to study it. Take me to it immediately.'",
@@ -585,6 +591,7 @@
         "mood": "content",
         "house_level": 0,
         "dialogue": {
+            "greeting_desc": "A wiry woman in a mud-streaked lab coat straightens up from a cluster of bioluminescent ferns, eyes locked on your arm.",
             "greeting": "Another person. And \u2014 what is that tendril on your arm? The vines near you are reaching toward it. I've never seen the biodome react to anything like that.",
             "idle": "'Have you tried composting the coral fragments? The mineral content would be extraordinary.'",
             "happy": "'The soil on your skerry \u2014 it responds to {seed_name} like nothing I've ever studied. I could spend years here.'",
@@ -686,7 +693,8 @@
         "assignment": "idle",
         "mood": "restless",
         "dialogue": {
-            "greeting": "A scarred woman rises from a crouch, hand on a makeshift blade. 'State your business. Quickly.'",
+            "greeting_desc": "A scarred woman rises from a crouch, hand on a makeshift blade.",
+            "greeting": "State your business. Quickly.",
             "idle": "'Don't bore me with talk. If there's fighting to be done, I'm ready.'",
             "happy": "'This skerry... it's worth defending. I'll make sure nothing threatens it.'",
             "recruit_success": "Angya sheathes her blade. 'You fight well. That's all I needed to see. Lead on.'",
