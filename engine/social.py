@@ -628,7 +628,12 @@ def get_contextual_greeting(npc, npc_id, game):
     greet_lines = npc.get("greet_lines", {})
     mood = npc.get("mood", "content")
     loyalty = npc.get("loyalty", 0)
+    assignment = npc.get("assignment", "idle")
     dialogue = npc.get("dialogue", {})
+
+    # If NPC has a work assignment, prefer assigned greeting
+    if assignment != "idle" and greet_lines.get("assigned"):
+        return random.choice(greet_lines["assigned"])
 
     # Check greet_lines first
     if mood in ("restless", "unhappy") and greet_lines.get("mood_restless"):
