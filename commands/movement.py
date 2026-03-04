@@ -570,8 +570,9 @@ class MovementMixin:
                     print()
                     display.seed_speak(hint)
 
-        # World seed flavor message occasionally
-        if not self.in_combat and not self.in_compel and random.random() < 0.3:
+        # World seed flavor message occasionally (skerry only — not useful mid-exploration)
+        room = self.current_room()
+        if room and room.zone == "skerry" and not self.in_combat and not self.in_compel and random.random() < 0.3:
             print()
             display.seed_speak(self.seed.communicate(self.seed_name))
 
