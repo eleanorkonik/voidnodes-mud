@@ -126,9 +126,6 @@ class BuildingMixin:
             print("  No structures available to build or upgrade right now.")
 
     def cmd_craft(self, args):
-        if self.state["current_phase"] == "explorer":
-            self._wrong_phase_narrate("steward", "building")
-            return
         if not args:
             display.error("Craft what? Type RECIPES to see available recipes.")
             return

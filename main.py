@@ -543,10 +543,12 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
 
         Handles masterwork prefix: "masterwork:rope" looks up "rope" in db,
         and "masterwork rope" as a target matches masterwork items.
+        Bare "masterwork" matches the first masterwork item found.
         """
         from engine.masterwork import is_masterwork, base_id
         # Normalize "masterwork rope" → match against masterwork items
         mw_target = None
+        mw_any = target == "masterwork"
         if target.startswith("masterwork "):
             mw_target = target[len("masterwork "):]
 
@@ -556,14 +558,19 @@ class Game(CombatMixin, MovementMixin, ItemsMixin, NpcsMixin, ArtifactsMixin,
             ename = edata.get("name", "").lower()
 
             if is_masterwork(eid):
-                # Match "masterwork rope", "rope", or the full id
+                # Bare "masterwork" matches any masterwork item
+                if mw_any:
+                    return eid, edata
+                # Match "masterwork rope" or "masterwork bandages"
                 if mw_target and (mw_target in ename or mw_target == bid):
                     return eid, edata
-                if target in ename or target == eid or target == bid:
+                # Also match against full display name ("masterwork bandages")
+                full_name = f"masterwork {ename}"
+                if target in full_name or target in ename or target == eid or target == bid:
                     return eid, edata
             else:
                 # Normal item — skip if player specifically asked for masterwork
-                if mw_target:
+                if mw_target or mw_any:
                     continue
                 if target in ename or target == eid:
                     return eid, edata
