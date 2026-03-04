@@ -7,6 +7,27 @@ STACK_SIZE = 5
 SKERRY_CAPACITY = {"large": 5, "medium": 50, "small": 500}
 
 
+def _display_item_counts(item_ids, items_db, specimens_db=None, artifacts_db=None, style=None):
+    """Count items by display name and print with x{count} for multiples."""
+    out = style or display.info
+    counts = {}
+    for mid in item_ids:
+        spec = specimens_db.get(mid) if specimens_db else None
+        art = artifacts_db.get(mid) if artifacts_db else None
+        if spec:
+            name = spec["name"]
+        elif art:
+            name = art.get("name", mid)
+        else:
+            name = masterwork.get_display_name(mid, items_db)
+        counts[name] = counts.get(name, 0) + 1
+    for name, count in counts.items():
+        if count > 1:
+            out(f"  {display.item_name(name)} x{count}")
+        else:
+            out(f"  {display.item_name(name)}")
+
+
 class ItemsMixin:
     """Mixin providing item manipulation commands for the Game class."""
 
@@ -50,16 +71,7 @@ class ItemsMixin:
                 else:
                     display.narrate("There's nothing here to pick up.")
                 return
-            counts = {}
-            for mid in picked:
-                spec = self.specimens_db.get(mid)
-                name = spec["name"] if spec else masterwork.get_display_name(mid, self.items_db)
-                counts[name] = counts.get(name, 0) + 1
-            for name, count in counts.items():
-                if count > 1:
-                    display.success(f"  {display.item_name(name)} x{count}")
-                else:
-                    display.success(f"  {display.item_name(name)}")
+            _display_item_counts(picked, self.items_db, specimens_db=self.specimens_db, style=display.success)
             if skipped:
                 display.info(f"  Left behind {len(skipped)} item{'s' if len(skipped) != 1 else ''} (no room).")
             return
@@ -143,16 +155,8 @@ class ItemsMixin:
                     room.add_item(item_id)
                     dropped.append(item_id)
             if dropped:
-                counts = {}
-                for mid in dropped:
-                    name = masterwork.get_display_name(mid, self.items_db)
-                    counts[name] = counts.get(name, 0) + 1
                 display.narrate("You pile your salvage on the ground.")
-                for name, count in counts.items():
-                    if count > 1:
-                        display.info(f"  {display.item_name(name)} x{count}")
-                    else:
-                        display.info(f"  {display.item_name(name)}")
+                _display_item_counts(dropped, self.items_db)
             else:
                 display.narrate("You don't have any materials to drop.")
             return
@@ -166,16 +170,8 @@ class ItemsMixin:
                     room.add_item(item_id)
                     dropped.append(item_id)
             if dropped:
-                counts = {}
-                for mid in dropped:
-                    name = self.specimens_db[mid]["name"]
-                    counts[name] = counts.get(name, 0) + 1
                 display.narrate("You set your specimens down carefully.")
-                for name, count in counts.items():
-                    if count > 1:
-                        display.info(f"  {display.item_name(name)} x{count}")
-                    else:
-                        display.info(f"  {display.item_name(name)}")
+                _display_item_counts(dropped, self.items_db, specimens_db=self.specimens_db)
             else:
                 display.narrate("You don't have any specimens to drop.")
             return
@@ -195,23 +191,8 @@ class ItemsMixin:
                     self._on_artifact_resolved(item_id)
                 dropped.append(item_id)
             if dropped:
-                counts = {}
-                for mid in dropped:
-                    spec = self.specimens_db.get(mid)
-                    art = self.artifacts_db.get(mid)
-                    if spec:
-                        name = spec["name"]
-                    elif art:
-                        name = art.get("name", mid)
-                    else:
-                        name = masterwork.get_display_name(mid, self.items_db)
-                    counts[name] = counts.get(name, 0) + 1
                 display.narrate("You set everything down.")
-                for name, count in counts.items():
-                    if count > 1:
-                        display.info(f"  {display.item_name(name)} x{count}")
-                    else:
-                        display.info(f"  {display.item_name(name)}")
+                _display_item_counts(dropped, self.items_db, specimens_db=self.specimens_db, artifacts_db=self.artifacts_db)
                 if kept_artifact and kept_artifact in char.inventory:
                     art = self.artifacts_db.get(kept_artifact, {})
                     display.info(f"  (Kept: {art.get('name', kept_artifact)})")
@@ -252,6 +233,23 @@ class ItemsMixin:
 
         display.error(f"You don't have anything called '{target}'.")
 
+    def _try_wear(self, char, item_id, item_data):
+        """Try to wear an item. Returns True if handled (success or error), False if not wearable."""
+        slot = item_data.get("slot")
+        if not slot:
+            display.narrate("You can't wear that.")
+            return True
+        if char.worn.get(slot):
+            current_name = display._lookup_name(char.worn[slot], self.items_db, self.artifacts_db)
+            display.narrate(f"You're already wearing {current_name} on your {slot}. REMOVE it first.")
+            return True
+        char.wear_item(item_id, slot)
+        name = item_data.get("name", item_id)
+        display.success(f"You put on the {name}.")
+        self._log_event("item_worn", comic_weight=2,
+                        item_id=item_id, item_name=name, slot=slot)
+        return True
+
     def cmd_wear(self, args):
         if not args:
             display.error("Wear what?")
@@ -263,34 +261,12 @@ class ItemsMixin:
         # Find item in inventory — check both items_db and artifacts_db
         art_id, art = self._find_entity(char.inventory, target, self.artifacts_db)
         if art:
-            slot = art.get("slot")
-            if not slot:
-                display.narrate("You can't wear that.")
-                return
-            if char.worn.get(slot):
-                current_name = display._lookup_name(char.worn[slot], self.items_db, self.artifacts_db)
-                display.narrate(f"You're already wearing {current_name} on your {slot}. REMOVE it first.")
-                return
-            char.wear_item(art_id, slot)
-            display.success(f"You put on the {art['name']}.")
-            self._log_event("item_worn", comic_weight=2,
-                            item_id=art_id, item_name=art["name"], slot=slot)
+            self._try_wear(char, art_id, art)
             return
 
         item_id, item = self._find_entity(char.inventory, target, self.items_db)
         if item:
-            slot = item.get("slot")
-            if not slot:
-                display.narrate("You can't wear that.")
-                return
-            if char.worn.get(slot):
-                current_name = display._lookup_name(char.worn[slot], self.items_db, self.artifacts_db)
-                display.narrate(f"You're already wearing {current_name} on your {slot}. REMOVE it first.")
-                return
-            char.wear_item(item_id, slot)
-            display.success(f"You put on the {item['name']}.")
-            self._log_event("item_worn", comic_weight=2,
-                            item_id=item_id, item_name=item["name"], slot=slot)
+            self._try_wear(char, item_id, item)
             return
 
         display.narrate(f"You don't have '{target}'.")
@@ -485,15 +461,18 @@ class ItemsMixin:
 
         display.error(f"There's nobody called '{target_name}' here to give things to.")
 
+    def _unequip_if_worn(self, char, item_id):
+        """If item is currently worn, remove it from its slot."""
+        worn_slot = char.find_worn_by_item(item_id)
+        if worn_slot:
+            char.remove_worn(worn_slot)
+
     def _give_to_seed(self, char, item_part):
         """Feed an item to the world seed for motes."""
         # Artifacts first — they have special feed effects
         art_id, art = self._find_in_db(item_part, self.artifacts_db)
         if art and (art_id in char.inventory or self.state.get("artifacts_status", {}).get(art_id) == "discovered"):
-            # If worn, unequip first
-            worn_slot = char.find_worn_by_item(art_id)
-            if worn_slot:
-                char.remove_worn(worn_slot)
+            self._unequip_if_worn(char, art_id)
 
             motes = art["mote_value"]
             new_total, stage_changed = self.seed.feed(motes)
@@ -531,10 +510,7 @@ class ItemsMixin:
                 display.seed_speak(f"There's nothing for me in that {feed_name}.")
                 return
 
-            # If worn, unequip first
-            worn_slot = char.find_worn_by_item(item_id)
-            if worn_slot:
-                char.remove_worn(worn_slot)
+            self._unequip_if_worn(char, item_id)
 
             new_total, stage_changed = self.seed.feed(motes)
             char.remove_from_inventory(item_id)
