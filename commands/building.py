@@ -554,15 +554,32 @@ class BuildingMixin:
             if not queue:
                 print("  Queue is empty. QUEUE <recipe> to add one.")
                 return
-            for i, recipe_id in enumerate(queue, 1):
+            # Group consecutive duplicates for cleaner display
+            seen = []
+            for recipe_id in queue:
+                if seen and seen[-1][0] == recipe_id:
+                    seen[-1] = (recipe_id, seen[-1][1] + 1)
+                else:
+                    seen.append((recipe_id, 1))
+            for i, (recipe_id, qty) in enumerate(seen, 1):
                 recipe = self.recipes_db.get(recipe_id, {})
                 name = recipe.get("name", recipe_id)
                 mats = ", ".join(f"{v}x {self.items_db.get(k, {}).get('name', k)}"
                                for k, v in recipe.get("materials", {}).items())
-                print(f"  {i}. {name} ({mats})")
+                qty_str = f" x{qty}" if qty > 1 else ""
+                print(f"  {i}. {name}{qty_str} ({mats})")
             return
 
-        target = " ".join(args).lower()
+        # Parse optional quantity: QUEUE 3 ROPE or QUEUE ROPE 3
+        count = 1
+        words = list(args)
+        if words[0].isdigit():
+            count = int(words.pop(0))
+        elif words[-1].isdigit():
+            count = int(words.pop())
+        count = max(1, min(count, 20))  # cap at 20
+
+        target = " ".join(words).lower()
         _, recipe = self._find_in_db(target, self.recipes_db)
         if not recipe:
             display.error(f"Unknown recipe: '{target}'. Type RECIPES to see options.")
@@ -572,12 +589,12 @@ class BuildingMixin:
             display.error(f"You haven't learned the {recipe['name']} recipe yet.")
             return
 
-        if recipe["id"] in queue:
-            display.info(f"{recipe['name']} is already in the queue.")
-            return
-
-        queue.append(recipe["id"])
-        display.success(f"Added {recipe['name']} to the craft queue (position {len(queue)}).")
+        for _ in range(count):
+            queue.append(recipe["id"])
+        if count == 1:
+            display.success(f"Added {recipe['name']} to the craft queue (position {len(queue)}).")
+        else:
+            display.success(f"Added {recipe['name']} x{count} to the craft queue.")
 
     def cmd_unqueue(self, args):
         """UNQUEUE <recipe> — Remove a recipe from the workshop craft queue."""
